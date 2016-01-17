@@ -20,6 +20,7 @@ import org.jboss.errai.bus.server.annotations.Remote;
 import org.uberfire.backend.vfs.Path;
 import org.uberfire.mvp.PlaceRequest;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,4 +42,6 @@ public interface DesignerAssetService {
 
     public Path createProcess( final Path context,
                                final String fileName );
+
+    public List<String> listAssets(String location);
 }

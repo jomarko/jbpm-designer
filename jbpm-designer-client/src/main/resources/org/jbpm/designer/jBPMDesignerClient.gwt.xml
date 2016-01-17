@@ -9,6 +9,7 @@
   <inherits name="com.google.gwt.user.User"/>
 
   <inherits name="org.jboss.errai.bus.ErraiBus"/>
+  <inherits name="org.jboss.errai.databinding.DataBinding" />
   <inherits name="org.uberfire.UberfireWorkbench"/>
   <inherits name="org.uberfire.ext.services.UberfireWidgetsServicesAPI"/>
   <inherits name="org.uberfire.ext.widgets.common.UberfireWidgetsCommons"/>
@@ -27,5 +28,7 @@
   <source path='client'/>
 
   <public path="public"/>
+
+  <stylesheet src="css/process-wizard.css" />
 
 </module>

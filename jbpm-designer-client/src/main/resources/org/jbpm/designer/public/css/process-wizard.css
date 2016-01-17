@@ -1,0 +1,11 @@
+.selectedRow {
+    background-color: #9ecaed;
+}
+
+.redRow {
+    background-color: #d13842;
+}
+
+.cellWithMargin {
+    margin: 5px 5px 5px 5px;
+}
