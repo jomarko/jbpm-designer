@@ -16,8 +16,11 @@
 
 package org.jbpm.designer.client.shared;
 
+import org.jboss.errai.databinding.client.api.Bindable;
+
 import java.util.List;
 
+@Bindable
 public class Variable {
 
     public enum VariableType {
@@ -33,6 +36,9 @@ public class Variable {
     private String dataType;
 
     private String customDataType;
+
+    public Variable() {
+    }
 
     public Variable(VariableType variableType) {
         this.variableType = variableType;

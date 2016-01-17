@@ -51,17 +51,49 @@ public interface DesignerEditorConstants extends
 
     String Enter_type();
 
+    String eventType();
+
+    String eventTypeHelp();
+
+    String generalProcessInfo();
+
+    String guidedBusinessProcess();
+
+    String guidedBusinessProcessWizard();
+
     String Invalid_character_in_name();
 
     String Only_single_entry_allowed();
 
+    String processName();
+
+    String processNameHelp();
+
+    String processDescription();
+
+    String processDescriptionHelp();
+
+    String processInputs();
+
+    String processParticipants();
+
+    String processStartEvent();
+
+    String processTasks();
+
     String Save();
 
+    String signalEventType();
+
     String Source();
+
+    String standardEventType();
 
     String Target();
 
     String This_input_should_be_entered_as_a_property_for_the_task();
+
+    String timerEventType();
 
     String Removed_invalid_characters_from_name();
 

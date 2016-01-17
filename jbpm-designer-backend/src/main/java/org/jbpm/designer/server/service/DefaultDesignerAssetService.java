@@ -65,7 +65,6 @@ import org.slf4j.LoggerFactory;
 import org.uberfire.backend.server.util.Paths;
 import org.uberfire.backend.vfs.Path;
 import org.uberfire.io.IOService;
-import org.uberfire.java.nio.file.FileSystem;
 import org.uberfire.java.nio.file.FileSystemNotFoundException;
 import org.uberfire.mvp.PlaceRequest;
 import org.uberfire.rpc.SessionInfo;
@@ -321,5 +320,14 @@ public class DefaultDesignerAssetService
     @Override
     protected DesignerContent constructContent(Path path, Overview overview) {
         return new DesignerContent(overview);
+    }
+
+    @Override
+    public List<String> listAssets(String location) {
+        List<String> assetNames = new ArrayList<String>();
+        for(Asset asset : repository.listAssets(location)){
+            assetNames.add(asset.getFullName());
+        }
+        return assetNames;
     }
 }

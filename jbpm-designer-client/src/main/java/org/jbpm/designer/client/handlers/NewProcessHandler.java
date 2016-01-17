@@ -15,16 +15,20 @@
 
 package org.jbpm.designer.client.handlers;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import com.google.gwt.user.client.ui.IsWidget;
 import org.guvnor.common.services.project.model.Package;
+import org.gwtbootstrap3.client.ui.CheckBox;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.type.Bpmn2Type;
+import org.jbpm.designer.client.wizard.GuidedProcessWizard;
 import org.jbpm.designer.service.DesignerAssetService;
+import org.uberfire.commons.data.Pair;
 import org.uberfire.ext.widgets.common.client.callbacks.DefaultErrorCallback;
 import org.kie.workbench.common.widgets.client.handlers.DefaultNewResourceHandler;
 import org.kie.workbench.common.widgets.client.handlers.NewResourcePresenter;
@@ -45,6 +49,17 @@ public class NewProcessHandler extends DefaultNewResourceHandler {
 
     @Inject
     private Bpmn2Type resourceType;
+
+    @Inject
+    private GuidedProcessWizard wizard;
+
+    private CheckBox useWizard;
+
+    @PostConstruct
+    private void setupExtensions() {
+        useWizard = new CheckBox("Use Wizard");
+        extensions.add( new Pair<String, CheckBox>( "Advanced options", useWizard ) );
+    }
 
     @Override
     public String getDescription() {
@@ -70,8 +85,14 @@ public class NewProcessHandler extends DefaultNewResourceHandler {
             public void callback( final Path path ) {
                 presenter.complete();
                 notifySuccess();
-                final PlaceRequest place = new PathPlaceRequest( path );
-                placeManager.goTo( place );
+                final PlaceRequest place = new PathPlaceRequest(path);
+
+                if(!useWizard.getValue()) {
+                    placeManager.goTo(place);
+                } else {
+                    wizard.setPlace( new PathPlaceRequest( path ) );
+                    wizard.start();
+                }
             }
         }, new DefaultErrorCallback() ).createProcess( pkg.getPackageMainResourcesPath(), buildFileName( baseFileName,
                                                                                                          resourceType ) );
