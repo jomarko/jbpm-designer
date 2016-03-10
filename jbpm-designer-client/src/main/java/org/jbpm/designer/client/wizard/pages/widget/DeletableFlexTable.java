@@ -18,7 +18,6 @@ package org.jbpm.designer.client.wizard.pages.widget;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.NativeEvent;
-import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.*;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -41,7 +40,7 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
     public interface RowsHandler<T> {
         void addedRow(Widget widget);
 
-        void rowSelected(Widget widget, Integer row, boolean ctrlPressed);
+        void rowSelected(Widget widget, Integer row);
 
         void rowDeleted();
     }
@@ -66,7 +65,7 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
                     Widget widget = container.getWidget(cell.getRowIndex(), cell.getCellIndex());
                                                             ;
                     if(!(widget instanceof Button)) {
-                        handler.rowSelected(widget, cell.getRowIndex(), event.getNativeEvent().getCtrlKey());
+                        handler.rowSelected(widget, cell.getRowIndex());
                     }
                 }
             }
@@ -80,8 +79,6 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
 
         container.setCellSpacing(5);
     }
-
-
 
     @Override
     public void onMouseDown(MouseDownEvent mouseDownEvent) {
@@ -103,7 +100,7 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
                 }
                 if(fromRow < toRow) {
                     int newRow = container.insertRow(toRow + 1);
-                    copyRowId(fromRow, newRow);
+                    copyRowIdAndStyle(fromRow, newRow);
                     for(int i = 0; i < rowWidgets.size(); i++) {
                         container.setWidget(newRow, i, rowWidgets.get(i));
                     }
@@ -111,7 +108,7 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
 
                 } else {
                     int newRow = container.insertRow(toRow);
-                    copyRowId(fromRow + 1, newRow);
+                    copyRowIdAndStyle(fromRow + 1, newRow);
                     for(int i = 0; i < rowWidgets.size(); i++) {
                         container.setWidget(newRow, i, rowWidgets.get(i));
                     }
@@ -121,9 +118,12 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
         }
     }
 
-    private void copyRowId(int from, int to) {
+    private void copyRowIdAndStyle(int from, int to) {
         container.getRowFormatter().getElement(to).setId(
                 container.getRowFormatter().getElement(from).getId()
+        );
+        container.getRowFormatter().setStyleName(to,
+                container.getRowFormatter().getStyleName(from)
         );
     }
 
@@ -140,16 +140,12 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
         leftButtonDown = false;
     }
 
-    @UiHandler("add")
-    public void addHandler(ClickEvent event) {
-        addNewRow(getNewRowWidget());
-    }
-
     public abstract T getNewRowWidget();
 
     public abstract List<U> getModels();
 
-    protected void addNewRow(final Widget newRowWidget) {
+    public void addNewRow() {
+        final Widget newRowWidget = getNewRowWidget();
         int row = container.getRowCount();
         container.setWidget(row, 0, newRowWidget);
         container.setWidget(row, 1, getDeleteButton(newRowWidget));
@@ -188,7 +184,8 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
     }
 
     public void setRedRowColor(int row) {
-        if(!container.getRowFormatter().getStyleName(row).contains("redRow")) {
+        if(!container.getRowFormatter().getStyleName(row).contains("redRow") &&
+                !container.getRowFormatter().getStyleName(row).contains("selectedRow")) {
             container.getRowFormatter().addStyleName(row, "redRow");
         }
     }
@@ -200,7 +197,7 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
     }
 
     protected Button getDeleteButton(final Widget widget) {
-        final Button delete = new Button("Delete");
+        final Button delete = new Button();
         delete.setIcon( IconType.TRASH );
         ClickHandler deleteHandler = new ClickHandler() {
             @Override
@@ -222,5 +219,4 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
 
         return delete;
     }
-
 }

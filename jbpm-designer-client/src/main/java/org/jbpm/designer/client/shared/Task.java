@@ -14,10 +14,6 @@ public class Task {
 
     private String name;
 
-    private Variable input;
-
-    private Variable output;
-
     private Participant responsibleHuman;
 
     private Participant responsibleGroup;
@@ -49,22 +45,6 @@ public class Task {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Variable getInput() {
-        return input;
-    }
-
-    public void setInput(Variable input) {
-        this.input = input;
-    }
-
-    public Variable getOutput() {
-        return output;
-    }
-
-    public void setOutput(Variable output) {
-        this.output = output;
     }
 
     public Participant getResponsibleHuman() {
@@ -108,8 +88,6 @@ public class Task {
 
         if (id != task.id) return false;
         if (getName() != null ? !getName().equals(task.getName()) : task.getName() != null) return false;
-        if (getInput() != null ? !getInput().equals(task.getInput()) : task.getInput() != null) return false;
-        if (getOutput() != null ? !getOutput().equals(task.getOutput()) : task.getOutput() != null) return false;
         if (getResponsibleHuman() != null ? !getResponsibleHuman().equals(task.getResponsibleHuman()) : task.getResponsibleHuman() != null)
             return false;
         if (getResponsibleGroup() != null ? !getResponsibleGroup().equals(task.getResponsibleGroup()) : task.getResponsibleGroup() != null)
@@ -124,8 +102,6 @@ public class Task {
     public int hashCode() {
         int result = getName() != null ? getName().hashCode() : 0;
         result = 31 * result + id;
-        result = 31 * result + (getInput() != null ? getInput().hashCode() : 0);
-        result = 31 * result + (getOutput() != null ? getOutput().hashCode() : 0);
         result = 31 * result + (getResponsibleHuman() != null ? getResponsibleHuman().hashCode() : 0);
         result = 31 * result + (getResponsibleGroup() != null ? getResponsibleGroup().hashCode() : 0);
         result = 31 * result + (getOperation() != null ? getOperation().hashCode() : 0);
@@ -138,8 +114,6 @@ public class Task {
         return "Task{" +
                 "id=" + id +
                 "name='" + name + '\'' +
-                ", input=" + input +
-                ", output=" + output +
                 ", responsibleHuman=" + responsibleHuman +
                 ", responsibleGroup=" + responsibleGroup +
                 ", operation='" + operation + '\'' +

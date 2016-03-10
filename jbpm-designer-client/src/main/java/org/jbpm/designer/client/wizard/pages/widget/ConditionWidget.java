@@ -15,14 +15,20 @@
 
 package org.jbpm.designer.client.wizard.pages.widget;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.HasValueChangeHandlers;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.uibinder.client.UiBinder;
+import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasValue;
-import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.CheckBox;
+import org.gwtbootstrap3.client.ui.HelpBlock;
+import org.gwtbootstrap3.client.ui.TextBox;
+import org.gwtbootstrap3.client.ui.ValueListBox;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
@@ -30,24 +36,46 @@ import org.jbpm.designer.client.shared.Condition;
 import org.jbpm.designer.client.shared.Variable;
 
 import javax.enterprise.context.Dependent;
+import java.util.ArrayList;
 import java.util.List;
 
 @Dependent
 public class ConditionWidget extends Composite implements HasModel<Condition>, HasValue<Condition>, HasValueChangeHandlers<Condition> {
 
+    interface ConditionWidgetBinder
+            extends
+            UiBinder<Widget, ConditionWidget> {
+    }
+
+    private static ConditionWidgetBinder uiBinder = GWT.create(ConditionWidgetBinder.class);
+
     DataBinder<Condition> binder = DataBinder.forType(Condition.class);
 
-    private ConstraintWidget constraint = new ConstraintWidget();
+    @UiField(provided = true)
+    ValueListBox<Variable> variable = new ValueListBox<Variable>(new ToStringRenderer());
 
-    private CheckBox constraintSatisfied = new CheckBox("satisfied");
+    @UiField
+    HelpBlock variableHelp;
+
+    @UiField(provided = true)
+    ValueListBox<String> constraint = new ValueListBox<String>(new ToStringRenderer());
+
+    @UiField
+    HelpBlock constraintHelp;
+
+    @UiField
+    TextBox constraintValue;
+
+    @UiField
+    HelpBlock constraintValueHelp;
+
+    @UiField
+    CheckBox constraintSatisfied;
 
     public ConditionWidget() {
-        VerticalPanel panel = new VerticalPanel();
-        panel.add(constraint);
-        panel.add(constraintSatisfied);
-        initWidget(panel);
+        initWidget(uiBinder.createAndBindUi(this));
 
-        binder.bind(constraint, "constraint").getModel();
+        binder.bind(variable, "constraint.variable").bind(constraint, "constraint.constraint").bind(constraintValue, "constraint.constraintValue").getModel();
 
         constraintSatisfied.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
             @Override
@@ -58,6 +86,14 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
                 model.setPositiveTaskId(negative);
                 model.setNegativeTaskId(positive);
                 setModel(model);
+            }
+        });
+
+        variable.addValueChangeHandler(new ValueChangeHandler<Variable>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Variable> valueChangeEvent) {
+                constraint.setValue("");
+                constraint.setAcceptableValues(getConstraints(valueChangeEvent.getValue()));
             }
         });
     }
@@ -96,7 +132,7 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
     }
 
     public void setVariables(List<Variable> variables) {
-        constraint.setVariables(variables);
+        variable.setAcceptableValues(variables);
     }
 
     public void unbind() {
@@ -104,15 +140,37 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
     }
 
     public void rebind() {
-        binder.bind(constraint, "constraint");
+        binder.bind(variable, "constraint.variable").bind(constraint, "constraint.constraint").bind(constraintValue, "constraint.constraintValue");
     }
 
     public void setPropertyChangeHandler(PropertyChangeHandler handler) {
         binder.addPropertyChangeHandler(handler);
-        constraint.setPropertyChangeHandler(handler);
     }
 
     public void setConstraintSatisfied(boolean value) {
         constraintSatisfied.setValue(value, false);
+    }
+
+    public void setVariableHelpVisibility(boolean value) {
+        variableHelp.setVisible(value);
+    }
+
+    public void setConstraintValueHelpVisibility(boolean value) {
+        constraintValueHelp.setVisible(value);
+    }
+
+    public void setConstraintHelpVisibility(boolean value) {
+        constraintHelp.setVisible(value);
+    }
+
+    private List<String> getConstraints(Variable var) {
+        List<String> constraints = new ArrayList<String>();
+        constraints.add("equal");
+        constraints.add("not equal");
+        if(var.getDataType() == "number") {
+            constraints.add("greater");
+            constraints.add("lesser");
+        }
+        return constraints;
     }
 }

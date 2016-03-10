@@ -7,15 +7,15 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.Button;
+import org.gwtbootstrap3.client.ui.NavTabs;
+import org.gwtbootstrap3.client.ui.TabPanel;
 import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jbpm.designer.client.shared.*;
 import org.jbpm.designer.client.wizard.pages.widget.*;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -31,6 +31,8 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
 
     private static ProcessTasksPageViewImplBinder uiBinder = GWT.create(ProcessTasksPageViewImplBinder.class);
 
+    private boolean isSelectingActive;
+
     private List<Integer> lastSelectedRows = new ArrayList<Integer>();
 
     private Presenter presenter;
@@ -42,17 +44,23 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         initWidget(uiBinder.createAndBindUi(this));
     }
 
-    @Inject
-    private TaskDetail taskDetail;
-
-    @Inject
-    private ConditionWidget conditionWidget;
+    @UiField
+    TaskDetail taskDetail;
 
     @UiField
-    VerticalPanel detail;
+    TaskIO taskIO;
+
+    @UiField
+    ConditionWidget conditionWidget;
 
     @UiField
     TasksTable tasksContainer;
+
+    @UiField
+    Button selectButton;
+
+    @UiField
+    Button cancelButton;
 
     @UiField
     Button parallelButton;
@@ -63,24 +71,19 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     @UiField
     Button splitButton;
 
-
-    @PostConstruct
-    public void initView() {
-        detail.add(parallelButton);
-        detail.add(taskDetail);
-        detail.add(conditionWidget);
-        tasksContainer.registerRowsHandler(this);
-        taskDetail.setPropertyChangeChandler(getHandler());
-        conditionWidget.setPropertyChangeHandler(getHandler());
-    }
-
     @Override
     public void init(Presenter presenter) {
         this.presenter = presenter;
-        taskDetail.setVisible(false);
-        conditionWidget.setVisible(false);
+
+        tasksContainer.registerRowsHandler(this);
+        taskDetail.setPropertyChangeChandler(getHandler());
+        conditionWidget.setPropertyChangeHandler(getHandler());
+        taskIO.setTaskInputsChangedHandler((ProcessTasksPage) presenter);
+
         tasksContainer.clear();
+        isSelectingActive = false;
         lastSelectedRows = new ArrayList<Integer>();
+
     }
 
     @Override
@@ -89,9 +92,9 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
-    public void rowSelected(Widget widget, Integer row, boolean ctrlPressed) {
+    public void rowSelected(Widget widget, Integer row) {
         lastSelectedWidget = (ListTaskDetail) widget;
-        if (ctrlPressed) {
+        if (isSelectingActive) {
             addToLastSelected(row);
         } else {
             lastSelectedRows.clear();
@@ -135,6 +138,11 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         tasksContainer.setRowId(row, type);
     }
 
+    @UiHandler("addButton")
+    public void addButtonHandler(ClickEvent event) {
+        tasksContainer.addNewRow();
+    }
+
     @UiHandler("parallelButton")
     public void parallelButtonHandler(ClickEvent event) {
         presenter.mergeTasksParallel();
@@ -148,6 +156,18 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     @UiHandler("splitButton")
     public void splitButtonHandler(ClickEvent event) {
         presenter.splitTasks();
+    }
+
+    @UiHandler("selectButton")
+    public void selectButtonHandler(ClickEvent event) {
+        isSelectingActive = true;
+        presenter.startSelection();
+    }
+
+    @UiHandler("cancelButton")
+    public void cancelButtonHandler(ClickEvent event) {
+        isSelectingActive = false;
+        presenter.cancelSelection();
     }
 
     @Override
@@ -172,25 +192,8 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
-    public void hideMergeSplitButtons() {
-        parallelButton.setVisible(false);
-        conditionButton.setVisible(false);
-        splitButton.setVisible(false);
-    }
-
-    @Override
     public void splitRow(int row) {
         tasksContainer.split(row);
-    }
-
-    @Override
-    public void hideTaskDetail() {
-        taskDetail.setVisible(false);
-    }
-
-    @Override
-    public void showTaskDetail() {
-        taskDetail.setVisible(true);
     }
 
     @Override
@@ -219,9 +222,6 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     public void rebindSelectedWidget() {
         lastSelectedWidget.rebind();
         taskDetail.rebind();
-        if(!taskDetail.isVisible()) {
-            taskDetail.setVisible(true);
-        }
         conditionWidget.rebind();
     }
 
@@ -233,37 +233,17 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
 
     @Override
     public void setAvailableVarsForSelectedTask(List<Variable> variables) {
-        taskDetail.setVariables(variables);
         conditionWidget.setVariables(variables);
+        taskIO.setAcceptableValues(variables);
     }
 
     @Override
     public Task getModelOfSelectedWidget() {
-        return lastSelectedWidget.getModel();
-    }
-
-    @Override
-    public void showMergeButtons() {
-        parallelButton.setVisible(true);
-        conditionButton.setVisible(true);
-        splitButton.setVisible(false);
-    }
-
-    @Override
-    public void showSplitButton() {
-        parallelButton.setVisible(false);
-        conditionButton.setVisible(false);
-        splitButton.setVisible(true);
-    }
-
-    @Override
-    public void showConditionWidget() {
-        conditionWidget.setVisible(true);
-    }
-
-    @Override
-    public void hideConditionWidget() {
-        conditionWidget.setVisible(false);
+        if(lastSelectedWidget != null) {
+            return lastSelectedWidget.getModel();
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -282,8 +262,18 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
-    public void showInvalidRowCountSelectedForCondition() {
-        Window.alert("Conditions supported only for 2 tasks");
+    public void showSplitInvalidCount() {
+        Window.alert("You can split only one row");
+    }
+
+    @Override
+    public void showMergeInvalidCount() {
+        Window.alert("Merge supported only for 2 tasks");
+    }
+
+    @Override
+    public void showAlreadyContainsMerged() {
+        Window.alert("Can't merge already merged tasks");
     }
 
     @Override
@@ -294,6 +284,64 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     @Override
     public void showAsInvalid(int taskId) {
         tasksContainer.setRedRowColor(rowOfTask(taskId));
+    }
+
+    @Override
+    public void setNameHelpVisibility(boolean value) {
+        taskDetail.setNameHelpVisibility(value);
+    }
+
+    @Override
+    public void setParticipantHelpVisibility(boolean value) {
+        taskDetail.setParticipantHelpVisibility(value);
+    }
+
+    @Override
+    public void setOperationHelpVisibility(boolean value) {
+        taskDetail.setOperationHelpVisibility(value);
+    }
+
+    @Override
+    public void setVariableHelpVisibility(boolean value) {
+        conditionWidget.setVariableHelpVisibility(value);
+    }
+
+    @Override
+    public void setConstraintValueHelpVisibility(boolean value) {
+        conditionWidget.setConstraintValueHelpVisibility(value);
+    }
+
+    @Override
+    public void setConstraintHelpVisibility(boolean value) {
+        conditionWidget.setConstraintHelpVisibility(value);
+    }
+
+    @Override
+    public void setSelectedTaskInputs(List<Variable> variables) {
+        taskIO.setSelectedVariables(variables);
+    }
+
+    @Override
+    public void setSelectedTaskOutput(Variable variable) {
+        taskIO.setOutputVariable(variable);
+    }
+
+    @Override
+    public void showButtonsAfterSelection() {
+        selectButton.setVisible(false);
+        splitButton.setVisible(true);
+        parallelButton.setVisible(true);
+        conditionButton.setVisible(true);
+        cancelButton.setVisible(true);
+    }
+
+    @Override
+    public void showButtonsAfterSelectionCancel() {
+        selectButton.setVisible(true);
+        splitButton.setVisible(false);
+        parallelButton.setVisible(false);
+        conditionButton.setVisible(false);
+        cancelButton.setVisible(false);
     }
 
     private PropertyChangeHandler getHandler() {
@@ -320,9 +368,11 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
 
     private void addToLastSelected(Integer row) {
         if(lastSelectedRows.contains(row)) {
-            lastSelectedRows.remove(row);
+            if(!presenter.isRowCondition(row) && !presenter.isRowParallel(row)) {
+                lastSelectedRows.remove(row);
+            }
+        } else {
+            lastSelectedRows.add(row);
         }
-
-        lastSelectedRows.add(row);
     }
 }

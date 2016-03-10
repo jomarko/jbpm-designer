@@ -70,7 +70,8 @@ public class TasksTable extends DeletableFlexTable<ListTaskDetail, Task> {
         int firstRow = rows.get(0);
 
         for(int i = 1; i < rows.size(); i++) {
-            for (int cell = 0; cell < container.getCellCount(rows.get(i)) - 1; cell++) {
+            int cellCount = container.getCellCount(rows.get(i));
+            for (int cell = 0; cell < cellCount - 1; cell++) {
                 container.insertCell(firstRow, container.getCellCount(firstRow) - 1);
                 container.setWidget(firstRow, container.getCellCount(firstRow) - 2, container.getWidget(rows.get(i), cell));
             }
@@ -85,7 +86,8 @@ public class TasksTable extends DeletableFlexTable<ListTaskDetail, Task> {
 
     public void split(int row) {
         List<Widget> widgets = new ArrayList<Widget>();
-        for(int i = 1; i < container.getCellCount(row) - 1; i++) {
+        int cellCount = container.getCellCount(row);
+        for(int i = 1; i < cellCount - 1; i++) {
             widgets.add(container.getWidget(row, 1));
             container.removeCell(row, 1);
         }
@@ -113,6 +115,9 @@ public class TasksTable extends DeletableFlexTable<ListTaskDetail, Task> {
                     container.getRowFormatter().removeStyleName(i, "selectedRow");
                 }
             } else {
+                if(container.getRowFormatter().getStyleName(i).contains("redRow")) {
+                    container.getRowFormatter().removeStyleName(i, "redRow");
+                }
                 if(!container.getRowFormatter().getStyleName(i).contains("selectedRow")) {
                     container.getRowFormatter().addStyleName(i, "selectedRow");
                 }

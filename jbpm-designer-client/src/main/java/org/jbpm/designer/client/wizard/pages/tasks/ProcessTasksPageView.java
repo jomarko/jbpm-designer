@@ -18,6 +18,10 @@ public interface ProcessTasksPageView extends IsWidget {
 
         void rowSelected();
 
+        void startSelection();
+
+        void cancelSelection();
+
         void splitTasks();
 
         void mergeTasksCondition();
@@ -51,23 +55,9 @@ public interface ProcessTasksPageView extends IsWidget {
 
     List<Integer> getSelectedRows();
 
-    void hideTaskDetail();
-
-    void showTaskDetail();
-
     void showHumanSpecificDetails();
 
     void showServiceSpecificDetails();
-
-    void showMergeButtons();
-
-    void showSplitButton();
-
-    void hideMergeSplitButtons();
-
-    void showConditionWidget();
-
-    void hideConditionWidget();
 
     void deselectAllRows();
 
@@ -89,9 +79,33 @@ public interface ProcessTasksPageView extends IsWidget {
 
     void showConditionAsNegative();
 
-    void showInvalidRowCountSelectedForCondition();
+    void showMergeInvalidCount();
+
+    void showAlreadyContainsMerged();
+
+    void showSplitInvalidCount();
 
     void showAsValid(int taskId);
 
     void showAsInvalid(int taskId);
+
+    void showButtonsAfterSelection();
+
+    void showButtonsAfterSelectionCancel();
+
+    void setNameHelpVisibility(boolean value);
+
+    void setParticipantHelpVisibility(boolean value);
+
+    void setOperationHelpVisibility(boolean value);
+
+    void setVariableHelpVisibility(boolean value);
+
+    void setConstraintValueHelpVisibility(boolean value);
+
+    void setConstraintHelpVisibility(boolean value);
+
+    void setSelectedTaskInputs(List<Variable> variables);
+
+    void setSelectedTaskOutput(Variable variable);
 }

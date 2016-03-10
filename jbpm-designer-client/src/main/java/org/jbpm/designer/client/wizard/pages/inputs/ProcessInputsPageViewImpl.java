@@ -1,8 +1,10 @@
 package org.jbpm.designer.client.wizard.pages.inputs;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
@@ -13,10 +15,7 @@ import org.jbpm.designer.client.wizard.pages.widget.InputRow;
 import org.jbpm.designer.client.wizard.pages.widget.InputsTable;
 
 import javax.enterprise.context.Dependent;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Dependent
 public class ProcessInputsPageViewImpl extends Composite implements ProcessInputsPageView,
@@ -43,6 +42,11 @@ public class ProcessInputsPageViewImpl extends Composite implements ProcessInput
 
     private Presenter presenter;
 
+    @UiHandler("addButton")
+    public void addButtonHandler(ClickEvent event) {
+        inputs.addNewRow();
+    }
+
     @UiField
     InputsTable inputs;
 
@@ -54,7 +58,7 @@ public class ProcessInputsPageViewImpl extends Composite implements ProcessInput
     }
 
     @Override
-    public void rowSelected(Widget widget, Integer row, boolean ctrlPressed) {
+    public void rowSelected(Widget widget, Integer row) {
 
     }
 

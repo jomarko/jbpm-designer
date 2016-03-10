@@ -23,10 +23,10 @@ import org.jbpm.designer.client.wizard.pages.inputs.ProcessInputsPage;
 import org.jbpm.designer.client.wizard.pages.preview.ProcessPreviewPage;
 import org.jbpm.designer.client.wizard.pages.start.ProcessStartEventPage;
 import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPage;
+import org.uberfire.backend.vfs.Path;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.core.client.wizards.AbstractWizard;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPage;
-import org.uberfire.mvp.PlaceRequest;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
@@ -62,7 +62,6 @@ public class GuidedProcessWizard extends AbstractWizard {
         pages.add( startEventPage );
         pages.add( tasksPage );
         tasksPage.setWizard(this);
-        pages.add( previewPage );
     }
 
     @Override
@@ -89,7 +88,7 @@ public class GuidedProcessWizard extends AbstractWizard {
 
     @Override
     public int getPreferredWidth() {
-        return 1024;
+        return 1280;
     }
 
     @Override
@@ -116,8 +115,12 @@ public class GuidedProcessWizard extends AbstractWizard {
         }
     }
 
-    public void setPlace(PlaceRequest place) {
-        previewPage.setPlace(place);
+    public void setPackagePath(Path packagePath) {
+
+    }
+
+    public void setFileName(String fileName) {
+
     }
 
     public void setProcessName(String processName){
@@ -127,5 +130,4 @@ public class GuidedProcessWizard extends AbstractWizard {
     public List<Variable> getInitialInputs() {
         return inputsPage.getInputs();
     }
-
 }

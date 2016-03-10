@@ -66,7 +66,6 @@ public class GeneralProcessInfoPageViewImpl extends Composite implements General
     @Override
     public void init(final Presenter presenter) {
         this.presenter = presenter;
-        processName.setText("");
         processName.addValueChangeHandler(new ValueChangeHandler<String>() {
             @Override
             public void onValueChange(ValueChangeEvent<String> valueChangeEvent) {

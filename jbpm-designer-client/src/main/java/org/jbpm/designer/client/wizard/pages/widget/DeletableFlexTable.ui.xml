@@ -21,14 +21,8 @@
 
     <ui:with field="i18n" type="org.jbpm.designer.client.resources.i18n.DesignerEditorConstants"/>
 
-
-
-    <gwt:VerticalPanel>
-        <gwt:ScrollPanel height="400px">
-            <gwt:FlexTable ui:field="container"/>
-        </gwt:ScrollPanel>
-        <b:Button ui:field="add" text="Add"/>
-    </gwt:VerticalPanel>
-
+    <gwt:ScrollPanel height="400px">
+        <gwt:FlexTable ui:field="container"/>
+    </gwt:ScrollPanel>
 
 </ui:UiBinder>

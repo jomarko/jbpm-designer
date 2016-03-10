@@ -196,11 +196,7 @@ public class ProcessTasksPageTest {
 
         page.rowDeleted();
 
-        verify(view).hideTaskDetail();
         verify(view).deselectAllRows();
-        verify(view).hideMergeSplitButtons();
-        verify(view).hideConditionWidget();
-
         assertEquals(1, page.conditions.size());
     }
 
@@ -224,8 +220,6 @@ public class ProcessTasksPageTest {
 
         verify(view).setRowType(1, "");
         verify(view).splitRow(1);
-        verify(view).hideMergeSplitButtons();
-        verify(view).hideConditionWidget();
         assertEquals(0, page.conditions.size());
     }
 
@@ -249,8 +243,6 @@ public class ProcessTasksPageTest {
 
         verify(view).setRowType(1, "");
         verify(view).splitRow(1);
-        verify(view).hideMergeSplitButtons();
-        verify(view).hideConditionWidget();
         assertEquals(2, page.conditions.size());
     }
 
@@ -274,8 +266,6 @@ public class ProcessTasksPageTest {
 
         verify(view, never()).setRowType(1, "");
         verify(view, never()).splitRow(1);
-        verify(view).hideMergeSplitButtons();
-        verify(view).hideConditionWidget();
         assertEquals(2, page.conditions.size());
     }
 
@@ -310,21 +300,18 @@ public class ProcessTasksPageTest {
         List<Integer> selectedRows = new ArrayList<Integer>();
         when(view.getSelectedRows()).thenReturn(selectedRows);
         page.mergeTasksCondition();
-        verify(view).showInvalidRowCountSelectedForCondition();
+        verify(view).showMergeInvalidCount();
 
         selectedRows.add(1);
         when(view.getSelectedRows()).thenReturn(selectedRows);
         page.mergeTasksCondition();
-        verify(view, times(2)).showInvalidRowCountSelectedForCondition();
+        verify(view, times(2)).showMergeInvalidCount();
 
         selectedRows.add(2);
         selectedRows.add(3);
         when(view.getSelectedRows()).thenReturn(selectedRows);
         page.mergeTasksCondition();
-        verify(view, times(3)).showInvalidRowCountSelectedForCondition();
-
-        verify(view, times(3)).hideMergeSplitButtons();
-        verify(view, times(3)).hideConditionWidget();
+        verify(view, times(3)).showMergeInvalidCount();
     }
 
     @Test
@@ -345,8 +332,6 @@ public class ProcessTasksPageTest {
 
         verify(view).setRowType(1, "parallel");
         verify(view).deselectAllRows();
-        verify(view).hideMergeSplitButtons();
-        verify(view).hideConditionWidget();
     }
 
     @Test
@@ -354,15 +339,10 @@ public class ProcessTasksPageTest {
         List<Integer> selectedRows = new ArrayList<Integer>();
         when(view.getSelectedRows()).thenReturn(selectedRows);
         page.mergeTasksParallel();
-        verify(view).hideMergeSplitButtons();
-        verify(view).hideConditionWidget();
-
 
         selectedRows.add(1);
         when(view.getSelectedRows()).thenReturn(selectedRows);
         page.mergeTasksParallel();
-        verify(view, times(2)).hideMergeSplitButtons();
-        verify(view, times(2)).hideConditionWidget();
 
         verify(view, never()).setRowType(anyInt(), anyString());
     }

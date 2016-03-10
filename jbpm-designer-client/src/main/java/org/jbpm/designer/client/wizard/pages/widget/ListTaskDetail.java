@@ -17,9 +17,9 @@ package org.jbpm.designer.client.wizard.pages.widget;
 
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.VerticalPanel;
-import org.gwtbootstrap3.client.ui.Label;
+import org.gwtbootstrap3.client.ui.Icon;
 import org.gwtbootstrap3.client.ui.TextBox;
+import org.gwtbootstrap3.client.ui.constants.IconType;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
@@ -31,27 +31,23 @@ public class ListTaskDetail extends Composite implements HasModel<Task> {
 
     private DataBinder<Task> dataBinder = DataBinder.forType(Task.class);
 
-    private VerticalPanel line = new VerticalPanel();
-
     private TextBox name = new TextBox();
 
-    private Label indicator = new Label();
+    private Icon indicator = new Icon(IconType.USER);
 
     public ListTaskDetail() {
-        VerticalPanel panel = new VerticalPanel();
+        HorizontalPanel panel = new HorizontalPanel();
         panel.add(indicator);
         panel.add(name);
-        name.setReadOnly(true);
-        line.add(panel);
         initWidget(panel);
         dataBinder.bind(name, "name");
         dataBinder.addPropertyChangeHandler("taskType", new PropertyChangeHandler<String>() {
             @Override
             public void onPropertyChange(PropertyChangeEvent<String> propertyChangeEvent) {
                 if(propertyChangeEvent.getNewValue().equals("Human")) {
-                    indicator.setText("human");
+                    indicator.setType(IconType.USER);
                 } else if(propertyChangeEvent.getNewValue().equals("Service")) {
-                    indicator.setText("service");
+                    indicator.setType(IconType.COG);
                 }
             }
         });
@@ -67,10 +63,6 @@ public class ListTaskDetail extends Composite implements HasModel<Task> {
     @Override
     public void setModel(Task task) {
         dataBinder.setModel(task);
-    }
-
-    public void add(ListTaskDetail detail) {
-        line.add(detail);
     }
 
     public void unbind() {
