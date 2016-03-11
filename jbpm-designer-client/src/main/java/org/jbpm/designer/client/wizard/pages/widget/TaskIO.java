@@ -3,13 +3,19 @@ package org.jbpm.designer.client.wizard.pages.widget;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HasValue;
 import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.CheckBox;
 import org.gwtbootstrap3.client.ui.html.Text;
+import org.jboss.errai.databinding.client.api.DataBinder;
+import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
+import org.jboss.errai.ui.client.widget.HasModel;
+import org.jbpm.designer.client.shared.Task;
 import org.jbpm.designer.client.shared.Variable;
 
 import java.util.ArrayList;
@@ -17,31 +23,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TaskIO extends Composite {
-    interface TaskIOBinder
-            extends
-            UiBinder<Widget, TaskIO> {
-    }
+public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> {
 
-    public interface TaskInputsChanged {
-        void actualTaskInputs(List<Variable> actualVariables);
-
-        void actualTaskOutput(Variable variable);
+    interface TaskIOBinder extends UiBinder<Widget, TaskIO> {
     }
 
     private static TaskIOBinder uiBinder = GWT.create(TaskIOBinder.class);
 
+    private DataBinder<Task> dataBinder = DataBinder.forType(Task.class);
+
     public TaskIO() {
         initWidget(uiBinder.createAndBindUi(this));
-        output.addValueChangeHandler(new ValueChangeHandler<Variable>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Variable> valueChangeEvent) {
-                taskInputsChangedHandler.actualTaskOutput(valueChangeEvent.getValue());
-            }
-        });
+        dataBinder.bind(output, "output");
     }
-
-    private TaskInputsChanged taskInputsChangedHandler;
 
     @UiField
     FlexTable variables;
@@ -66,8 +60,9 @@ public class TaskIO extends Composite {
                             selected.add(variable);
                         }
                     }
-
-                    taskInputsChangedHandler.actualTaskInputs(selected);
+                    Task model = dataBinder.getModel();
+                    model.setInputs(selected);
+                    setModel(model);
                 }
             });
             variables.setWidget(newRow, 0, checkBox);
@@ -76,22 +71,64 @@ public class TaskIO extends Composite {
         }
     }
 
-    public void setTaskInputsChangedHandler(TaskInputsChanged handler) {
-        this.taskInputsChangedHandler = handler;
-    }
-
     public void setSelectedVariables(List<Variable> vars) {
         for(Variable variable : variableMap.keySet()) {
             if(vars.contains(variable)) {
-                variableMap.get(variable).setValue(true);
+                variableMap.get(variable).setValue(true, true);
             } else {
-                variableMap.get(variable).setValue(false);
+                variableMap.get(variable).setValue(false, true);
             }
         }
     }
 
     public void setOutputVariable(Variable variable) {
         output.setValue(variable, true);
+    }
+
+    @Override
+    public Task getModel() {
+        return dataBinder.getModel();
+    }
+
+    @Override
+    public void setModel(Task task) {
+        dataBinder.setModel(task);
+        if (task.getInputs() != null) {
+            for (Variable variable : task.getInputs()) {
+                variableMap.get(variable).setValue(true);
+            }
+        }
+    }
+
+    @Override
+    public Task getValue() {
+        return getModel();
+    }
+
+    @Override
+    public void setValue(Task task) {
+        setValue(task, false);
+    }
+
+    @Override
+    public void setValue(Task task, boolean fireEvent) {
+        if(fireEvent) {
+            ValueChangeEvent.fire(this, task);
+        }
+        setModel(task);
+    }
+
+    @Override
+    public HandlerRegistration addValueChangeHandler(ValueChangeHandler<Task> valueChangeHandler) {
+        return addHandler(valueChangeHandler, ValueChangeEvent.getType());
+    }
+
+    public void unbind() {
+        dataBinder.unbind();
+    }
+
+    public void rebind() {
+        dataBinder.bind(output, "output").getModel();
     }
 }
 

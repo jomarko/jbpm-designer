@@ -40,7 +40,7 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
     public interface RowsHandler<T> {
         void addedRow(Widget widget);
 
-        void rowSelected(Widget widget, Integer row);
+        void cellSelected(Widget widget, Integer row, Integer column);
 
         void rowDeleted();
     }
@@ -65,7 +65,7 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
                     Widget widget = container.getWidget(cell.getRowIndex(), cell.getCellIndex());
                                                             ;
                     if(!(widget instanceof Button)) {
-                        handler.rowSelected(widget, cell.getRowIndex());
+                        handler.cellSelected(widget, cell.getRowIndex(), cell.getCellIndex());
                     }
                 }
             }
@@ -183,16 +183,16 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
         container.removeAllRows();
     }
 
-    public void setRedRowColor(int row) {
-        if(!container.getRowFormatter().getStyleName(row).contains("redRow") &&
-                !container.getRowFormatter().getStyleName(row).contains("selectedRow")) {
-            container.getRowFormatter().addStyleName(row, "redRow");
+    public void setRedRowColor(int row, int column) {
+        if(!container.getCellFormatter().getStyleName(row, column).contains("redRow") &&
+                !container.getCellFormatter().getStyleName(row, column).contains("selectedRow")) {
+            container.getCellFormatter().addStyleName(row, column, "redRow");
         }
     }
 
-    public void setNormalRowColor(int row) {
-        if(container.getRowFormatter().getStyleName(row).contains("redRow")) {
-            container.getRowFormatter().removeStyleName(row, "redRow");
+    public void setNormalRowColor(int row, int column) {
+        if(container.getCellFormatter().getStyleName(row, column).contains("redRow")) {
+            container.getCellFormatter().removeStyleName(row, column, "redRow");
         }
     }
 

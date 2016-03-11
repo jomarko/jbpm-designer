@@ -6,9 +6,7 @@ import org.jboss.errai.databinding.client.api.Bindable;
 public class Condition {
     private Constraint constraint;
 
-    private int positiveTaskId;
-
-    private int negativeTaskId;
+    private boolean executeIfConstraintSatisfied;
 
     public Condition() {
     }
@@ -21,20 +19,12 @@ public class Condition {
         this.constraint = constraint;
     }
 
-    public int getPositiveTaskId() {
-        return positiveTaskId;
+    public boolean isExecuteIfConstraintSatisfied() {
+        return executeIfConstraintSatisfied;
     }
 
-    public void setPositiveTaskId(int positiveTaskId) {
-        this.positiveTaskId = positiveTaskId;
-    }
-
-    public int getNegativeTaskId() {
-        return negativeTaskId;
-    }
-
-    public void setNegativeTaskId(int negativeTaskId) {
-        this.negativeTaskId = negativeTaskId;
+    public void setExecuteIfConstraintSatisfied(boolean executeIfConstraintSatisfied) {
+        this.executeIfConstraintSatisfied = executeIfConstraintSatisfied;
     }
 
     @Override
@@ -44,8 +34,7 @@ public class Condition {
 
         Condition condition = (Condition) o;
 
-        if (getPositiveTaskId() != condition.getPositiveTaskId()) return false;
-        if (getNegativeTaskId() != condition.getNegativeTaskId()) return false;
+        if (isExecuteIfConstraintSatisfied() != condition.isExecuteIfConstraintSatisfied()) return false;
         return getConstraint() != null ? getConstraint().equals(condition.getConstraint()) : condition.getConstraint() == null;
 
     }
@@ -53,8 +42,7 @@ public class Condition {
     @Override
     public int hashCode() {
         int result = getConstraint() != null ? getConstraint().hashCode() : 0;
-        result = 31 * result + getPositiveTaskId();
-        result = 31 * result + getNegativeTaskId();
+        result = 31 * result + (isExecuteIfConstraintSatisfied() ? 1 : 0);
         return result;
     }
 }

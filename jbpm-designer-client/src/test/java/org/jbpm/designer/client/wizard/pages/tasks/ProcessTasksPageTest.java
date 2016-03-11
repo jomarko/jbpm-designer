@@ -3,7 +3,6 @@ package org.jbpm.designer.client.wizard.pages.tasks;
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import org.jboss.errai.common.client.api.ErrorCallback;
 import org.jboss.errai.common.client.api.RemoteCallback;
-import org.jbpm.designer.client.shared.Condition;
 import org.jbpm.designer.client.shared.Task;
 import org.jbpm.designer.client.shared.User;
 import org.jbpm.designer.client.shared.Variable;
@@ -156,8 +155,6 @@ public class ProcessTasksPageTest {
         List<Task> tasks = new ArrayList<Task>();
         tasks.add(taskOne);
 
-        page.conditions.put(taskOne.getId(), new Condition());
-
         when(view.getTasks()).thenReturn(tasks);
 
         Callback<Boolean> callback = mock(Callback.class);
@@ -191,13 +188,9 @@ public class ProcessTasksPageTest {
         tasks.add(taskOne);
         when(view.getTasks()).thenReturn(tasks);
 
-        page.conditions.put(taskOne.getId(), new Condition());
-        page.conditions.put(taskTwo.getId(), new Condition());
-
         page.rowDeleted();
 
-        verify(view).deselectAllRows();
-        assertEquals(1, page.conditions.size());
+        verify(view).deselectAll();
     }
 
     @Test
@@ -213,14 +206,10 @@ public class ProcessTasksPageTest {
 
         when(view.getRowType(1)).thenReturn("condition");
 
-        page.conditions.put(taskOne.getId(), new Condition());
-        page.conditions.put(taskTwo.getId(), new Condition());
-
         page.splitTasks();
 
         verify(view).setRowType(1, "");
         verify(view).splitRow(1);
-        assertEquals(0, page.conditions.size());
     }
 
     @Test
@@ -236,14 +225,10 @@ public class ProcessTasksPageTest {
 
         when(view.getRowType(1)).thenReturn("parallel");
 
-        page.conditions.put(taskOne.getId(), new Condition());
-        page.conditions.put(taskTwo.getId(), new Condition());
-
         page.splitTasks();
 
         verify(view).setRowType(1, "");
         verify(view).splitRow(1);
-        assertEquals(2, page.conditions.size());
     }
 
     @Test
@@ -259,14 +244,10 @@ public class ProcessTasksPageTest {
 
         when(view.getRowType(1)).thenReturn("");
 
-        page.conditions.put(taskOne.getId(), new Condition());
-        page.conditions.put(taskTwo.getId(), new Condition());
-
         page.splitTasks();
 
         verify(view, never()).setRowType(1, "");
         verify(view, never()).splitRow(1);
-        assertEquals(2, page.conditions.size());
     }
 
     @Test
@@ -287,12 +268,7 @@ public class ProcessTasksPageTest {
 
         verify(view).mergeRows(selectedRows);
         verify(view).setRowType(1, "condition");
-        verify(view).deselectAllRows();
-
-        assertEquals(2, page.conditions.size());
-        assertTrue(page.conditions.keySet().contains(taskOne.getId()));
-        assertTrue(page.conditions.keySet().contains(taskTwo.getId()));
-
+        verify(view).deselectAll();
     }
 
     @Test
@@ -331,7 +307,7 @@ public class ProcessTasksPageTest {
         page.mergeTasksParallel();
 
         verify(view).setRowType(1, "parallel");
-        verify(view).deselectAllRows();
+        verify(view).deselectAll();
     }
 
     @Test

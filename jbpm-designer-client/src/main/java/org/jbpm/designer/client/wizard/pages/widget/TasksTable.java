@@ -21,6 +21,7 @@ import org.jbpm.designer.client.shared.Task;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class TasksTable extends DeletableFlexTable<ListTaskDetail, Task> {
 
@@ -108,19 +109,18 @@ public class TasksTable extends DeletableFlexTable<ListTaskDetail, Task> {
         container.getRowFormatter().getElement(row).setId(id);
     }
 
-    public void highlightRows(List<Integer> rows) {
-        for(int i = 0; i < container.getRowCount(); i++) {
-            if(!rows.contains(i)) {
-                if(container.getRowFormatter().getStyleName(i).contains("selectedRow")) {
-                    container.getRowFormatter().removeStyleName(i, "selectedRow");
-                }
-            } else {
-                if(container.getRowFormatter().getStyleName(i).contains("redRow")) {
-                    container.getRowFormatter().removeStyleName(i, "redRow");
-                }
-                if(!container.getRowFormatter().getStyleName(i).contains("selectedRow")) {
-                    container.getRowFormatter().addStyleName(i, "selectedRow");
-                }
+    public void highlightCells(Map<Integer, List<Integer>> cells) {
+
+        for(int row = 0; row < container.getRowCount(); row++) {
+            for (int column = 0; column < container.getCellCount(row); column++) {
+                container.getCellFormatter().removeStyleName(row, column, "selectedRow");
+                container.getCellFormatter().removeStyleName(row, column, "redRow");
+            }
+        }
+
+        for(int row : cells.keySet()) {
+            for(int column : cells.get(row)) {
+                container.getCellFormatter().addStyleName(row, column, "selectedRow");
             }
         }
     }

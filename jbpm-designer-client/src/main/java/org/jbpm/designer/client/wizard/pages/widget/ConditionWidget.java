@@ -16,7 +16,6 @@
 package org.jbpm.designer.client.wizard.pages.widget;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.logical.shared.HasValueChangeHandlers;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -32,7 +31,7 @@ import org.gwtbootstrap3.client.ui.ValueListBox;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
-import org.jbpm.designer.client.shared.Condition;
+import org.jbpm.designer.client.shared.Task;
 import org.jbpm.designer.client.shared.Variable;
 
 import javax.enterprise.context.Dependent;
@@ -40,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Dependent
-public class ConditionWidget extends Composite implements HasModel<Condition>, HasValue<Condition>, HasValueChangeHandlers<Condition> {
+public class ConditionWidget extends Composite implements HasModel<Task>, HasValue<Task> {
 
     interface ConditionWidgetBinder
             extends
@@ -49,7 +48,7 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
 
     private static ConditionWidgetBinder uiBinder = GWT.create(ConditionWidgetBinder.class);
 
-    DataBinder<Condition> binder = DataBinder.forType(Condition.class);
+    DataBinder<Task> binder = DataBinder.forType(Task.class);
 
     @UiField(provided = true)
     ValueListBox<Variable> variable = new ValueListBox<Variable>(new ToStringRenderer());
@@ -75,19 +74,11 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
     public ConditionWidget() {
         initWidget(uiBinder.createAndBindUi(this));
 
-        binder.bind(variable, "constraint.variable").bind(constraint, "constraint.constraint").bind(constraintValue, "constraint.constraintValue").getModel();
-
-        constraintSatisfied.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Boolean> valueChangeEvent) {
-                Condition model = getModel();
-                int positive = model.getPositiveTaskId();
-                int negative = model.getNegativeTaskId();
-                model.setPositiveTaskId(negative);
-                model.setNegativeTaskId(positive);
-                setModel(model);
-            }
-        });
+        binder.bind(variable, "condition.constraint.variable")
+            .bind(constraint, "condition.constraint.constraint")
+            .bind(constraintValue, "condition.constraint.constraintValue")
+            .bind(constraintSatisfied, "condition.executeIfConstraintSatisfied")
+            .getModel();
 
         variable.addValueChangeHandler(new ValueChangeHandler<Variable>() {
             @Override
@@ -99,35 +90,35 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
     }
 
     @Override
-    public Condition getModel() {
+    public Task getModel() {
         return binder.getModel();
     }
 
     @Override
-    public void setModel(Condition condition) {
-        binder.setModel(condition);
+    public void setModel(Task task) {
+        binder.setModel(task);
     }
 
     @Override
-    public Condition getValue() {
+    public Task getValue() {
         return getModel();
     }
 
     @Override
-    public void setValue(Condition condition) {
-        setValue(condition, false);
+    public void setValue(Task task) {
+        setValue(task, false);
     }
 
     @Override
-    public void setValue(Condition condition, boolean fireEvents) {
-        setModel(condition);
+    public void setValue(Task task, boolean fireEvents) {
+        setModel(task);
         if(fireEvents) {
-            ValueChangeEvent.fire(this, condition);
+            ValueChangeEvent.fire(this, task);
         }
     }
 
     @Override
-    public HandlerRegistration addValueChangeHandler(ValueChangeHandler<Condition> valueChangeHandler) {
+    public HandlerRegistration addValueChangeHandler(ValueChangeHandler<Task> valueChangeHandler) {
         return addHandler(valueChangeHandler, ValueChangeEvent.getType());
     }
 
@@ -140,15 +131,14 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
     }
 
     public void rebind() {
-        binder.bind(variable, "constraint.variable").bind(constraint, "constraint.constraint").bind(constraintValue, "constraint.constraintValue");
+        binder.bind(variable, "condition.constraint.variable")
+                .bind(constraint, "condition.constraint.constraint")
+                .bind(constraintValue, "condition.constraint.constraintValue")
+                .bind(constraintSatisfied, "condition.executeIfConstraintSatisfied");
     }
 
     public void setPropertyChangeHandler(PropertyChangeHandler handler) {
         binder.addPropertyChangeHandler(handler);
-    }
-
-    public void setConstraintSatisfied(boolean value) {
-        constraintSatisfied.setValue(value, false);
     }
 
     public void setVariableHelpVisibility(boolean value) {

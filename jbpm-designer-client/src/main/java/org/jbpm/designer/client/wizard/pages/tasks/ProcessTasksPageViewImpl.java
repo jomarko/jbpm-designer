@@ -1,3 +1,18 @@
+/*
+ * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 package org.jbpm.designer.client.wizard.pages.tasks;
 
 import com.google.gwt.core.client.GWT;
@@ -9,8 +24,6 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.Button;
-import org.gwtbootstrap3.client.ui.NavTabs;
-import org.gwtbootstrap3.client.ui.TabPanel;
 import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jbpm.designer.client.shared.*;
@@ -19,7 +32,9 @@ import org.jbpm.designer.client.wizard.pages.widget.*;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Dependent
 public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksPageView, DeletableFlexTable.RowsHandler {
@@ -33,7 +48,7 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
 
     private boolean isSelectingActive;
 
-    private List<Integer> lastSelectedRows = new ArrayList<Integer>();
+    private Map<Integer, List<Integer>> lastSelectedCells;
 
     private Presenter presenter;
 
@@ -78,12 +93,10 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         tasksContainer.registerRowsHandler(this);
         taskDetail.setPropertyChangeChandler(getHandler());
         conditionWidget.setPropertyChangeHandler(getHandler());
-        taskIO.setTaskInputsChangedHandler((ProcessTasksPage) presenter);
 
         tasksContainer.clear();
         isSelectingActive = false;
-        lastSelectedRows = new ArrayList<Integer>();
-
+        lastSelectedCells = new HashMap<Integer, List<Integer>>();
     }
 
     @Override
@@ -92,13 +105,13 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
-    public void rowSelected(Widget widget, Integer row) {
+    public void cellSelected(Widget widget, Integer row, Integer column) {
         lastSelectedWidget = (ListTaskDetail) widget;
         if (isSelectingActive) {
-            addToLastSelected(row);
+            addToLastSelected(row, column);
         } else {
-            lastSelectedRows.clear();
-            addToLastSelected(row);
+            lastSelectedCells.clear();
+            addToLastSelected(row, column);
         }
         presenter.rowSelected();
     }
@@ -172,7 +185,7 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
 
     @Override
     public List<Integer> getSelectedRows() {
-        return lastSelectedRows;
+        return new ArrayList<Integer>(lastSelectedCells.keySet());
     }
 
     @Override
@@ -181,14 +194,14 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
-    public void deselectAllRows() {
-        lastSelectedRows.clear();
-        tasksContainer.highlightRows(lastSelectedRows);
+    public void deselectAll() {
+        lastSelectedCells.clear();
+        tasksContainer.highlightCells(lastSelectedCells);
     }
 
     @Override
-    public void highlightSelectedRows() {
-        tasksContainer.highlightRows(lastSelectedRows);
+    public void highlightSelected() {
+        tasksContainer.highlightCells(lastSelectedCells);
     }
 
     @Override
@@ -216,6 +229,7 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
 
         taskDetail.unbind();
         conditionWidget.unbind();
+        taskIO.unbind();
     }
 
     @Override
@@ -223,12 +237,15 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         lastSelectedWidget.rebind();
         taskDetail.rebind();
         conditionWidget.rebind();
+        taskIO.rebind();
     }
 
     @Override
     public void setModelForSelectedWidget(Task model) {
         lastSelectedWidget.setModel(model);
         taskDetail.setModel(model);
+        conditionWidget.setModel(model);
+        taskIO.setModel(model);
     }
 
     @Override
@@ -244,21 +261,6 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         } else {
             return null;
         }
-    }
-
-    @Override
-    public void setConditionModel(Condition condition) {
-        conditionWidget.setModel(condition);
-    }
-
-    @Override
-    public void showConditionAsPositive() {
-        conditionWidget.setConstraintSatisfied(true);
-    }
-
-    @Override
-    public void showConditionAsNegative() {
-        conditionWidget.setConstraintSatisfied(false);
     }
 
     @Override
@@ -278,12 +280,14 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
 
     @Override
     public void showAsValid(int taskId) {
-        tasksContainer.setNormalRowColor(rowOfTask(taskId));
+        int row = rowOfTask(taskId);
+        tasksContainer.setNormalRowColor(row, columnOfTask(row, taskId));
     }
 
     @Override
     public void showAsInvalid(int taskId) {
-        tasksContainer.setRedRowColor(rowOfTask(taskId));
+        int row = rowOfTask(taskId);
+        tasksContainer.setRedRowColor(row, columnOfTask(row, taskId));
     }
 
     @Override
@@ -366,13 +370,29 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         return 0;
     }
 
-    private void addToLastSelected(Integer row) {
-        if(lastSelectedRows.contains(row)) {
-            if(!presenter.isRowCondition(row) && !presenter.isRowParallel(row)) {
-                lastSelectedRows.remove(row);
+    private int columnOfTask(int row, int taskId) {
+        int column = 0;
+        for(Task t : tasksContainer.getRowModels(row)) {
+            if (t.getId() == taskId) {
+                return column;
             }
+            column++;
+        }
+
+        return 0;
+    }
+
+    private void addToLastSelected(Integer row, Integer column) {
+        if(!lastSelectedCells.keySet().contains(row)) {
+            lastSelectedCells.put(row, new ArrayList<Integer>());
+        }
+        List<Integer> columns = lastSelectedCells.get(row);
+        if(!columns.contains(column)) {
+            columns.add(column);
+            lastSelectedCells.put(row, columns);
         } else {
-            lastSelectedRows.add(row);
+            columns.remove(column);
+            lastSelectedCells.put(row, columns);
         }
     }
 }

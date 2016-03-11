@@ -2,6 +2,8 @@ package org.jbpm.designer.client.shared;
 
 import org.jboss.errai.databinding.client.api.Bindable;
 
+import java.util.List;
+
 @Bindable
 public class Task {
 
@@ -21,6 +23,12 @@ public class Task {
     private String operation;
 
     private String taskType;
+
+    private Condition condition;
+
+    private List<Variable> inputs;
+
+    private Variable output;
 
     public Task() {
         id = lastId++;
@@ -79,6 +87,30 @@ public class Task {
         this.taskType = taskType;
     }
 
+    public Condition getCondition() {
+        return condition;
+    }
+
+    public void setCondition(Condition condition) {
+        this.condition = condition;
+    }
+
+    public List<Variable> getInputs() {
+        return inputs;
+    }
+
+    public void setInputs(List<Variable> inputs) {
+        this.inputs = inputs;
+    }
+
+    public Variable getOutput() {
+        return output;
+    }
+
+    public void setOutput(Variable output) {
+        this.output = output;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -94,6 +126,12 @@ public class Task {
             return false;
         if (getOperation() != null ? !getOperation().equals(task.getOperation()) : task.getOperation() != null)
             return false;
+        if (getCondition() != null ? !getCondition().equals(task.getCondition()) : task.getCondition() != null)
+            return false;
+        if (getInputs() != null ? !getInputs().equals(task.getInputs()) : task.getInputs() != null)
+            return false;
+        if (getOutput() != null ? !getOutput().equals(task.getOutput()) : task.getOutput() != null)
+            return false;
         return getTaskType() != null ? getTaskType().equals(task.getTaskType()) : task.getTaskType() == null;
 
     }
@@ -106,6 +144,9 @@ public class Task {
         result = 31 * result + (getResponsibleGroup() != null ? getResponsibleGroup().hashCode() : 0);
         result = 31 * result + (getOperation() != null ? getOperation().hashCode() : 0);
         result = 31 * result + (getTaskType() != null ? getTaskType().hashCode() : 0);
+        result = 31 * result + (getCondition() != null ? getCondition().hashCode() : 0);
+        result = 31 * result + (getInputs() != null ? getInputs().hashCode() : 0);
+        result = 31 * result + (getOutput() != null ? getOutput().hashCode() : 0);
         return result;
     }
 
@@ -118,6 +159,7 @@ public class Task {
                 ", responsibleGroup=" + responsibleGroup +
                 ", operation='" + operation + '\'' +
                 ", taskType='" + taskType + '\'' +
+                ", condition='" + condition + '\'' +
                 '}';
     }
 }

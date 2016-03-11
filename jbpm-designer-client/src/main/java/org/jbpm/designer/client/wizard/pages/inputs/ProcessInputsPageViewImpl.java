@@ -58,7 +58,7 @@ public class ProcessInputsPageViewImpl extends Composite implements ProcessInput
     }
 
     @Override
-    public void rowSelected(Widget widget, Integer row) {
+    public void cellSelected(Widget widget, Integer row, Integer column) {
 
     }
 
@@ -80,11 +80,11 @@ public class ProcessInputsPageViewImpl extends Composite implements ProcessInput
 
     @Override
     public void showAsValid(int row) {
-        inputs.setNormalRowColor(row);
+        inputs.setNormalRowColor(row, 0);
     }
 
     @Override
     public void showAsInvalid(int row) {
-        inputs.setRedRowColor(row);
+        inputs.setRedRowColor(row, 0);
     }
 }
