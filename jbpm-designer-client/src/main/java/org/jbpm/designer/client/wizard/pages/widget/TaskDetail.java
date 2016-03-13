@@ -27,9 +27,11 @@ import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.*;
 import org.jboss.errai.databinding.client.api.DataBinder;
+import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
 import org.jbpm.designer.client.shared.*;
+import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPageView;
 
 import javax.enterprise.context.Dependent;
 import java.util.List;
@@ -45,6 +47,8 @@ public class TaskDetail extends Composite implements HasModel<Task> {
     private static TaskDetailBinder uiBinder = GWT.create(TaskDetailBinder.class);
 
     private DataBinder<Task> dataBinder = DataBinder.forType(Task.class);
+
+    private ProcessTasksPageView.Presenter presenter;
 
     @UiField(provided = true)
     ValueListBox<String> taskType = new ValueListBox<String>(new ToStringRenderer());
@@ -96,6 +100,17 @@ public class TaskDetail extends Composite implements HasModel<Task> {
 
         taskType.setValue(Task.SERVICE_TYPE, true);
         taskType.setValue(Task.HUMAN_TYPE, true);
+
+        dataBinder.addPropertyChangeHandler(new PropertyChangeHandler() {
+            @Override
+            public void onPropertyChange(PropertyChangeEvent propertyChangeEvent) {
+                presenter.firePageChangedEvent();
+            }
+        });
+    }
+
+    public void init(ProcessTasksPageView.Presenter presenter) {
+        this.presenter = presenter;
     }
 
     @Override

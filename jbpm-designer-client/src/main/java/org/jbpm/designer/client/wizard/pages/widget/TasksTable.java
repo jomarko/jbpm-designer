@@ -19,9 +19,7 @@ import com.google.gwt.user.client.ui.Widget;
 import org.jbpm.designer.client.shared.Task;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class TasksTable extends DeletableFlexTable<ListTaskDetail, Task> {
 
@@ -44,18 +42,20 @@ public class TasksTable extends DeletableFlexTable<ListTaskDetail, Task> {
         for(int i = 0; i < container.getCellCount(row) - 1; i++) {
             Widget widget = container.getWidget(row, i);
             if(widget != null) {
-                result.add(((ListTaskDetail)widget).getModel());
+                if(widget instanceof ListTaskDetail) {
+                    result.add(((ListTaskDetail) widget).getModel());
+                }
             }
         }
         return result;
     }
 
-    public List<ListTaskDetail> getRowWidgets(int row) {
-        List<ListTaskDetail> result = new ArrayList<ListTaskDetail>();
+    public List<Widget> getRowWidgets(int row) {
+        List<Widget> result = new ArrayList<Widget>();
         for(int i = 0; i < container.getCellCount(row) - 1; i++) {
             Widget widget = container.getWidget(row, i);
             if(widget != null) {
-                result.add((ListTaskDetail)widget);
+                result.add(widget);
             }
         }
         return result;
@@ -65,63 +65,48 @@ public class TasksTable extends DeletableFlexTable<ListTaskDetail, Task> {
         return container.getRowCount();
     }
 
-    public int merge(List<Integer> rows) {
-        Collections.sort(rows);
-
-        int firstRow = rows.get(0);
-
-        for(int i = 1; i < rows.size(); i++) {
-            int cellCount = container.getCellCount(rows.get(i));
-            for (int cell = 0; cell < cellCount - 1; cell++) {
-                container.insertCell(firstRow, container.getCellCount(firstRow) - 1);
-                container.setWidget(firstRow, container.getCellCount(firstRow) - 2, container.getWidget(rows.get(i), cell));
-            }
+    public void split(TasksHolder holder) {
+        for(int i = 1; i < holder.getTasks().size(); i++) {
+            int newRow = container.insertRow(getRowOfWidget(holder));
+            container.setWidget(newRow, 0, holder.getTasks().get(i));
+            container.setWidget(newRow, 1, getDeleteButton());
         }
 
-        for(int i = 1; i < rows.size(); i++) {
-            container.removeRow(rows.get(i) - i + 1);
-        }
-
-        return firstRow;
+        container.setWidget(getRowOfWidget(holder), 0, holder.getTasks().get(0));
     }
 
-    public void split(int row) {
-        List<Widget> widgets = new ArrayList<Widget>();
-        int cellCount = container.getCellCount(row);
-        for(int i = 1; i < cellCount - 1; i++) {
-            widgets.add(container.getWidget(row, 1));
-            container.removeCell(row, 1);
-        }
-
-        for(Widget widget : widgets) {
-            int newRow = container.insertRow(row);
-            container.setWidget(newRow, 0, widget);
-            container.setWidget(newRow, 1, getDeleteButton(widget));
-        }
-
-    }
-
-    public String getRowId(int row) {
-        return container.getRowFormatter().getElement(row).getId();
-    }
-
-    public void setRowId(int row, String id) {
-        container.getRowFormatter().getElement(row).setId(id);
-    }
-
-    public void highlightCells(Map<Integer, List<Integer>> cells) {
-
+    public void highlightWidgets(List<Widget> widgets) {
         for(int row = 0; row < container.getRowCount(); row++) {
             for (int column = 0; column < container.getCellCount(row); column++) {
                 container.getCellFormatter().removeStyleName(row, column, "selectedRow");
                 container.getCellFormatter().removeStyleName(row, column, "redRow");
+
+                Widget widget = container.getWidget(row, column);
+                if (widgets.contains(widget)) {
+                    container.getCellFormatter().addStyleName(row, column, "selectedRow");
+                }
+            }
+        }
+    }
+
+    public int getRowOfWidget(Widget widget) {
+        for(int row = 0; row < container.getRowCount(); row++) {
+            for (int column = 0; column < container.getCellCount(row); column++) {
+
+                if(widget == container.getWidget(row, column)) {
+                    return row;
+                }
             }
         }
 
-        for(int row : cells.keySet()) {
-            for(int column : cells.get(row)) {
-                container.getCellFormatter().addStyleName(row, column, "selectedRow");
-            }
-        }
+        return -1;
+    }
+
+    public void removeRow(int row) {
+        container.removeRow(row);
+    }
+
+    public void setWidget(int row, int column, Widget widget) {
+        container.setWidget(row, column, widget);
     }
 }

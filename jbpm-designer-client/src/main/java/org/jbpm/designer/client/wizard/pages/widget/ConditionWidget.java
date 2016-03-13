@@ -29,10 +29,12 @@ import org.gwtbootstrap3.client.ui.HelpBlock;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.ValueListBox;
 import org.jboss.errai.databinding.client.api.DataBinder;
+import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
 import org.jbpm.designer.client.shared.Task;
 import org.jbpm.designer.client.shared.Variable;
+import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPageView;
 
 import javax.enterprise.context.Dependent;
 import java.util.ArrayList;
@@ -49,6 +51,8 @@ public class ConditionWidget extends Composite implements HasModel<Task>, HasVal
     private static ConditionWidgetBinder uiBinder = GWT.create(ConditionWidgetBinder.class);
 
     DataBinder<Task> binder = DataBinder.forType(Task.class);
+
+    private ProcessTasksPageView.Presenter presenter;
 
     @UiField(provided = true)
     ValueListBox<Variable> variable = new ValueListBox<Variable>(new ToStringRenderer());
@@ -87,6 +91,17 @@ public class ConditionWidget extends Composite implements HasModel<Task>, HasVal
                 constraint.setAcceptableValues(getConstraints(valueChangeEvent.getValue()));
             }
         });
+
+        binder.addPropertyChangeHandler(new PropertyChangeHandler() {
+            @Override
+            public void onPropertyChange(PropertyChangeEvent propertyChangeEvent) {
+                presenter.firePageChangedEvent();
+            }
+        });
+    }
+
+    public void init(ProcessTasksPageView.Presenter presenter) {
+        this.presenter = presenter;
     }
 
     @Override

@@ -21,7 +21,6 @@ import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.*;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.*;
 import org.gwtbootstrap3.client.ui.Button;
@@ -40,8 +39,6 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
     public interface RowsHandler<T> {
         void addedRow(Widget widget);
 
-        void cellSelected(Widget widget, Integer row, Integer column);
-
         void rowDeleted();
     }
 
@@ -58,19 +55,6 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
 
     public DeletableFlexTable() {
         initWidget(uiBinder.createAndBindUi(this));
-        container.addClickHandler(new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                HTMLTable.Cell cell = container.getCellForEvent(event);
-                for(RowsHandler handler : handlers) {
-                    Widget widget = container.getWidget(cell.getRowIndex(), cell.getCellIndex());
-                                                            ;
-                    if(!(widget instanceof Button)) {
-                        handler.cellSelected(widget, cell.getRowIndex(), cell.getCellIndex());
-                    }
-                }
-            }
-        });
-
         container.sinkEvents(Event.ONMOUSEOVER | Event.ONMOUSEOUT | Event.ONMOUSEDOWN | Event.ONMOUSEMOVE);
         container.addDomHandler(this, MouseDownEvent.getType());
         container.addDomHandler(this, MouseUpEvent.getType());
@@ -148,7 +132,7 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
         final Widget newRowWidget = getNewRowWidget();
         int row = container.getRowCount();
         container.setWidget(row, 0, newRowWidget);
-        container.setWidget(row, 1, getDeleteButton(newRowWidget));
+        container.setWidget(row, 1, getDeleteButton());
         for(RowsHandler handler : handlers) {
             handler.addedRow(newRowWidget);
         }
@@ -196,7 +180,7 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
         }
     }
 
-    protected Button getDeleteButton(final Widget widget) {
+    protected Button getDeleteButton() {
         final Button delete = new Button();
         delete.setIcon( IconType.TRASH );
         ClickHandler deleteHandler = new ClickHandler() {
@@ -204,7 +188,7 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
             public void onClick(ClickEvent clickEvent) {
 
                 for(int row = 0; row < container.getRowCount(); row++) {
-                    if(container.getWidget(row, 0) == widget) {
+                    if(container.getWidget(row, 1) == delete) {
                         container.removeRow(row);
                         break;
                     }

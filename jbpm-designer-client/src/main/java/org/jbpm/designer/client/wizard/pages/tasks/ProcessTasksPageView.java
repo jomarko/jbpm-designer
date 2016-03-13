@@ -16,7 +16,10 @@
 package org.jbpm.designer.client.wizard.pages.tasks;
 
 import com.google.gwt.user.client.ui.IsWidget;
+import com.google.gwt.user.client.ui.Widget;
 import org.jbpm.designer.client.shared.*;
+import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
+import org.jbpm.designer.client.wizard.pages.widget.TasksHolder;
 
 import java.util.List;
 
@@ -25,13 +28,11 @@ public interface ProcessTasksPageView extends IsWidget {
     interface Presenter {
         Task getDefaultModel();
 
-        boolean isRowParallel(int row);
-
-        boolean isRowCondition(int row);
-
         void rowDeleted();
 
-        void rowSelected();
+        void taskDetailSelected(ListTaskDetail detail);
+
+        void holderSelected(TasksHolder holder);
 
         void startSelection();
 
@@ -54,21 +55,17 @@ public interface ProcessTasksPageView extends IsWidget {
 
     List<Task> getTasks();
 
-    List<Task> getTasks(int row);
+    void mergeParallel(List<ListTaskDetail> widgets);
 
-    String getRowType(int row);
+    void mergeCondition(List<ListTaskDetail> widgets);
 
-    void splitRow(int row);
-
-    int mergeRows(List<Integer> rows);
-
-    void setRowType(int row, String type);
+    void split(TasksHolder holder);
 
     void setAvailableHumanParticipants(List<User> users);
 
     void setAvailableGroupParticipants(List<Group> groups);
 
-    List<Integer> getSelectedRows();
+    List<Widget> getSelectedWidgets();
 
     void showHumanSpecificDetails();
 
@@ -85,8 +82,6 @@ public interface ProcessTasksPageView extends IsWidget {
     void setModelForSelectedWidget(Task model);
 
     void setAvailableVarsForSelectedTask(List<Variable> variables);
-
-    Task getModelOfSelectedWidget();
 
     void showMergeInvalidCount();
 
@@ -117,4 +112,8 @@ public interface ProcessTasksPageView extends IsWidget {
     void setSelectedTaskInputs(List<Variable> variables);
 
     void setSelectedTaskOutput(Variable variable);
+
+    void setSplitButtonVisibility(boolean value);
+
+    void selectAllWidgetsOfHolder(TasksHolder holder);
 }

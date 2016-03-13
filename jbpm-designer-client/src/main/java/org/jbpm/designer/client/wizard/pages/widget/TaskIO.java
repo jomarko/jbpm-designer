@@ -13,10 +13,12 @@ import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.CheckBox;
 import org.gwtbootstrap3.client.ui.html.Text;
 import org.jboss.errai.databinding.client.api.DataBinder;
+import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
 import org.jbpm.designer.client.shared.Task;
 import org.jbpm.designer.client.shared.Variable;
+import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPageView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,10 +34,7 @@ public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> 
 
     private DataBinder<Task> dataBinder = DataBinder.forType(Task.class);
 
-    public TaskIO() {
-        initWidget(uiBinder.createAndBindUi(this));
-        dataBinder.bind(output, "output");
-    }
+    private ProcessTasksPageView.Presenter presenter;
 
     @UiField
     FlexTable variables;
@@ -44,6 +43,22 @@ public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> 
     InputRow output;
 
     private Map<Variable, CheckBox> variableMap = new HashMap<Variable, CheckBox>();
+
+    public TaskIO() {
+        initWidget(uiBinder.createAndBindUi(this));
+        dataBinder.bind(output, "output");
+
+        dataBinder.addPropertyChangeHandler(new PropertyChangeHandler() {
+            @Override
+            public void onPropertyChange(PropertyChangeEvent propertyChangeEvent) {
+                presenter.firePageChangedEvent();
+            }
+        });
+    }
+
+    public void init(ProcessTasksPageView.Presenter presenter) {
+        this.presenter = presenter;
+    }
 
     public void setAcceptableValues(List<Variable> vars) {
         variables.removeAllRows();

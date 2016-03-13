@@ -58,11 +58,6 @@ public class ProcessInputsPageViewImpl extends Composite implements ProcessInput
     }
 
     @Override
-    public void cellSelected(Widget widget, Integer row, Integer column) {
-
-    }
-
-    @Override
     public void rowDeleted() {
 
     }
