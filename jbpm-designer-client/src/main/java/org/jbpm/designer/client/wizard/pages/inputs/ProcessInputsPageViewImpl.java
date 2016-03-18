@@ -9,7 +9,7 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
-import org.jbpm.designer.client.shared.Variable;
+import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.client.wizard.pages.widget.DeletableFlexTable;
 import org.jbpm.designer.client.wizard.pages.widget.InputRow;
 import org.jbpm.designer.client.wizard.pages.widget.InputsTable;

@@ -19,15 +19,19 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.IsWidget;
 import org.guvnor.common.services.project.model.Package;
 import org.gwtbootstrap3.client.ui.CheckBox;
 import org.jboss.errai.common.client.api.Caller;
+import org.jboss.errai.common.client.api.ErrorCallback;
 import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.type.Bpmn2Type;
 import org.jbpm.designer.client.wizard.GuidedProcessWizard;
+import org.jbpm.designer.model.BusinessProcess;
 import org.jbpm.designer.service.DesignerAssetService;
+import org.uberfire.client.callbacks.Callback;
 import org.uberfire.commons.data.Pair;
 import org.uberfire.ext.widgets.common.client.callbacks.DefaultErrorCallback;
 import org.kie.workbench.common.widgets.client.handlers.DefaultNewResourceHandler;
@@ -37,6 +41,10 @@ import org.uberfire.client.mvp.PlaceManager;
 import org.uberfire.mvp.PlaceRequest;
 import org.uberfire.mvp.impl.PathPlaceRequest;
 import org.uberfire.workbench.type.ResourceTypeDefinition;
+
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 @ApplicationScoped
 public class NewProcessHandler extends DefaultNewResourceHandler {
@@ -92,10 +100,31 @@ public class NewProcessHandler extends DefaultNewResourceHandler {
             }, new DefaultErrorCallback()).createProcess(pkg.getPackageMainResourcesPath(), buildFileName(baseFileName,
                     resourceType));
         } else {
-            wizard.setPackagePath(pkg.getPackageMainResourcesPath());
-            wizard.setFileName(buildFileName(baseFileName, resourceType));
             wizard.setProcessName(baseFileName);
+            wizard.setHandler(NewProcessHandler.this);
+            wizard.setCompleteProcessCallback(completeProcessCallback(pkg.getPackageMainResourcesPath(),
+                                                                      buildFileName(baseFileName, resourceType),
+                                                                      presenter));
             wizard.start();
         }
+    }
+
+    private Callback<BusinessProcess> completeProcessCallback(final Path resourcePath,
+                                                              final String fileName,
+                                                              final NewResourcePresenter presenter) {
+        return new Callback<BusinessProcess>() {
+            @Override
+            public void callback(BusinessProcess process) {
+                designerAssetService.call(new RemoteCallback<Path>() {
+                    @Override
+                    public void callback(Path path) {
+                        presenter.complete();
+                        notifySuccess();
+                        PlaceRequest place = new PathPlaceRequest(path);
+                        placeManager.goTo(place);
+                    }
+                }, new DefaultErrorCallback()).createProcess(resourcePath, fileName, process);
+            }
+        };
     }
 }

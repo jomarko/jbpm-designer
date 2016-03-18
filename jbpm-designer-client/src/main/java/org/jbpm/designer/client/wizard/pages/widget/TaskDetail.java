@@ -16,22 +16,21 @@
 package org.jbpm.designer.client.wizard.pages.widget;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.*;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
-import org.jbpm.designer.client.shared.*;
 import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPageView;
+import org.jbpm.designer.model.Group;
+import org.jbpm.designer.model.Task;
+import org.jbpm.designer.model.User;
 
 import javax.enterprise.context.Dependent;
 import java.util.List;

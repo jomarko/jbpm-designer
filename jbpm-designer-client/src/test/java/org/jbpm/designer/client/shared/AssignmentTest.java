@@ -17,6 +17,7 @@
 package org.jbpm.designer.client.shared;
 
 import org.jbpm.designer.client.shared.util.StringUtils;
+import org.jbpm.designer.model.Variable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

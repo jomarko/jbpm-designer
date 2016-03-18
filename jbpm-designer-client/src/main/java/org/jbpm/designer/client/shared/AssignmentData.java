@@ -24,7 +24,8 @@ import java.util.Map;
 
 import org.jboss.errai.common.client.api.annotations.Portable;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
-import org.jbpm.designer.client.shared.Variable.VariableType;
+import org.jbpm.designer.model.Variable;
+import org.jbpm.designer.model.Variable.VariableType;
 import org.jbpm.designer.client.shared.util.StringUtils;
 
 /**
@@ -81,7 +82,7 @@ public class AssignmentData {
      * @param outputAssignmentRows
      */
     public AssignmentData(List<AssignmentRow> inputAssignmentRows, List<AssignmentRow> outputAssignmentRows,
-            List<String> dataTypes, List<String> dataTypeDisplayNames) {
+                          List<String> dataTypes, List<String> dataTypeDisplayNames) {
         setDataTypes(dataTypes, dataTypeDisplayNames);
         if (inputAssignmentRows != null) {
             for (AssignmentRow row : inputAssignmentRows) {

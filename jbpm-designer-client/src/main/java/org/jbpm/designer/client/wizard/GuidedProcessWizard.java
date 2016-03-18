@@ -16,8 +16,10 @@
 package org.jbpm.designer.client.wizard;
 
 import com.google.gwt.user.client.ui.Widget;
+import org.jbpm.designer.client.handlers.NewProcessHandler;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
-import org.jbpm.designer.client.shared.Variable;
+import org.jbpm.designer.model.BusinessProcess;
+import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.client.wizard.pages.general.GeneralProcessInfoPage;
 import org.jbpm.designer.client.wizard.pages.inputs.ProcessInputsPage;
 import org.jbpm.designer.client.wizard.pages.preview.ProcessPreviewPage;
@@ -52,7 +54,14 @@ public class GuidedProcessWizard extends AbstractWizard {
     @Inject
     ProcessPreviewPage previewPage;
 
+    Callback<BusinessProcess> completeProcessCallback;
+
+    private NewProcessHandler handler;
+
     private List<WizardPage> pages;
+
+    private Path packagePath;
+    private String fileName;
 
     @PostConstruct
     public void setupPages() {
@@ -115,12 +124,14 @@ public class GuidedProcessWizard extends AbstractWizard {
         }
     }
 
-    public void setPackagePath(Path packagePath) {
-
+    @Override
+    public void complete() {
+        super.complete();
+        completeProcessCallback.callback(constructBusinessProcess());
     }
 
-    public void setFileName(String fileName) {
-
+    public void setHandler(NewProcessHandler handler) {
+        this.handler = handler;
     }
 
     public void setProcessName(String processName){
@@ -130,4 +141,16 @@ public class GuidedProcessWizard extends AbstractWizard {
     public List<Variable> getInitialInputs() {
         return inputsPage.getInputs();
     }
+
+    public void setCompleteProcessCallback(Callback<BusinessProcess> completeProcessCallback) {
+        this.completeProcessCallback = completeProcessCallback;
+    }
+
+    private BusinessProcess constructBusinessProcess() {
+        BusinessProcess businessProcess = new BusinessProcess();
+        businessProcess.setVariables(inputsPage.getInputs());
+        businessProcess.setTasks(tasksPage.getTasks());
+        return businessProcess;
+    }
+
 }

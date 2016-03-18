@@ -26,7 +26,7 @@ import org.gwtbootstrap3.client.ui.ValueListBox;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
-import org.jbpm.designer.client.shared.Variable;
+import org.jbpm.designer.model.Variable;
 
 public class InputRow extends Composite implements HasModel<Variable>, HasValue<Variable> {
 

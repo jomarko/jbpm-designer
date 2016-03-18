@@ -10,5 +10,6 @@
   <source path='service'/>
   <source path='notification'/>
   <source path='type'/>
+  <source path='model'/>
 
 </module>

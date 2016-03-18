@@ -42,7 +42,7 @@ import org.jboss.errai.ui.shared.api.annotations.EventHandler;
 import org.jboss.errai.ui.shared.api.annotations.Templated;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.shared.AssignmentRow;
-import org.jbpm.designer.client.shared.Variable.VariableType;
+import org.jbpm.designer.model.Variable.VariableType;
 import org.jbpm.designer.client.shared.util.StringUtils;
 import org.jbpm.designer.client.util.ComboBox;
 import org.jbpm.designer.client.util.ComboBoxView;

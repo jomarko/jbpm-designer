@@ -30,7 +30,7 @@ import org.gwtbootstrap3.client.ui.constants.IconType;
 import org.gwtbootstrap3.client.ui.constants.Pull;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.shared.AssignmentRow;
-import org.jbpm.designer.client.shared.Variable.VariableType;
+import org.jbpm.designer.model.Variable.VariableType;
 import org.jbpm.designer.client.util.ListBoxValues;
 import org.uberfire.ext.widgets.common.client.common.popups.BaseModal;
 

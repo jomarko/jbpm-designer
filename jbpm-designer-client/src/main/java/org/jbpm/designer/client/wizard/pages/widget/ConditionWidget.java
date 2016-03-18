@@ -32,8 +32,8 @@ import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
-import org.jbpm.designer.client.shared.Task;
-import org.jbpm.designer.client.shared.Variable;
+import org.jbpm.designer.model.Task;
+import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPageView;
 
 import javax.enterprise.context.Dependent;
@@ -175,7 +175,7 @@ public class ConditionWidget extends Composite implements HasModel<Task>, HasVal
         if(var.getDataType() == "number") {
             constraints.add("greater");
             constraints.add("lesser");
-        }
+        }a
         return constraints;
     }
 }

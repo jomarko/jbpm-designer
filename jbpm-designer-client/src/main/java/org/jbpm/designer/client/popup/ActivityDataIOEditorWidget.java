@@ -18,7 +18,7 @@ package org.jbpm.designer.client.popup;
 
 import com.google.gwt.user.client.ui.Widget;
 import org.jbpm.designer.client.shared.AssignmentRow;
-import org.jbpm.designer.client.shared.Variable.VariableType;
+import org.jbpm.designer.model.Variable.VariableType;
 import org.jbpm.designer.client.util.ListBoxValues;
 
 import javax.annotation.PostConstruct;

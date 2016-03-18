@@ -17,7 +17,7 @@
 package org.jbpm.designer.client.shared;
 
 import org.jboss.errai.databinding.client.api.Bindable;
-import org.jbpm.designer.client.shared.Variable.VariableType;
+import org.jbpm.designer.model.Variable.VariableType;
 
 /**
  * Class which is bound to rows in the DataIOEditor

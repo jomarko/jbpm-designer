@@ -16,17 +16,14 @@
 package org.jbpm.designer.server.service;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
@@ -47,8 +44,17 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.util.EntityUtils;
 import org.guvnor.common.services.shared.metadata.model.Metadata;
+import org.eclipse.bpmn2.*;
+import org.eclipse.bpmn2.Process;
+import org.eclipse.bpmn2.di.*;
+import org.eclipse.dd.dc.Bounds;
+import org.eclipse.dd.dc.DcFactory;
+import org.eclipse.dd.di.DiagramElement;
 import org.guvnor.common.services.shared.metadata.model.Overview;
 import org.jboss.errai.bus.server.annotations.Service;
+import org.jbpm.designer.bpmn2.impl.Bpmn2JsonMarshaller;
+import org.jbpm.designer.model.*;
+import org.jbpm.designer.model.Task;
 import org.jbpm.designer.repository.Asset;
 import org.jbpm.designer.repository.AssetBuilderFactory;
 import org.jbpm.designer.repository.Repository;
@@ -59,6 +65,7 @@ import org.jbpm.designer.service.BPMN2DataServices;
 import org.jbpm.designer.service.DesignerAssetService;
 import org.jbpm.designer.service.DesignerContent;
 import org.jbpm.designer.util.Utils;
+import org.jbpm.designer.web.profile.impl.JbpmProfileImpl;
 import org.json.JSONArray;
 import org.kie.workbench.common.services.backend.service.KieService;
 import org.slf4j.Logger;
@@ -208,16 +215,13 @@ public class DefaultDesignerAssetService
         return UUID.randomUUID().toString().replaceAll( "-", "" );
     }
 
-    @Override
-    public Path createProcess( final Path context,
-                               final String fileName ) {
+    private Path createProcess( final Path context,
+                               final String fileName,
+                               final String processContent ) {
 
         final Path path = Paths.convert( Paths.convert( context ).resolve( fileName ) );
         String location = Paths.convert( path ).getParent().toString();
         String name = path.getFileName();
-        String processId = buildProcessId( location, name );
-
-        String processContent = PROCESS_STUB.replaceAll( "\\$\\{processid\\}", processId.replaceAll("\\s", "") );
 
         AssetBuilder builder = AssetBuilderFactory.getAssetBuilder( name );
         builder.location( location ).content( processContent ).uniqueId( path.toURI() );
@@ -227,19 +231,49 @@ public class DefaultDesignerAssetService
         return path;
     }
 
+    @Override
+    public Path createProcess( final Path context,
+                               final String fileName ) {
+
+        final Path path = Paths.convert( Paths.convert( context ).resolve( fileName ) );
+        String location = Paths.convert( path ).getParent().toString();
+        String name = path.getFileName();
+        String processId = buildProcessId( location, name );
+        String processContent = PROCESS_STUB.replaceAll( "\\$\\{processid\\}", processId.replaceAll("\\s", "") );
+        return createProcess(context, fileName, processContent);
+    }
+
+    @Override
+    public Path createProcess(Path context, String fileName, BusinessProcess businessProcess) {
+        createProcess();
+        int horizontalOffset = 100;
+        FlowElement from = createStartEvent(horizontalOffset);
+        FlowElement to;
+        createProcessVariables(businessProcess.getVariables());
+        for(Task task : businessProcess.getTasks()) {
+            horizontalOffset += 150;
+            to = createTask(task, horizontalOffset);
+            createEdge(from, to);
+            from = to;
+        }
+        to = createEndEvent(horizontalOffset + 150);
+        createEdge(from, to);
+        return createProcess(context, fileName, convertProcessToXml());
+    }
+
     private String getEditorResponse(String urlpath,
                                      String encProcessSrc ) {
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
-    
+
         // convert string to url in order to get host and port
         URL url;
-        try { 
+        try {
             url = new URL(urlpath);
-        } catch( MalformedURLException murle ) { 
+        } catch( MalformedURLException murle ) {
             logger.error( "Incorrect URL: " + murle.getMessage(), murle );
             return null;
         }
-       
+
         // configure socket to ignore local addresses (this constructur instead of full constructor)
         Socket socket;
         try {
@@ -249,10 +283,10 @@ public class DefaultDesignerAssetService
         } catch( Exception  e ) {
             e.printStackTrace();
         }
-      
-        // TODO: tiho, if it's possible to do preemptive basic authentication here (which it is?, I think?), please let me know. 
+
+        // TODO: tiho, if it's possible to do preemptive basic authentication here (which it is?, I think?), please let me know.
         // Then you can do everything in one request, which will improve performance.. :) -- mriet
-       
+
         // setup form authentication
         List<NameValuePair> formParams = new ArrayList<NameValuePair>(2);
         formParams.add(new BasicNameValuePair("j_username", "admin"));
@@ -264,7 +298,7 @@ public class DefaultDesignerAssetService
             logger.error("Could not encode authentication parameters into request body", uee);
             return null;
         }
-       
+
         // do form authentication
         HttpPost authMethod = new HttpPost(urlpath);
         authMethod.setEntity(formEntity);
@@ -276,22 +310,22 @@ public class DefaultDesignerAssetService
         } finally {
             authMethod.releaseConnection();
         }
-       
+
         // create post method and add query parameter
         HttpPost theMethod = new HttpPost( urlpath );
         BasicHttpParams params = new BasicHttpParams();
         params.setParameter( "processsource", encProcessSrc );
         theMethod.setParams(params);
-        
+
         // execute post method and return response content
         try {
             // post
             CloseableHttpResponse response = httpClient.execute( theMethod );
-            
+
             // extract content
             HttpEntity respEntity = response.getEntity();
             String responseBody = null;
-            if( respEntity != null ) { 
+            if( respEntity != null ) {
                 responseBody = EntityUtils.toString(respEntity);
             }
             return responseBody;
@@ -329,5 +363,224 @@ public class DefaultDesignerAssetService
     @Override
     protected DesignerContent constructContent(Path path, Overview overview) {
         return new DesignerContent(overview);
+    }
+
+    Process process = null;
+    BPMNDiagram diagram = null;
+    private Definitions definitions = null;
+    private JbpmProfileImpl profile = new JbpmProfileImpl();
+
+    private String createProcess() {
+
+        Bpmn2JsonMarshaller marshaller = new Bpmn2JsonMarshaller();
+        marshaller.setProfile(profile);
+
+        String processId = UUID.randomUUID().toString();
+        process = Bpmn2Factory.eINSTANCE.createProcess();
+        process.setId(processId);
+
+        diagram = BpmnDiFactory.eINSTANCE.createBPMNDiagram();
+        BPMNPlane plane = BpmnDiFactory.eINSTANCE.createBPMNPlane();
+        plane.setBpmnElement(process);
+        diagram.setPlane(plane);
+
+        definitions = Bpmn2Factory.eINSTANCE.createDefinitions();
+        definitions.getRootElements().add(process);
+        definitions.getDiagrams().add(diagram);
+
+        return processId;
+    }
+
+    private FlowElement createTask(Task task, int horizontalOffset) {
+        if (process == null) {
+            throw new RuntimeException("Create process at first");
+        }
+
+        String taskId = UUID.randomUUID().toString();
+        org.eclipse.bpmn2.Task bpmnTask = null;
+        if (Task.HUMAN_TYPE.compareTo(task.getTaskType()) == 0) {
+            bpmnTask = Bpmn2Factory.eINSTANCE.createUserTask();
+            bpmnTask.setId(taskId);
+            bpmnTask.setName(task.getName());
+        }
+
+        if (Task.SERVICE_TYPE.compareTo(task.getTaskType()) == 0) {
+            bpmnTask = Bpmn2Factory.eINSTANCE.createServiceTask();
+            bpmnTask.setId(taskId);
+            bpmnTask.setName(task.getName());
+        }
+
+        BPMNShape shape = getShape(100, 80, horizontalOffset, 100);
+        shape.setBpmnElement(bpmnTask);
+
+        diagram.getPlane().getPlaneElement().add(shape);
+        process.getFlowElements().add(bpmnTask);
+
+        return bpmnTask;
+    }
+
+    private void createProcessVariables(List<Variable> variables) {
+        if(process == null) {
+            throw new RuntimeException("Create process at first");
+        }
+
+        for(Variable variable : variables) {
+            Property property = Bpmn2Factory.eINSTANCE.createProperty();
+            property.setName(variable.getName());
+        }
+    }
+
+    private FlowElement createDivergingGateway(int horizontalOffset) {
+        if(process == null) {
+            throw new RuntimeException("Create process at first");
+        }
+
+        String id = UUID.randomUUID().toString();
+        ExclusiveGateway gateway = Bpmn2Factory.eINSTANCE.createExclusiveGateway();
+        gateway.setGatewayDirection(GatewayDirection.DIVERGING);
+        gateway.setId(id);
+
+        BPMNShape shape = getShape(40, 40, horizontalOffset, 100);
+        shape.setBpmnElement(gateway);
+
+        diagram.getPlane().getPlaneElement().add(shape);
+        process.getFlowElements().add(gateway);
+        return gateway;
+    }
+
+    private FlowElement createConvergingGateway(int horizontalOffset) {
+        if(process == null) {
+            throw new RuntimeException("Create process at first");
+        }
+
+        String id = UUID.randomUUID().toString();
+        ExclusiveGateway gateway = Bpmn2Factory.eINSTANCE.createExclusiveGateway();
+        gateway.setGatewayDirection(GatewayDirection.CONVERGING);
+        gateway.setId(id);
+
+        BPMNShape shape = getShape(40, 40, horizontalOffset, 100);
+        shape.setBpmnElement(gateway);
+
+        diagram.getPlane().getPlaneElement().add(shape);
+        process.getFlowElements().add(gateway);
+        return gateway;
+    }
+
+    private FlowElement createEdge(FlowElement from, FlowElement to) {
+        if(process == null) {
+            throw new RuntimeException("Create process at first");
+        }
+
+        BPMNShape fromShape = getShapeByElement(from);
+        BPMNShape toShape = getShapeByElement(to);
+
+        String id = UUID.randomUUID().toString();
+        SequenceFlow flow = Bpmn2Factory.eINSTANCE.createSequenceFlow();
+        flow.setSourceRef((FlowNode) from);
+        flow.setTargetRef((FlowNode) to);
+        flow.setId(id);
+
+        BPMNEdge edge = BpmnDiFactory.eINSTANCE.createBPMNEdge();
+        edge.setSourceElement(fromShape);
+        edge.setTargetElement(toShape);
+        edge.setBpmnElement(flow);
+
+        diagram.getPlane().getPlaneElement().add(edge);
+        process.getFlowElements().add(flow);
+        return flow;
+    }
+
+    private BPMNShape getShapeByElement(FlowElement element) {
+        for(DiagramElement shape : diagram.getPlane().getPlaneElement()) {
+
+            if((shape instanceof BPMNShape) && ((BPMNShape)shape).getBpmnElement() == element) {
+                return (BPMNShape) shape;
+            }
+        }
+
+        return null;
+    }
+
+    private FlowElement createStartEvent(int horizontalOffset) {
+        if(process == null) {
+            throw new RuntimeException("Create process at first");
+        }
+
+        String id = UUID.randomUUID().toString();
+        StartEvent start = Bpmn2Factory.eINSTANCE.createStartEvent();
+        start.setId(id);
+
+        BPMNShape shape = getShape(28, 28, horizontalOffset, 100);
+        shape.setBpmnElement(start);
+
+        diagram.getPlane().getPlaneElement().add(shape);
+        process.getFlowElements().add(start);
+        return start;
+    }
+
+    private String setTimerForStartEvent(String timeExpression) {
+        if(process == null) {
+            throw new RuntimeException("Create process at first");
+        }
+
+        TimerEventDefinition timerEventDefinition = Bpmn2Factory.eINSTANCE.createTimerEventDefinition();
+
+        return timerEventDefinition.getId();
+    }
+
+    private String setSignalForStartEvent(String signalName) {
+        if(process == null) {
+            throw new RuntimeException("Create process at first");
+        }
+
+        SignalEventDefinition eventDefinition = Bpmn2Factory.eINSTANCE.createSignalEventDefinition();
+        Signal signal = Bpmn2Factory.eINSTANCE.createSignal();
+        signal.setName(signalName);
+        eventDefinition.setSignalRef(signal.getStructureRef().toString());
+
+        return eventDefinition.getId();
+    }
+
+    private FlowElement createEndEvent(int horizontalOffset) {
+        if(process == null) {
+            throw new RuntimeException("Create process at first");
+        }
+
+        String id = UUID.randomUUID().toString();
+        EndEvent end = Bpmn2Factory.eINSTANCE.createEndEvent();
+        end.setId(id);
+
+        BPMNShape shape = getShape(28, 28, horizontalOffset, 100);
+        shape.setBpmnElement(end);
+
+        diagram.getPlane().getPlaneElement().add(shape);
+        process.getFlowElements().add(end);
+        return end;
+    }
+
+    private String convertProcessToXml() {
+        if(process == null ) {
+            throw new RuntimeException("Create process at first");
+        }
+        Bpmn2JsonMarshaller marshaller = new Bpmn2JsonMarshaller();
+        marshaller.setProfile(profile);
+
+        try {
+            return profile.createMarshaller().parseModel(marshaller.marshall(definitions, ""), "");
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to convert your model to xml", e);
+        }
+    }
+
+    private BPMNShape getShape(int width, int height, int x, int y) {
+        BPMNShape shape = BpmnDiFactory.eINSTANCE.createBPMNShape();
+        Bounds bounds = DcFactory.eINSTANCE.createBounds();
+        bounds.setWidth(width);
+        bounds.setHeight(height);
+        bounds.setX(x);
+        bounds.setY(y);
+
+        shape.setBounds(bounds);
+        return shape;
     }
 }

@@ -27,8 +27,8 @@ import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.Button;
 import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
-import org.jbpm.designer.client.shared.*;
 import org.jbpm.designer.client.wizard.pages.widget.*;
+import org.jbpm.designer.model.*;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;

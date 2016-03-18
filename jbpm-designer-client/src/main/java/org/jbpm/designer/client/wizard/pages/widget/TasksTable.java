@@ -16,7 +16,7 @@
 package org.jbpm.designer.client.wizard.pages.widget;
 
 import com.google.gwt.user.client.ui.Widget;
-import org.jbpm.designer.client.shared.Task;
+import org.jbpm.designer.model.Task;
 
 import java.util.ArrayList;
 import java.util.List;

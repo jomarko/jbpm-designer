@@ -21,7 +21,7 @@ import java.util.Set;
 import org.jboss.errai.ui.client.widget.HasModel;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.shared.AssignmentRow;
-import org.jbpm.designer.client.shared.Variable.VariableType;
+import org.jbpm.designer.model.Variable.VariableType;
 import org.jbpm.designer.client.util.ListBoxValues;
 
 public interface AssignmentListItemWidgetView extends HasModel<AssignmentRow>  {

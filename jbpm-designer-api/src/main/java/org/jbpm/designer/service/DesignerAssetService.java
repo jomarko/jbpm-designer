@@ -17,6 +17,7 @@ package org.jbpm.designer.service;
 
 import org.guvnor.common.services.shared.metadata.model.Metadata;
 import org.jboss.errai.bus.server.annotations.Remote;
+import org.jbpm.designer.model.BusinessProcess;
 import org.uberfire.backend.vfs.Path;
 import org.uberfire.mvp.PlaceRequest;
 
@@ -41,4 +42,8 @@ public interface DesignerAssetService {
 
     public Path createProcess( final Path context,
                                final String fileName );
+
+    public Path createProcess( final Path context,
+                               final String fileName,
+                               final BusinessProcess businessProcess);
 }

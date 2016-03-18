@@ -1,10 +1,12 @@
-package org.jbpm.designer.client.shared;
+package org.jbpm.designer.model;
 
+import org.jboss.errai.common.client.api.annotations.Portable;
 import org.jboss.errai.databinding.client.api.Bindable;
 
 import java.util.List;
 
 @Bindable
+@Portable
 public class Task {
 
     public static final String HUMAN_TYPE = "Human";

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.jbpm.designer.client.wizard.pages.tasks;
+package org.jbpm.designer.client.wizard.pages.tasks;/**/
 
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Widget;
@@ -20,11 +20,11 @@ import org.jboss.errai.common.client.api.ErrorCallback;
 import org.jboss.errai.common.client.api.RemoteCallback;
 
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
-import org.jbpm.designer.client.shared.*;
 import org.jbpm.designer.client.wizard.GuidedProcessWizard;
 import org.jbpm.designer.client.wizard.pages.widget.ConstraintHolder;
 import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
 import org.jbpm.designer.client.wizard.pages.widget.TasksHolder;
+import org.jbpm.designer.model.*;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.security.management.api.AbstractEntityManager;
 import org.uberfire.ext.security.management.client.ClientUserSystemManager;
@@ -223,7 +223,6 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         view.unbindAllWidgets();
 
         Task model = detail.getModel();
-
         if(model.getTaskType() == Task.HUMAN_TYPE) {
             view.showHumanSpecificDetails();
         }
@@ -314,6 +313,10 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         }
 
         return validResult;
+    }
+
+    public List<Task> getTasks() {
+        return view.getTasks();
     }
 
     public void showHelpForSelectedTask(@Observes WizardPageStatusChangeEvent event) {

@@ -16,7 +16,8 @@
 
 package org.jbpm.designer.client.shared;
 
-import org.jbpm.designer.client.shared.Variable.VariableType;
+import org.jbpm.designer.model.Variable;
+import org.jbpm.designer.model.Variable.VariableType;
 import org.jbpm.designer.client.shared.util.StringUtils;
 
 public class Assignment {

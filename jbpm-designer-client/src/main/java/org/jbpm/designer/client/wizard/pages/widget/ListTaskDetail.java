@@ -24,7 +24,7 @@ import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
-import org.jbpm.designer.client.shared.Task;
+import org.jbpm.designer.model.Task;
 
 
 public class ListTaskDetail extends Composite implements HasModel<Task> {

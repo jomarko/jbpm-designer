@@ -31,7 +31,7 @@ import org.jboss.errai.security.shared.api.identity.User;
 import org.jbpm.designer.client.parameters.DesignerEditorParametersPublisher;
 import org.jbpm.designer.client.popup.ActivityDataIOEditor;
 import org.jbpm.designer.client.shared.AssignmentData;
-import org.jbpm.designer.client.shared.Variable;
+import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.client.type.Bpmn2Type;
 import org.jbpm.designer.notification.DesignerNotificationEvent;
 import org.jbpm.designer.service.DesignerAssetService;

@@ -23,7 +23,7 @@ import java.util.Set;
 
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import org.jbpm.designer.client.shared.AssignmentRow;
-import org.jbpm.designer.client.shared.Variable;
+import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.client.util.ListBoxValues;
 import org.junit.Before;
 import org.junit.Test;

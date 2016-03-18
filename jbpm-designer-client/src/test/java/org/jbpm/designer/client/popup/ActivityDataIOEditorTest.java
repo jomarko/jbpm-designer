@@ -20,7 +20,7 @@ import org.jboss.errai.marshalling.client.api.MarshallingSession;
 import org.jbpm.designer.client.shared.AssignmentData;
 import org.jbpm.designer.client.shared.AssignmentDataMarshaller;
 import org.jbpm.designer.client.shared.AssignmentRow;
-import org.jbpm.designer.client.shared.Variable;
+import org.jbpm.designer.model.Variable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.*;

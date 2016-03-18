@@ -30,7 +30,7 @@ import org.gwtbootstrap3.client.ui.constants.IconType;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jbpm.designer.client.shared.AssignmentRow;
 
-import org.jbpm.designer.client.shared.Variable;
+import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.client.util.ComboBox;
 import org.jbpm.designer.client.util.DataIOEditorNameTextBox;
 import org.junit.Before;

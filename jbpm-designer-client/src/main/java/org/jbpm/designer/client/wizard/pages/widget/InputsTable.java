@@ -16,7 +16,7 @@
 package org.jbpm.designer.client.wizard.pages.widget;
 
 import com.google.gwt.user.client.ui.Widget;
-import org.jbpm.designer.client.shared.Variable;
+import org.jbpm.designer.model.Variable;
 
 import java.util.ArrayList;
 import java.util.List;
