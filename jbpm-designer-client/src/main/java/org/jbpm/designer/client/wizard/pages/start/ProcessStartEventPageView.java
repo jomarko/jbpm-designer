@@ -1,6 +1,7 @@
 package org.jbpm.designer.client.wizard.pages.start;
 
 import com.google.gwt.user.client.ui.IsWidget;
+import org.jbpm.designer.model.StandardEvent;
 
 
 public interface ProcessStartEventPageView extends IsWidget {
@@ -31,4 +32,6 @@ public interface ProcessStartEventPageView extends IsWidget {
     void showTimeError();
 
     void hideTimeError();
+
+    StandardEvent getDefinedEvent();
 }

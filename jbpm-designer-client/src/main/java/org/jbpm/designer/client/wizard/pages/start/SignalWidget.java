@@ -9,11 +9,16 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.HelpBlock;
 import org.gwtbootstrap3.client.ui.TextBox;
+import org.jboss.errai.databinding.client.api.DataBinder;
+import org.jboss.errai.ui.client.widget.HasModel;
+import org.jbpm.designer.model.SignalEvent;
 
 import javax.enterprise.context.Dependent;
 
 @Dependent
-public class SignalWidget extends Composite {
+public class SignalWidget extends Composite implements HasModel<SignalEvent> {
+
+    private DataBinder<SignalEvent> dataBinder = DataBinder.forType(SignalEvent.class);
 
     interface SignalWidgetBinder
             extends
@@ -32,6 +37,7 @@ public class SignalWidget extends Composite {
 
     public SignalWidget() {
         initWidget(uiBinder.createAndBindUi(this));
+        dataBinder.bind(signal, "signalName").getModel();
         signal.addValueChangeHandler(new ValueChangeHandler<String>() {
             @Override
             public void onValueChange(ValueChangeEvent<String> valueChangeEvent) {
@@ -54,5 +60,15 @@ public class SignalWidget extends Composite {
 
     public void hideHelp() {
         signalHelp.setVisible(false);
+    }
+
+    @Override
+    public SignalEvent getModel() {
+        return dataBinder.getModel();
+    }
+
+    @Override
+    public void setModel(SignalEvent signalEvent) {
+        dataBinder.setModel(signalEvent);
     }
 }

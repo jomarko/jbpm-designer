@@ -17,6 +17,7 @@ package org.jbpm.designer.client.wizard.pages.start;
 
 import com.google.gwt.user.client.ui.Widget;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
+import org.jbpm.designer.model.StandardEvent;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPage;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
@@ -86,5 +87,9 @@ public class ProcessStartEventPage implements WizardPage, ProcessStartEventPageV
     @Override
     public void firePageChangedEvent() {
         event.fire(pageChanged);
+    }
+
+    public StandardEvent getStartEvent() {
+        return view.getDefinedEvent();
     }
 }

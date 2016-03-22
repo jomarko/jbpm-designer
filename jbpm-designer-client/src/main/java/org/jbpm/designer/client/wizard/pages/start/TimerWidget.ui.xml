@@ -26,6 +26,7 @@
             <b:FormLabel for="timerType" text="Timer type" addStyleNames="col-lg-3"/>
             <gwt:VerticalPanel addStyleNames="col-lg-8">
                 <gwt:RadioButton ui:field="delay" name="timerType" value="true" enabled="true" text="Start with delay" />
+                <gwt:RadioButton ui:field="date" name="timerType" value="false" enabled="true" text="Start on date" />
                 <gwt:RadioButton ui:field="cycle" name="timerType" value="false" enabled="true" text="Repeat in cycle" />
                 <b:HelpBlock ui:field="timerTypeHelp" text="Timer type help" visible="false"/>
             </gwt:VerticalPanel>

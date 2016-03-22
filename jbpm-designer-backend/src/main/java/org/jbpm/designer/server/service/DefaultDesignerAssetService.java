@@ -52,6 +52,7 @@ import org.eclipse.dd.dc.DcFactory;
 import org.eclipse.dd.di.DiagramElement;
 import org.guvnor.common.services.shared.metadata.model.Overview;
 import org.jboss.errai.bus.server.annotations.Service;
+import org.jboss.errai.bus.server.async.TimedTask;
 import org.jbpm.designer.bpmn2.impl.Bpmn2JsonMarshaller;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.Task;
@@ -246,10 +247,10 @@ public class DefaultDesignerAssetService
     @Override
     public Path createProcess(Path context, String fileName, BusinessProcess businessProcess) {
         createProcess();
-        int horizontalOffset = 100;
-        FlowElement from = createStartEvent(horizontalOffset);
-        FlowElement to;
         createProcessVariables(businessProcess.getVariables());
+        int horizontalOffset = 100;
+        FlowElement from = createStartEvent(horizontalOffset, businessProcess.getStartEvent());
+        FlowElement to;
         for(Task task : businessProcess.getTasks()) {
             horizontalOffset += 150;
             to = createTask(task, horizontalOffset);
@@ -501,14 +502,43 @@ public class DefaultDesignerAssetService
         return null;
     }
 
-    private FlowElement createStartEvent(int horizontalOffset) {
+    private FlowElement createStartEvent(int horizontalOffset, StandardEvent startEvent) {
         if(process == null) {
             throw new RuntimeException("Create process at first");
         }
 
         String id = UUID.randomUUID().toString();
+
         StartEvent start = Bpmn2Factory.eINSTANCE.createStartEvent();
         start.setId(id);
+        if(startEvent instanceof SignalEvent) {
+            Signal signal = Bpmn2Factory.eINSTANCE.createSignal();
+            signal.setName(((SignalEvent)startEvent).getSignalName());
+            signal.setId(UUID.randomUUID().toString());
+            definitions.getRootElements().add(signal);
+            SignalEventDefinition signalED = Bpmn2Factory.eINSTANCE.createSignalEventDefinition();
+            signalED.setSignalRef(signal.getId());
+            signalED.setId(UUID.randomUUID().toString());
+            start.getEventDefinitions().add(signalED);
+        }
+        if(startEvent instanceof TimerEvent) {
+            TimerEventDefinition timer = Bpmn2Factory.eINSTANCE.createTimerEventDefinition();
+            String type = ((TimerEvent)startEvent).getTimerType();
+            FormalExpression expression = Bpmn2Factory.eINSTANCE.createFormalExpression();
+            expression.setBody(((TimerEvent)startEvent).getTimerExpression());
+            expression.setId(UUID.randomUUID().toString());
+            if(TimerEvent.DURATION.compareTo(type) == 0) {
+                timer.setTimeDuration(expression);
+            }
+            if(TimerEvent.CYCLE.compareTo(type) == 0) {
+                timer.setTimeCycle(expression);
+            }
+            if(TimerEvent.DATE.compareTo(type) == 0) {
+                timer.setTimeDate(expression);
+            }
+            timer.setId(UUID.randomUUID().toString());
+            start.getEventDefinitions().add(timer);
+        }
 
         BPMNShape shape = getShape(28, 28, horizontalOffset, 100);
         shape.setBpmnElement(start);
@@ -516,29 +546,6 @@ public class DefaultDesignerAssetService
         diagram.getPlane().getPlaneElement().add(shape);
         process.getFlowElements().add(start);
         return start;
-    }
-
-    private String setTimerForStartEvent(String timeExpression) {
-        if(process == null) {
-            throw new RuntimeException("Create process at first");
-        }
-
-        TimerEventDefinition timerEventDefinition = Bpmn2Factory.eINSTANCE.createTimerEventDefinition();
-
-        return timerEventDefinition.getId();
-    }
-
-    private String setSignalForStartEvent(String signalName) {
-        if(process == null) {
-            throw new RuntimeException("Create process at first");
-        }
-
-        SignalEventDefinition eventDefinition = Bpmn2Factory.eINSTANCE.createSignalEventDefinition();
-        Signal signal = Bpmn2Factory.eINSTANCE.createSignal();
-        signal.setName(signalName);
-        eventDefinition.setSignalRef(signal.getStructureRef().toString());
-
-        return eventDefinition.getId();
     }
 
     private FlowElement createEndEvent(int horizontalOffset) {

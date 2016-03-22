@@ -7,11 +7,21 @@ import java.util.List;
 @Portable
 public class BusinessProcess {
 
+    private StandardEvent startEvent;
+
     private List<Variable> variables;
 
     private List<Task> tasks;
 
     public BusinessProcess() {
+    }
+
+    public StandardEvent getStartEvent() {
+        return startEvent;
+    }
+
+    public void setStartEvent(StandardEvent startEvent) {
+        this.startEvent = startEvent;
     }
 
     public List<Variable> getVariables() {

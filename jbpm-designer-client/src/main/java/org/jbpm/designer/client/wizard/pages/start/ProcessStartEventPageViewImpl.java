@@ -8,6 +8,9 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.Widget;
+import org.jboss.errai.databinding.client.api.DataBinder;
+import org.jboss.errai.ui.client.widget.HasModel;
+import org.jbpm.designer.model.StandardEvent;
 
 
 import javax.enterprise.context.Dependent;
@@ -25,6 +28,8 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
     private static ProcessStartEventPageViewImplBinder uiBinder = GWT.create(ProcessStartEventPageViewImplBinder.class);
 
     private Presenter presenter;
+
+    private StandardEvent standardStartEvent = new StandardEvent();
 
     @Inject
     public ProcessStartEventPageViewImpl() {
@@ -122,5 +127,16 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
     @Override
     public void hideTimeError() {
         timerDetails.hideHelp();
+    }
+
+    @Override
+    public StandardEvent getDefinedEvent() {
+        if(timer.getValue()) {
+            return timerDetails.getModel();
+        }
+        if(signal.getValue()) {
+            return signalDetails.getModel();
+        }
+        return standardStartEvent;
     }
 }
