@@ -62,12 +62,15 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     @Override
     public void isComplete(Callback<Boolean> callback) {
         boolean allTasksValid = true;
-        for(Task task : view.getTasks()) {
-            if(!isTaskValid(task)) {
-                allTasksValid = false;
-                view.showAsInvalid(task.getId());
-            } else {
-                view.showAsValid(task.getId());
+        int rowsCount = view.getRowsCount();
+        for(int row = 0; row < rowsCount; row++) {
+            for(Task task : view.getTasks(row)) {
+                if(!isTaskValid(task)) {
+                    allTasksValid = false;
+                    view.showAsInvalid(task.getId());
+                } else {
+                    view.showAsValid(task.getId());
+                }
             }
         }
         callback.callback(allTasksValid);
@@ -315,8 +318,13 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         return validResult;
     }
 
-    public List<Task> getTasks() {
-        return view.getTasks();
+    public Map<Integer, List<Task>> getTasks() {
+        Map<Integer, List<Task>> tasks = new HashMap<Integer, List<Task>>();
+        int rowsCount = view.getRowsCount();
+        for(int row = 0; row < rowsCount; row++) {
+            tasks.put(row, view.getTasks(row));
+        }
+        return tasks;
     }
 
     public void showHelpForSelectedTask(@Observes WizardPageStatusChangeEvent event) {

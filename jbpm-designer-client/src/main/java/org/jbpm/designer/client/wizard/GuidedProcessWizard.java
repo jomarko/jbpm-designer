@@ -148,6 +148,8 @@ public class GuidedProcessWizard extends AbstractWizard {
 
     private BusinessProcess constructBusinessProcess() {
         BusinessProcess businessProcess = new BusinessProcess();
+        businessProcess.setProcessName(generalInfoPage.getProcessName());
+        businessProcess.setProcessDocumentation(generalInfoPage.getProcessDocumentation());
         businessProcess.setStartEvent(startEventPage.getStartEvent());
         businessProcess.setVariables(inputsPage.getInputs());
         businessProcess.setTasks(tasksPage.getTasks());

@@ -75,4 +75,13 @@ public class GeneralProcessInfoPage implements WizardPage, GeneralProcessInfoPag
     public void setProcessName(String processName) {
         view.setName(processName);
     }
+
+    public String getProcessName() {
+        return view.getName();
+    }
+
+    public String getProcessDocumentation() {
+        return view.getDescription();
+    }
+
 }

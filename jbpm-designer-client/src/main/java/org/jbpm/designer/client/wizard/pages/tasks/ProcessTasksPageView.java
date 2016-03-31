@@ -53,7 +53,9 @@ public interface ProcessTasksPageView extends IsWidget {
 
     void init(Presenter presenter);
 
-    List<Task> getTasks();
+    List<Task> getTasks(int row);
+
+    int getRowsCount();
 
     void mergeParallel(List<ListTaskDetail> widgets);
 

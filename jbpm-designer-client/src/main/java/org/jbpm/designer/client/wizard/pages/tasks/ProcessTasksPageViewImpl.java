@@ -134,8 +134,13 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
-    public List<Task> getTasks() {
-        return tasksContainer.getModels();
+    public List<Task> getTasks(int row) {
+        return tasksContainer.getRowModels(row);
+    }
+
+    @Override
+    public int getRowsCount() {
+        return tasksContainer.getRowCount();
     }
 
     @UiHandler("addButton")

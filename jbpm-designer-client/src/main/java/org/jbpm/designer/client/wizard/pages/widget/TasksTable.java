@@ -45,6 +45,11 @@ public class TasksTable extends DeletableFlexTable<ListTaskDetail, Task> {
                 if(widget instanceof ListTaskDetail) {
                     result.add(((ListTaskDetail) widget).getModel());
                 }
+                if(widget instanceof TasksHolder) {
+                    for(ListTaskDetail detail : ((TasksHolder)widget).getTasks()) {
+                        result.add(detail.getModel());
+                    }
+                }
             }
         }
         return result;

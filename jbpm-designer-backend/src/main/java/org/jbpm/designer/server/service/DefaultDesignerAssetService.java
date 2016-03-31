@@ -54,6 +54,7 @@ import org.guvnor.common.services.shared.metadata.model.Overview;
 import org.jboss.errai.bus.server.annotations.Service;
 import org.jboss.errai.bus.server.async.TimedTask;
 import org.jbpm.designer.bpmn2.impl.Bpmn2JsonMarshaller;
+import org.jbpm.designer.expressioneditor.model.ConditionExpression;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.Task;
 import org.jbpm.designer.repository.Asset;
@@ -246,19 +247,41 @@ public class DefaultDesignerAssetService
 
     @Override
     public Path createProcess(Path context, String fileName, BusinessProcess businessProcess) {
-        createProcess();
+        createProcess(businessProcess.getProcessName(), businessProcess.getProcessDocumentation());
         createProcessVariables(businessProcess.getVariables());
         int horizontalOffset = 100;
         FlowElement from = createStartEvent(horizontalOffset, businessProcess.getStartEvent());
         FlowElement to;
-        for(Task task : businessProcess.getTasks()) {
-            horizontalOffset += 150;
-            to = createTask(task, horizontalOffset);
-            createEdge(from, to);
-            from = to;
+        for(Integer row : businessProcess.getTasks().keySet()) {
+            if(businessProcess.getTasks().get(row).size() > 1) {
+                horizontalOffset += 150;
+                FlowElement fromGateway = createDivergingGateway(horizontalOffset);
+                FlowElement toGateway = createConvergingGateway(horizontalOffset + 300);
+                createEdge(from, fromGateway, null);
+                int verticalRelativeOffset = 0;
+                for(Task task : businessProcess.getTasks().get(row)) {
+                    FlowElement middle = createTask(task, horizontalOffset + 150, verticalRelativeOffset);
+                    if(task.getCondition() != null) {
+                        createEdge(fromGateway, middle, task.getCondition().getConstraint());
+                    } else {
+                        createEdge(fromGateway, middle, null);
+                    }
+                    createEdge(middle, toGateway, null);
+                    verticalRelativeOffset += 150;
+                }
+                from = toGateway;
+                horizontalOffset = horizontalOffset + 300;
+            } else {
+                for (Task task : businessProcess.getTasks().get(row)) {
+                    horizontalOffset += 150;
+                    to = createTask(task, horizontalOffset, 0);
+                    createEdge(from, to, null);
+                    from = to;
+                }
+            }
         }
         to = createEndEvent(horizontalOffset + 150);
-        createEdge(from, to);
+        createEdge(from, to, null);
         return createProcess(context, fileName, convertProcessToXml());
     }
 
@@ -366,12 +389,12 @@ public class DefaultDesignerAssetService
         return new DesignerContent(overview);
     }
 
-    Process process = null;
-    BPMNDiagram diagram = null;
+    private Process process = null;
+    private BPMNDiagram diagram = null;
     private Definitions definitions = null;
     private JbpmProfileImpl profile = new JbpmProfileImpl();
 
-    private String createProcess() {
+    private String createProcess(String processName, String documentationText) {
 
         Bpmn2JsonMarshaller marshaller = new Bpmn2JsonMarshaller();
         marshaller.setProfile(profile);
@@ -379,6 +402,10 @@ public class DefaultDesignerAssetService
         String processId = UUID.randomUUID().toString();
         process = Bpmn2Factory.eINSTANCE.createProcess();
         process.setId(processId);
+        process.setName(processName);
+        Documentation documentation = Bpmn2Factory.eINSTANCE.createDocumentation();
+        documentation.setText(documentationText);
+        process.getDocumentation().add(documentation);
 
         diagram = BpmnDiFactory.eINSTANCE.createBPMNDiagram();
         BPMNPlane plane = BpmnDiFactory.eINSTANCE.createBPMNPlane();
@@ -392,7 +419,7 @@ public class DefaultDesignerAssetService
         return processId;
     }
 
-    private FlowElement createTask(Task task, int horizontalOffset) {
+    private FlowElement createTask(Task task, int horizontalOffset, int verticalRelativeOffset) {
         if (process == null) {
             throw new RuntimeException("Create process at first");
         }
@@ -411,7 +438,7 @@ public class DefaultDesignerAssetService
             bpmnTask.setName(task.getName());
         }
 
-        BPMNShape shape = getShape(100, 80, horizontalOffset, 100);
+        BPMNShape shape = getShape(100, 80, horizontalOffset, 100 + verticalRelativeOffset);
         shape.setBpmnElement(bpmnTask);
 
         diagram.getPlane().getPlaneElement().add(shape);
@@ -425,9 +452,32 @@ public class DefaultDesignerAssetService
             throw new RuntimeException("Create process at first");
         }
 
+        ItemDefinition stringDefinition = Bpmn2Factory.eINSTANCE.createItemDefinition();
+        stringDefinition.setId(UUID.randomUUID().toString());
+        stringDefinition.setStructureRef("String");
+
+        ItemDefinition booleanDefinition = Bpmn2Factory.eINSTANCE.createItemDefinition();
+        booleanDefinition.setId(UUID.randomUUID().toString());
+        booleanDefinition.setStructureRef("Boolean");
+
+        ItemDefinition integerDefinition = Bpmn2Factory.eINSTANCE.createItemDefinition();
+        integerDefinition.setId(UUID.randomUUID().toString());
+        integerDefinition.setStructureRef("Integer");
+
         for(Variable variable : variables) {
             Property property = Bpmn2Factory.eINSTANCE.createProperty();
+            property.setId(variable.getName());
             property.setName(variable.getName());
+            if(variable.getDataType().compareTo("string") == 0) {
+                property.setItemSubjectRef(stringDefinition);
+            }
+            if(variable.getDataType().compareTo("boolean") == 0) {
+                property.setItemSubjectRef(booleanDefinition);
+            }
+            if(variable.getDataType().compareTo("number") == 0) {
+                property.setItemSubjectRef(integerDefinition);
+            }
+            process.getProperties().add(property);
         }
     }
 
@@ -467,7 +517,7 @@ public class DefaultDesignerAssetService
         return gateway;
     }
 
-    private FlowElement createEdge(FlowElement from, FlowElement to) {
+    private FlowElement createEdge(FlowElement from, FlowElement to, Constraint constraint) {
         if(process == null) {
             throw new RuntimeException("Create process at first");
         }
@@ -480,6 +530,18 @@ public class DefaultDesignerAssetService
         flow.setSourceRef((FlowNode) from);
         flow.setTargetRef((FlowNode) to);
         flow.setId(id);
+
+        if(constraint != null) {
+            FormalExpression expression = Bpmn2Factory.eINSTANCE.createFormalExpression();
+            expression.setId(UUID.randomUUID().toString());
+            String expressionBody = "return KieFunctions.equalsTo(";
+            expressionBody += constraint.getVariable().getName();
+            expressionBody += ",\"";
+            expressionBody += constraint.getConstraintValue();
+            expressionBody += "\");";
+            expression.setBody(expressionBody);
+            flow.setConditionExpression(expression);
+        }
 
         BPMNEdge edge = BpmnDiFactory.eINSTANCE.createBPMNEdge();
         edge.setSourceElement(fromShape);

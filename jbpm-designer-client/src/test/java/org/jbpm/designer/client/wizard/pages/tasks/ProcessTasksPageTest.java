@@ -105,7 +105,7 @@ public class ProcessTasksPageTest {
         tasks.add(taskOne);
         tasks.add(taskTwo);
 
-        when(view.getTasks()).thenReturn(tasks);
+//        when(view.getTasks()).thenReturn(tasks);
 
         Callback<Boolean> callback = mock(Callback.class);
         page.isComplete(callback);
@@ -122,7 +122,7 @@ public class ProcessTasksPageTest {
         tasks.add(taskOne);
         tasks.add(taskTwo);
 
-        when(view.getTasks()).thenReturn(tasks);
+//        when(view.getTasks()).thenReturn(tasks);
 
         Callback<Boolean> callback = mock(Callback.class);
         page.isComplete(callback);
@@ -139,7 +139,7 @@ public class ProcessTasksPageTest {
         tasks.add(taskOne);
         tasks.add(taskTwo);
 
-        when(view.getTasks()).thenReturn(tasks);
+//        when(view.getTasks()).thenReturn(tasks);
 
         Callback<Boolean> callback = mock(Callback.class);
         page.isComplete(callback);
@@ -154,7 +154,7 @@ public class ProcessTasksPageTest {
         List<Task> tasks = new ArrayList<Task>();
         tasks.add(taskOne);
 
-        when(view.getTasks()).thenReturn(tasks);
+//        when(view.getTasks()).thenReturn(tasks);
 
         Callback<Boolean> callback = mock(Callback.class);
         page.isComplete(callback);
@@ -185,7 +185,7 @@ public class ProcessTasksPageTest {
     public void testRowDeleted() {
         List<Task> tasks = new ArrayList<Task>();
         tasks.add(taskOne);
-        when(view.getTasks()).thenReturn(tasks);
+//        when(view.getTasks()).thenReturn(tasks);
 
         page.rowDeleted();
 
