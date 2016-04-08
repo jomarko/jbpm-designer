@@ -341,16 +341,6 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
-    public void setSelectedTaskInputs(List<Variable> variables) {
-        taskIO.setSelectedVariables(variables);
-    }
-
-    @Override
-    public void setSelectedTaskOutput(Variable variable) {
-        taskIO.setOutputVariable(variable);
-    }
-
-    @Override
     public void showButtonsAfterSelection() {
         selectButton.setVisible(false);
         parallelButton.setVisible(true);

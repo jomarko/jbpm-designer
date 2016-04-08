@@ -39,7 +39,7 @@ public class InputRow extends Composite implements HasModel<Variable>, HasValue<
         name = new TextBox();
         dataType = new ValueListBox<String>(new ToStringRenderer());
         dataType.setValue("Boolean", true);
-        dataType.setValue("Number", true);
+        dataType.setValue("Float", true);
         dataType.setValue("String", true);
 
         HorizontalPanel row =  new HorizontalPanel();

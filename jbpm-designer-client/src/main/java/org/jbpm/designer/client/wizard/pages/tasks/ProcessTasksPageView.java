@@ -111,10 +111,6 @@ public interface ProcessTasksPageView extends IsWidget {
 
     void setConstraintHelpVisibility(boolean value);
 
-    void setSelectedTaskInputs(List<Variable> variables);
-
-    void setSelectedTaskOutput(Variable variable);
-
     void setSplitButtonVisibility(boolean value);
 
     void selectAllWidgetsOfHolder(TasksHolder holder);

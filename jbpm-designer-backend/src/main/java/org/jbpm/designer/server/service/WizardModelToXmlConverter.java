@@ -39,7 +39,6 @@ public class WizardModelToXmlConverter {
 
 
     public String convertProcessToXml(BusinessProcess businessProcess) {
-
         createProcess(businessProcess.getProcessName(), businessProcess.getProcessDocumentation());
         createProcessVariables(businessProcess.getVariables());
         int horizontalOffset = 100;
@@ -146,19 +145,13 @@ public class WizardModelToXmlConverter {
     private void createInputOutputAssociations(org.eclipse.bpmn2.Task bpmnTask, org.jbpm.designer.model.Task wizardTask) {
         InputOutputSpecification specification = Bpmn2Factory.eINSTANCE.createInputOutputSpecification();
         InputSet inputSet = Bpmn2Factory.eINSTANCE.createInputSet();
+        OutputSet outputSet = Bpmn2Factory.eINSTANCE.createOutputSet();
 
         if(wizardTask.getInputs() != null) {
             for (Variable variable : wizardTask.getInputs()) {
-                String inputId = UUID.randomUUID().toString() + "_" + variable.getName();
-
-                ItemDefinition itemDefinition = Bpmn2Factory.eINSTANCE.createItemDefinition();
-                itemDefinition.setStructureRef("Object");
-                itemDefinition.setId(inputId + "_item");
-
                 DataInput dataInput = Bpmn2Factory.eINSTANCE.createDataInput();
-                dataInput.setId(inputId);
+                setItemSubjectRef(dataInput, variable);
                 dataInput.setName(variable.getName() + "_inner");
-                dataInput.setItemSubjectRef(itemDefinition);
 
                 DataInputAssociation inputAssociation = Bpmn2Factory.eINSTANCE.createDataInputAssociation();
                 for (Property property : process.getProperties()) {
@@ -174,8 +167,41 @@ public class WizardModelToXmlConverter {
             }
 
             specification.getInputSets().add(inputSet);
-            bpmnTask.setIoSpecification(specification);
         }
+
+        if(wizardTask.getOutput() != null) {
+            DataOutput dataOutput = Bpmn2Factory.eINSTANCE.createDataOutput();
+            setItemSubjectRef(dataOutput, wizardTask.getOutput());
+            dataOutput.setName(wizardTask.getOutput().getName() + "_inner");
+
+            DataOutputAssociation outputAssociation = Bpmn2Factory.eINSTANCE.createDataOutputAssociation();
+            for (Property property : process.getProperties()) {
+                if (property.getName().compareTo(wizardTask.getOutput().getName()) == 0) {
+                    outputAssociation.setTargetRef(property);
+                }
+            }
+
+            outputAssociation.getSourceRef().add(dataOutput);
+
+            specification.getDataOutputs().add(dataOutput);
+            outputSet.getDataOutputRefs().add(dataOutput);
+            bpmnTask.getDataOutputAssociations().add(outputAssociation);
+
+            specification.getOutputSets().add(outputSet);
+        }
+
+        bpmnTask.setIoSpecification(specification);
+    }
+
+    private void setItemSubjectRef(ItemAwareElement element, Variable variable) {
+        String id = UUID.randomUUID().toString() + "_" + variable.getName();
+
+        ItemDefinition itemDefinition = Bpmn2Factory.eINSTANCE.createItemDefinition();
+        itemDefinition.setStructureRef(variable.getDataType());
+        itemDefinition.setId(id + "_item");
+
+        element.setId(id);
+        element.setItemSubjectRef(itemDefinition);
     }
 
     private void createProcessVariables(List<Variable> variables) {
@@ -206,7 +232,7 @@ public class WizardModelToXmlConverter {
                 if (variable.getDataType().compareTo("Boolean") == 0) {
                     property.setItemSubjectRef(booleanDefinition);
                 }
-                if (variable.getDataType().compareTo("Number") == 0) {
+                if (variable.getDataType().compareTo("Float") == 0) {
                     property.setItemSubjectRef(floatDefinition);
                 }
                 process.getProperties().add(property);

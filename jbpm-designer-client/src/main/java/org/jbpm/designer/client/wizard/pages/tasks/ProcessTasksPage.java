@@ -133,7 +133,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         task.setTaskType(Task.HUMAN_TYPE);
         Variable output = new Variable();
         output.setName("");
-        output.setDataType("string");
+        output.setDataType("String");
         task.setOutput(output);
         task.setInputs(new ArrayList<Variable>());
 

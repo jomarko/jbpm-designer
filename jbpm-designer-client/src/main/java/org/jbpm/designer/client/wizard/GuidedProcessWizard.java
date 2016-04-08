@@ -19,13 +19,13 @@ import com.google.gwt.user.client.ui.Widget;
 import org.jbpm.designer.client.handlers.NewProcessHandler;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.model.BusinessProcess;
+import org.jbpm.designer.model.Task;
 import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.client.wizard.pages.general.GeneralProcessInfoPage;
 import org.jbpm.designer.client.wizard.pages.inputs.ProcessInputsPage;
 import org.jbpm.designer.client.wizard.pages.preview.ProcessPreviewPage;
 import org.jbpm.designer.client.wizard.pages.start.ProcessStartEventPage;
 import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPage;
-import org.uberfire.backend.vfs.Path;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.core.client.wizards.AbstractWizard;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPage;
@@ -35,6 +35,7 @@ import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Dependent
 public class GuidedProcessWizard extends AbstractWizard {
@@ -59,9 +60,6 @@ public class GuidedProcessWizard extends AbstractWizard {
     private NewProcessHandler handler;
 
     private List<WizardPage> pages;
-
-    private Path packagePath;
-    private String fileName;
 
     @PostConstruct
     public void setupPages() {
@@ -151,7 +149,15 @@ public class GuidedProcessWizard extends AbstractWizard {
         businessProcess.setProcessName(generalInfoPage.getProcessName());
         businessProcess.setProcessDocumentation(generalInfoPage.getProcessDocumentation());
         businessProcess.setStartEvent(startEventPage.getStartEvent());
-        businessProcess.setVariables(inputsPage.getInputs());
+        List<Variable> variables = inputsPage.getInputs();
+        for(Map.Entry<Integer, List<Task>> tasksGroup: tasksPage.getTasks().entrySet()) {
+            for(Task task : tasksGroup.getValue()) {
+                if(task.getOutput() != null) {
+                    variables.add(task.getOutput());
+                }
+            }
+        }
+        businessProcess.setVariables(variables);
         businessProcess.setTasks(tasksPage.getTasks());
         return businessProcess;
     }

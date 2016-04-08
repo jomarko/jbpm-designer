@@ -95,7 +95,7 @@ public class WizardModelToXmlConverterTest {
         process.setVariables(variables);
         process.setTasks(taskGroups);
 
-        String xml = converter.convertProcessToXml(process);
+        converter.convertProcessToXml(process);
 
         assertEquals(1, converter.process.getProperties().size());
         assertEquals(5, converter.process.getFlowElements().size());
@@ -104,6 +104,23 @@ public class WizardModelToXmlConverterTest {
         org.eclipse.bpmn2.Task bpmnTask = extractBpmnTasks(converter.process.getFlowElements()).get(0);
         assertEquals(1, bpmnTask.getIoSpecification().getDataInputs().size());
         assertEquals(1, bpmnTask.getDataInputAssociations().size());
+    }
+
+    @Test
+    public void testTaskOutput() {
+        humanTask.setOutput(stringVariable);
+        process.setVariables(variables);
+        process.setTasks(taskGroups);
+
+        String xml = converter.convertProcessToXml(process);
+
+        assertEquals(1, converter.process.getProperties().size());
+        assertEquals(5, converter.process.getFlowElements().size());
+        assertEquals(1, extractBpmnTasks(converter.process.getFlowElements()).size());
+
+        org.eclipse.bpmn2.Task bpmnTask = extractBpmnTasks(converter.process.getFlowElements()).get(0);
+        assertEquals(1, bpmnTask.getIoSpecification().getDataOutputs().size());
+        assertEquals(1, bpmnTask.getDataOutputAssociations().size());
     }
 
     private List<org.eclipse.bpmn2.Task> extractBpmnTasks(List<FlowElement> flowElements) {
