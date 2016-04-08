@@ -79,7 +79,7 @@ public class ProcessInputsPage implements WizardPage, ProcessInputsPageView.Pres
         Variable defaultModel = new Variable();
         defaultModel.setVariableType(Variable.VariableType.INPUT);
         defaultModel.setName("");
-        defaultModel.setDataType("string");
+        defaultModel.setDataType("String");
         return defaultModel;
     }
 
