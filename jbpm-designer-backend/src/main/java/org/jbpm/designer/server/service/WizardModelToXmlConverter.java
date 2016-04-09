@@ -169,14 +169,15 @@ public class WizardModelToXmlConverter {
             specification.getInputSets().add(inputSet);
         }
 
-        if(wizardTask.getOutput() != null) {
+        Variable taskOutput = wizardTask.getOutput();
+        if(taskOutput != null && taskOutput.getName() != null && !taskOutput.getName().isEmpty()) {
             DataOutput dataOutput = Bpmn2Factory.eINSTANCE.createDataOutput();
-            setItemSubjectRef(dataOutput, wizardTask.getOutput());
-            dataOutput.setName(wizardTask.getOutput().getName() + "_inner");
+            setItemSubjectRef(dataOutput, taskOutput);
+            dataOutput.setName(taskOutput.getName() + "_inner");
 
             DataOutputAssociation outputAssociation = Bpmn2Factory.eINSTANCE.createDataOutputAssociation();
             for (Property property : process.getProperties()) {
-                if (property.getName().compareTo(wizardTask.getOutput().getName()) == 0) {
+                if (property.getName().compareTo(taskOutput.getName()) == 0) {
                     outputAssociation.setTargetRef(property);
                 }
             }

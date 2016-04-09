@@ -155,12 +155,12 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
                 ((TasksHolder) selectedWidgets.get(0)).removeHandlers();
                 view.split((TasksHolder)selectedWidgets.get(0));
                 view.deselectAll();
+                view.setSplitButtonVisibility(false);
                 firePageChangedEvent();
             }
         } else {
             view.showSplitInvalidCount();
         }
-        view.setSplitButtonVisibility(false);
     }
 
     @Override
@@ -173,6 +173,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
                 details.add((ListTaskDetail) selectedWidgets.get(1));
                 view.mergeCondition(details);
                 view.deselectAll();
+                view.setMergeButtonsVisibility(false);
                 firePageChangedEvent();
             } else {
                 view.showAlreadyContainsMerged();
@@ -192,6 +193,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
                 details.add((ListTaskDetail) selectedWidgets.get(1));
                 view.mergeParallel(details);
                 view.deselectAll();
+                view.setMergeButtonsVisibility(false);
                 firePageChangedEvent();
             } else {
                 view.showAlreadyContainsMerged();
@@ -203,26 +205,14 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
 
     @Override
     public void rowDeleted() {
+        view.deselectAll();
         view.setSplitButtonVisibility(false);
-        view.deselectAll();
-        firePageChangedEvent();
-    }
-
-    @Override
-    public void startSelection() {
-        view.showButtonsAfterSelection();
-    }
-
-    @Override
-    public void cancelSelection() {
-        view.showButtonsAfterSelectionCancel();
-        view.deselectAll();
+        view.setMergeButtonsVisibility(false);
         firePageChangedEvent();
     }
 
     @Override
     public void taskDetailSelected(ListTaskDetail detail) {
-        view.setSplitButtonVisibility(false);
         view.unbindAllWidgets();
 
         Task model = detail.getModel();
@@ -240,6 +230,17 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         detail.rebind();
         view.rebindSelectedWidget();
         view.highlightSelected();
+        if( view.getSelectedWidgets().size() > 1 ) {
+            view.setMergeButtonsVisibility(true);
+            view.setSplitButtonVisibility(false);
+        } else {
+            view.setMergeButtonsVisibility(false);
+            if(view.getSelectedWidgets().size() == 1 && view.getSelectedWidgets().get(0) instanceof TasksHolder) {
+                view.setSplitButtonVisibility(true);
+            } else {
+                view.setSplitButtonVisibility(false);
+            }
+        }
         firePageChangedEvent();
     }
 
@@ -258,8 +259,21 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     }
 
     public List<Variable> getVariablesForTask(Task task) {
-        List<Variable> result = wizard.getInitialInputs();
-        return result;
+        List<Variable> possibleInputs = wizard.getInitialInputs();
+        for(Map.Entry<Integer, List<Task>> tasksGroup : getTasks().entrySet()) {
+            for(Task previousTask : tasksGroup.getValue()) {
+                if(task != previousTask) {
+                    Variable taskOutput = previousTask.getOutput();
+                    if (taskOutput != null && taskOutput.getName() != null &&
+                        !taskOutput.getName().isEmpty() && !possibleInputs.contains(taskOutput)) {
+                        possibleInputs.add(taskOutput);
+                    }
+                } else {
+                    return possibleInputs;
+                }
+            }
+        }
+        return possibleInputs;
     }
 
     @Override

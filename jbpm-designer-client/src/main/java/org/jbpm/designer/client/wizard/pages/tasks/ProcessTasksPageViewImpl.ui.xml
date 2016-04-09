@@ -34,11 +34,9 @@
                 <bHtml:Div styleName="col-md-6">
                     <gwt:HorizontalPanel>
                         <b:Button ui:field="addButton" text="Add" />
-                        <b:Button ui:field="selectButton" text="Select" />
                         <b:Button ui:field="parallelButton" text="Parallel" visible="false" />
                         <b:Button ui:field="conditionButton" text="Condition" visible="false" />
                         <b:Button ui:field="splitButton" text="Split" visible="false" />
-                        <b:Button ui:field="cancelButton" text="Cancel" visible="false" />
                     </gwt:HorizontalPanel>
                     <widget:TasksTable ui:field="tasksContainer"/>
                 </bHtml:Div>

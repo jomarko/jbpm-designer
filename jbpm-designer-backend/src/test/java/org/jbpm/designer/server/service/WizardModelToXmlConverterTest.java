@@ -52,6 +52,7 @@ public class WizardModelToXmlConverterTest {
         humanTask.setResponsibleHuman(new User("user_nick"));
         humanTask.setTaskType(org.jbpm.designer.model.Task.HUMAN_TYPE);
         humanTask.setInputs(new ArrayList<Variable>());
+        humanTask.setOutput(new Variable());
 
         taskGroups = new HashMap<Integer, List<Task>>();
         List<Task> group = new ArrayList<Task>();
@@ -112,7 +113,7 @@ public class WizardModelToXmlConverterTest {
         process.setVariables(variables);
         process.setTasks(taskGroups);
 
-        String xml = converter.convertProcessToXml(process);
+        converter.convertProcessToXml(process);
 
         assertEquals(1, converter.process.getProperties().size());
         assertEquals(5, converter.process.getFlowElements().size());
@@ -123,11 +124,34 @@ public class WizardModelToXmlConverterTest {
         assertEquals(1, bpmnTask.getDataOutputAssociations().size());
     }
 
+    @Test
+    public void testParallelGateway() {
+        taskGroups.get(0).add(humanTask);
+        process.setTasks(taskGroups);
+
+        String xml = converter.convertProcessToXml(process);
+
+        assertEquals(0, converter.process.getProperties().size());
+        assertEquals(12, converter.process.getFlowElements().size());
+        assertEquals(2, extractBpmnGateways(converter.process.getFlowElements()).size());
+    }
+
     private List<org.eclipse.bpmn2.Task> extractBpmnTasks(List<FlowElement> flowElements) {
         List<org.eclipse.bpmn2.Task> tasks = new ArrayList<org.eclipse.bpmn2.Task>();
         for(FlowElement element : flowElements) {
             if(element instanceof org.eclipse.bpmn2.Task) {
                 tasks.add((org.eclipse.bpmn2.Task) element);
+            }
+        }
+
+        return tasks;
+    }
+
+    private List<Gateway> extractBpmnGateways(List<FlowElement> flowElements) {
+        List<Gateway> tasks = new ArrayList<Gateway>();
+        for(FlowElement element : flowElements) {
+            if(element instanceof Gateway) {
+                tasks.add((Gateway) element);
             }
         }
 

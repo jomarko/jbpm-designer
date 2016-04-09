@@ -46,8 +46,6 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
 
     private static ProcessTasksPageViewImplBinder uiBinder = GWT.create(ProcessTasksPageViewImplBinder.class);
 
-    private boolean isSelectingActive;
-
     private List<Widget> lastSelectedWidgets;
 
     private Presenter presenter;
@@ -67,13 +65,7 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     ConditionWidget conditionWidget;
 
     @UiField
-    TasksTable tasksContainer;
-
-    @UiField
-    Button selectButton;
-
-    @UiField
-    Button cancelButton;
+    TasksTable tasksContainer;;
 
     @UiField
     Button parallelButton;
@@ -97,7 +89,6 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         conditionWidget.setPropertyChangeHandler(getHandler());
 
         tasksContainer.clear();
-        isSelectingActive = false;
         lastSelectedWidgets = new ArrayList<Widget>();
     }
 
@@ -107,12 +98,10 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         widget.addDomHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent clickEvent) {
-                if (isSelectingActive) {
-                    addToLastSelected(widget);
-                } else {
+                if(!clickEvent.isControlKeyDown()) {
                     lastSelectedWidgets.clear();
-                    addToLastSelected(widget);
                 }
+                addToLastSelected(widget);
                 presenter.taskDetailSelected((ListTaskDetail)widget);
             }
         }, ClickEvent.getType());
@@ -161,18 +150,6 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     @UiHandler("splitButton")
     public void splitButtonHandler(ClickEvent event) {
         presenter.splitTasks();
-    }
-
-    @UiHandler("selectButton")
-    public void selectButtonHandler(ClickEvent event) {
-        isSelectingActive = true;
-        presenter.startSelection();
-    }
-
-    @UiHandler("cancelButton")
-    public void cancelButtonHandler(ClickEvent event) {
-        isSelectingActive = false;
-        presenter.cancelSelection();
     }
 
     @Override
@@ -341,19 +318,9 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
-    public void showButtonsAfterSelection() {
-        selectButton.setVisible(false);
-        parallelButton.setVisible(true);
-        conditionButton.setVisible(true);
-        cancelButton.setVisible(true);
-    }
-
-    @Override
-    public void showButtonsAfterSelectionCancel() {
-        selectButton.setVisible(true);
-        parallelButton.setVisible(false);
-        conditionButton.setVisible(false);
-        cancelButton.setVisible(false);
+    public void setMergeButtonsVisibility(boolean value) {
+        parallelButton.setVisible(value);
+        conditionButton.setVisible(value);
     }
 
     @Override

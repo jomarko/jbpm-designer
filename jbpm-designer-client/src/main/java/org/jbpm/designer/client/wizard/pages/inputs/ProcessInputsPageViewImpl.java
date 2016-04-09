@@ -59,7 +59,7 @@ public class ProcessInputsPageViewImpl extends Composite implements ProcessInput
 
     @Override
     public void rowDeleted() {
-
+        presenter.firePageChangedEvent();
     }
 
     @Override

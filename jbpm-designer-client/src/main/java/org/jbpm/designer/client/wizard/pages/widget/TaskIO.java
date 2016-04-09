@@ -42,7 +42,7 @@ public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> 
     @UiField
     InputRow output;
 
-    private Map<Variable, CheckBox> variableMap = new HashMap<Variable, CheckBox>();
+    private Map<Variable, CheckBox> variabeCheckBoxes = new HashMap<Variable, CheckBox>();
 
     public TaskIO() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -62,7 +62,7 @@ public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> 
 
     public void setAcceptableValues(List<Variable> vars) {
         variables.removeAllRows();
-        variableMap.clear();
+        variabeCheckBoxes.clear();
         for(final Variable variable : vars) {
             int newRow = variables.getRowCount();
             CheckBox checkBox = new CheckBox();
@@ -70,8 +70,8 @@ public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> 
                 @Override
                 public void onValueChange(ValueChangeEvent<Boolean> valueChangeEvent) {
                     List<Variable> selected = new ArrayList<Variable>();
-                    for(Variable variable : variableMap.keySet()) {
-                        if(variableMap.get(variable).getValue()) {
+                    for(Variable variable : variabeCheckBoxes.keySet()) {
+                        if(variabeCheckBoxes.get(variable).getValue()) {
                             selected.add(variable);
                         }
                     }
@@ -82,22 +82,8 @@ public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> 
             });
             variables.setWidget(newRow, 0, checkBox);
             variables.setWidget(newRow, 1, new Text(variable.getName() + ":" + variable.getDataType()));
-            variableMap.put(variable, checkBox);
+            variabeCheckBoxes.put(variable, checkBox);
         }
-    }
-
-    public void setSelectedVariables(List<Variable> vars) {
-        for(Variable variable : variableMap.keySet()) {
-            if(vars.contains(variable)) {
-                variableMap.get(variable).setValue(true, true);
-            } else {
-                variableMap.get(variable).setValue(false, true);
-            }
-        }
-    }
-
-    public void setOutputVariable(Variable variable) {
-        output.setValue(variable, true);
     }
 
     @Override
@@ -109,8 +95,17 @@ public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> 
     public void setModel(Task task) {
         dataBinder.setModel(task);
         if (task.getInputs() != null) {
+            List<Variable> taskInputs = task.getInputs();
             for (Variable variable : task.getInputs()) {
-                variableMap.get(variable).setValue(true);
+                if(variabeCheckBoxes.containsKey(variable)) {
+                    variabeCheckBoxes.get(variable).setValue(true);
+                } else {
+                    taskInputs.remove(variable);
+                }
+            }
+            if(taskInputs.size() != task.getInputs().size()) {
+                task.setInputs(taskInputs);
+                setValue(task, true);
             }
         }
     }

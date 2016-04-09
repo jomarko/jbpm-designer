@@ -34,10 +34,6 @@ public interface ProcessTasksPageView extends IsWidget {
 
         void holderSelected(TasksHolder holder);
 
-        void startSelection();
-
-        void cancelSelection();
-
         void splitTasks();
 
         void mergeTasksCondition();
@@ -95,10 +91,6 @@ public interface ProcessTasksPageView extends IsWidget {
 
     void showAsInvalid(int taskId);
 
-    void showButtonsAfterSelection();
-
-    void showButtonsAfterSelectionCancel();
-
     void setNameHelpVisibility(boolean value);
 
     void setParticipantHelpVisibility(boolean value);
@@ -110,6 +102,8 @@ public interface ProcessTasksPageView extends IsWidget {
     void setConstraintValueHelpVisibility(boolean value);
 
     void setConstraintHelpVisibility(boolean value);
+
+    void setMergeButtonsVisibility(boolean value);
 
     void setSplitButtonVisibility(boolean value);
 
