@@ -23,10 +23,7 @@ import org.jbpm.designer.model.Task;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -50,6 +47,7 @@ public class WizardModelToXmlConverterTest {
         humanTask = new Task();
         humanTask.setName("a");
         humanTask.setResponsibleHuman(new User("user_nick"));
+        humanTask.setResponsibleGroup(new User("group_nick"));
         humanTask.setTaskType(org.jbpm.designer.model.Task.HUMAN_TYPE);
         humanTask.setInputs(new ArrayList<Variable>());
         humanTask.setOutput(new Variable());
@@ -87,7 +85,13 @@ public class WizardModelToXmlConverterTest {
 
         assertEquals(0, converter.process.getProperties().size());
         assertEquals(5, converter.process.getFlowElements().size());
-        assertEquals(1, extractBpmnTasks(converter.process.getFlowElements()).size());
+        List<org.eclipse.bpmn2.Task> tasks = extractBpmnTasks(converter.process.getFlowElements());
+        assertEquals(1, tasks.size());
+        assertEquals(1, tasks.get(0).getResources().size());
+        assertEquals("user_nick",
+                ((FormalExpression)tasks.get(0).getResources().get(0).getResourceAssignmentExpression().getExpression()).getBody());
+        assertEquals(1, tasks.get(0).getDataInputAssociations().size());
+        assertEquals("group_nick", ((FormalExpression)tasks.get(0).getDataInputAssociations().get(0).getAssignment().get(0).getFrom()).getBody());
     }
 
     @Test
@@ -103,8 +107,8 @@ public class WizardModelToXmlConverterTest {
         assertEquals(1, extractBpmnTasks(converter.process.getFlowElements()).size());
 
         org.eclipse.bpmn2.Task bpmnTask = extractBpmnTasks(converter.process.getFlowElements()).get(0);
-        assertEquals(1, bpmnTask.getIoSpecification().getDataInputs().size());
-        assertEquals(1, bpmnTask.getDataInputAssociations().size());
+        assertEquals(2, bpmnTask.getIoSpecification().getDataInputs().size());
+        assertEquals(2, bpmnTask.getDataInputAssociations().size());
     }
 
     @Test
@@ -129,11 +133,26 @@ public class WizardModelToXmlConverterTest {
         taskGroups.get(0).add(humanTask);
         process.setTasks(taskGroups);
 
-        String xml = converter.convertProcessToXml(process);
+        converter.convertProcessToXml(process);
 
         assertEquals(0, converter.process.getProperties().size());
         assertEquals(12, converter.process.getFlowElements().size());
-        assertEquals(2, extractBpmnGateways(converter.process.getFlowElements()).size());
+        assertEquals(2, extractBpmnGateways(converter.process.getFlowElements(), false).size());
+    }
+
+    @Test
+    public void testExclusiveGateway() {
+        taskGroups.get(0).add(humanTask);
+        Set<Integer> conditionBasedGroups = new HashSet<Integer>();
+        conditionBasedGroups.add(0);
+        process.setConditionBasedGroups(conditionBasedGroups);
+        process.setTasks(taskGroups);
+
+        converter.convertProcessToXml(process);
+
+        assertEquals(0, converter.process.getProperties().size());
+        assertEquals(12, converter.process.getFlowElements().size());
+        assertEquals(2, extractBpmnGateways(converter.process.getFlowElements(), true).size());
     }
 
     private List<org.eclipse.bpmn2.Task> extractBpmnTasks(List<FlowElement> flowElements) {
@@ -147,11 +166,17 @@ public class WizardModelToXmlConverterTest {
         return tasks;
     }
 
-    private List<Gateway> extractBpmnGateways(List<FlowElement> flowElements) {
+    private List<Gateway> extractBpmnGateways(List<FlowElement> flowElements, boolean exclusive) {
         List<Gateway> tasks = new ArrayList<Gateway>();
         for(FlowElement element : flowElements) {
-            if(element instanceof Gateway) {
-                tasks.add((Gateway) element);
+            if(exclusive) {
+                if (element instanceof ExclusiveGateway) {
+                    tasks.add((Gateway) element);
+                }
+            } else {
+                if (element instanceof ParallelGateway) {
+                    tasks.add((Gateway) element);
+                }
             }
         }
 

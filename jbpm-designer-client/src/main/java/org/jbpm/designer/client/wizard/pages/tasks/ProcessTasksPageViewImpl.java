@@ -32,9 +32,7 @@ import org.jbpm.designer.model.*;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Dependent
 public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksPageView, DeletableFlexTable.RowsHandler {
@@ -130,6 +128,17 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     @Override
     public int getRowsCount() {
         return tasksContainer.getRowCount();
+    }
+
+    @Override
+    public Set<Integer> getConditionBasedGroups() {
+        Set<Integer> conditionBasedRows = new HashSet<Integer>();
+        for(int row = 0; row < tasksContainer.getRowCount(); row++) {
+            if(tasksContainer.isRowConditionBased(row)) {
+                conditionBasedRows.add(row);
+            }
+        }
+        return conditionBasedRows;
     }
 
     @UiHandler("addButton")

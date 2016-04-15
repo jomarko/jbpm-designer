@@ -70,6 +70,10 @@ public class TasksTable extends DeletableFlexTable<ListTaskDetail, Task> {
         return container.getRowCount();
     }
 
+    public boolean isRowConditionBased(int row) {
+        return (container.getWidget(row, 0) instanceof ConstraintHolder);
+    }
+
     public void split(TasksHolder holder) {
         for(int i = 1; i < holder.getTasks().size(); i++) {
             int newRow = container.insertRow(getRowOfWidget(holder));

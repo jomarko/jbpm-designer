@@ -26,6 +26,7 @@ import org.jbpm.designer.model.*;
 import org.jbpm.designer.web.profile.impl.JbpmProfileImpl;
 
 import javax.enterprise.context.Dependent;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,8 +49,12 @@ public class WizardModelToXmlConverter {
             for (Integer row : businessProcess.getTasks().keySet()) {
                 if (businessProcess.getTasks().get(row).size() > 1) {
                     horizontalOffset += 150;
-                    FlowElement fromGateway = createDivergingGateway(horizontalOffset);
-                    FlowElement toGateway = createConvergingGateway(horizontalOffset + 300);
+                    boolean createAsExclusive = false;
+                    if(businessProcess.getConditionBasedGroups() != null && businessProcess.getConditionBasedGroups().contains(row)) {
+                        createAsExclusive = true;
+                    }
+                    FlowElement fromGateway = createGateway(horizontalOffset, createAsExclusive, false);
+                    FlowElement toGateway = createGateway(horizontalOffset + 300, createAsExclusive, true);
                     createEdge(from, fromGateway, null);
                     int verticalRelativeOffset = 0;
                     for (org.jbpm.designer.model.Task task : businessProcess.getTasks().get(row)) {
@@ -123,6 +128,28 @@ public class WizardModelToXmlConverter {
             bpmnTask = Bpmn2Factory.eINSTANCE.createUserTask();
             bpmnTask.setId(taskId);
             bpmnTask.setName(task.getName());
+            if(task.getResponsibleHuman() != null
+                    && task.getResponsibleHuman().getName() != null
+                    && !task.getResponsibleHuman().getName().isEmpty()) {
+                PotentialOwner potentialOwner = Bpmn2Factory.eINSTANCE.createPotentialOwner();
+                FormalExpression expression = Bpmn2Factory.eINSTANCE.createFormalExpression();
+                expression.setBody(task.getResponsibleHuman().getName());
+                ResourceAssignmentExpression resourceAssignmentExpression = Bpmn2Factory.eINSTANCE.createResourceAssignmentExpression();
+                resourceAssignmentExpression.setExpression(expression);
+                potentialOwner.setResourceAssignmentExpression(resourceAssignmentExpression);
+                bpmnTask.getResources().add(potentialOwner);
+            }
+            if(task.getResponsibleGroup() != null
+                    && task.getResponsibleGroup().getName() != null
+                    && !task.getResponsibleGroup().getName().isEmpty()) {
+                Variable groupId = new Variable();
+                groupId.setDataType("String");
+                groupId.setName("GroupId");
+                if(task.getInputs() == null) {
+                    task.setInputs(new ArrayList<Variable>());
+                }
+                task.getInputs().add(groupId);
+            }
         }
 
         if (org.jbpm.designer.model.Task.SERVICE_TYPE.compareTo(task.getTaskType()) == 0) {
@@ -151,16 +178,29 @@ public class WizardModelToXmlConverter {
             for (Variable variable : wizardTask.getInputs()) {
                 DataInput dataInput = Bpmn2Factory.eINSTANCE.createDataInput();
                 setItemSubjectRef(dataInput, variable);
-                dataInput.setName(variable.getName() + "_inner");
 
                 DataInputAssociation inputAssociation = Bpmn2Factory.eINSTANCE.createDataInputAssociation();
-                for (Property property : process.getProperties()) {
-                    if (property.getName().compareTo(variable.getName()) == 0) {
-                        inputAssociation.getSourceRef().add(property);
+
+                if("GroupId".compareTo(variable.getName()) == 0) {
+                    dataInput.setName(variable.getName());
+                    Assignment assignment = Bpmn2Factory.eINSTANCE.createAssignment();
+                    FormalExpression fromExpression = Bpmn2Factory.eINSTANCE.createFormalExpression();
+                    fromExpression.setBody(wizardTask.getResponsibleGroup().getName());
+                    assignment.setFrom(fromExpression);
+                    FormalExpression toExpression = Bpmn2Factory.eINSTANCE.createFormalExpression();
+                    toExpression.setBody(dataInput.getId());
+                    assignment.setTo(toExpression);
+                    inputAssociation.getAssignment().add(assignment);
+                } else {
+                    dataInput.setName(variable.getName() + "_inner");
+                    for (Property property : process.getProperties()) {
+                        if (property.getName().compareTo(variable.getName()) == 0) {
+                            inputAssociation.getSourceRef().add(property);
+                        }
                     }
                 }
-                inputAssociation.setTargetRef(dataInput);
 
+                inputAssociation.setTargetRef(dataInput);
                 specification.getDataInputs().add(dataInput);
                 inputSet.getDataInputRefs().add(dataInput);
                 bpmnTask.getDataInputAssociations().add(inputAssociation);
@@ -241,32 +281,23 @@ public class WizardModelToXmlConverter {
         }
     }
 
-    private FlowElement createDivergingGateway(int horizontalOffset) {
+    private FlowElement createGateway(int horizontalOffset, boolean exclusive, boolean converging) {
         if(process == null) {
             throw new RuntimeException("Create process at first");
         }
 
         String id = UUID.randomUUID().toString();
-        ExclusiveGateway gateway = Bpmn2Factory.eINSTANCE.createExclusiveGateway();
-        gateway.setGatewayDirection(GatewayDirection.DIVERGING);
-        gateway.setId(id);
-
-        BPMNShape shape = getShape(40, 40, horizontalOffset, 100);
-        shape.setBpmnElement(gateway);
-
-        diagram.getPlane().getPlaneElement().add(shape);
-        process.getFlowElements().add(gateway);
-        return gateway;
-    }
-
-    private FlowElement createConvergingGateway(int horizontalOffset) {
-        if(process == null) {
-            throw new RuntimeException("Create process at first");
+        Gateway gateway = null;
+        if (exclusive) {
+            gateway = Bpmn2Factory.eINSTANCE.createExclusiveGateway();
+        } else {
+            gateway = Bpmn2Factory.eINSTANCE.createParallelGateway();
         }
-
-        String id = UUID.randomUUID().toString();
-        ExclusiveGateway gateway = Bpmn2Factory.eINSTANCE.createExclusiveGateway();
-        gateway.setGatewayDirection(GatewayDirection.CONVERGING);
+        if (converging) {
+            gateway.setGatewayDirection(GatewayDirection.CONVERGING);
+        } else {
+            gateway.setGatewayDirection(GatewayDirection.DIVERGING);
+        }
         gateway.setId(id);
 
         BPMNShape shape = getShape(40, 40, horizontalOffset, 100);
@@ -291,7 +322,7 @@ public class WizardModelToXmlConverter {
         flow.setTargetRef((FlowNode) to);
         flow.setId(id);
 
-        if(constraint != null) {
+        if(constraint != null && constraint.getConstraint() != null && constraint.getVariable() != null && constraint.getConstraintValue() != null) {
             FormalExpression expression = Bpmn2Factory.eINSTANCE.createFormalExpression();
             expression.setId(UUID.randomUUID().toString());
             String expressionBody = "return KieFunctions.equalsTo(";

@@ -33,9 +33,7 @@ import org.uberfire.ext.widgets.core.client.wizards.WizardPage;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Dependent
 public class GuidedProcessWizard extends AbstractWizard {
@@ -159,6 +157,7 @@ public class GuidedProcessWizard extends AbstractWizard {
                 }
             }
         }
+        businessProcess.setConditionBasedGroups(tasksPage.getConditionBasedGroups());
         businessProcess.setVariables(variables);
         businessProcess.setTasks(tasksPage.getTasks());
         return businessProcess;

@@ -22,6 +22,7 @@ import org.jbpm.designer.client.wizard.pages.widget.TasksHolder;
 import org.jbpm.designer.model.*;
 
 import java.util.List;
+import java.util.Set;
 
 
 public interface ProcessTasksPageView extends IsWidget {
@@ -52,6 +53,8 @@ public interface ProcessTasksPageView extends IsWidget {
     List<Task> getTasks(int row);
 
     int getRowsCount();
+
+    Set<Integer> getConditionBasedGroups();
 
     void mergeParallel(List<ListTaskDetail> widgets);
 

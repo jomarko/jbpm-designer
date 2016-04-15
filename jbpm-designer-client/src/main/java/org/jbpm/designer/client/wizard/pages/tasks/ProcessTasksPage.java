@@ -341,6 +341,10 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         return tasks;
     }
 
+    public Set<Integer> getConditionBasedGroups() {
+        return view.getConditionBasedGroups();
+    }
+
     public void showHelpForSelectedTask(@Observes WizardPageStatusChangeEvent event) {
         Task task = null;
         List<Widget> selectedWidgets = view.getSelectedWidgets();
