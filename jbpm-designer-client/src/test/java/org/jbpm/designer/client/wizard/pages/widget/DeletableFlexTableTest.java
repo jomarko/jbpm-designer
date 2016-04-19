@@ -21,19 +21,14 @@ public class DeletableFlexTableTest {
     @GwtMock
     FlexTable container;
 
-    DeletableFlexTable<Widget, Object> table;
+    DeletableFlexTable table;
 
     @Before
     public void setUp() throws Exception {
-        table =  new DeletableFlexTable<Widget, Object>() {
+        table =  new DeletableFlexTable() {
             @Override
-            public Widget getNewRowWidget() {
-                return mock(Widget.class);
-            }
-
-            @Override
-            public List<Object> getModels() {
-                return new ArrayList<Object>();
+            public List<Widget> getNewRowWidgets() {
+                return mock(List.class);
             }
         };
 

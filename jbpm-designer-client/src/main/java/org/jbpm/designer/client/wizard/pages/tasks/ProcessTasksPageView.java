@@ -18,7 +18,7 @@ package org.jbpm.designer.client.wizard.pages.tasks;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
-import org.jbpm.designer.client.wizard.pages.widget.TasksHolder;
+import org.jbpm.designer.client.wizard.pages.widget.MergedTasksIndicator;
 import org.jbpm.designer.model.*;
 
 import java.util.List;
@@ -33,13 +33,9 @@ public interface ProcessTasksPageView extends IsWidget {
 
         void taskDetailSelected(ListTaskDetail detail);
 
-        void holderSelected(TasksHolder holder);
-
         void splitTasks();
 
-        void mergeTasksCondition();
-
-        void mergeTasksParallel();
+        void mergeTasks(boolean conditionBased);
 
         boolean isTaskValid(Task task);
 
@@ -52,15 +48,13 @@ public interface ProcessTasksPageView extends IsWidget {
 
     List<Task> getTasks(int row);
 
+    List<Widget> getWidgets(int row);
+
     int getRowsCount();
 
-    Set<Integer> getConditionBasedGroups();
+    void mergeSelectedWidgets();
 
-    void mergeParallel(List<ListTaskDetail> widgets);
-
-    void mergeCondition(List<ListTaskDetail> widgets);
-
-    void split(TasksHolder holder);
+    void splitSelectedWidgets();
 
     void setAvailableHumanParticipants(List<User> users);
 
@@ -76,11 +70,13 @@ public interface ProcessTasksPageView extends IsWidget {
 
     void highlightSelected();
 
-    void unbindAllWidgets();
+    void unbindAllTaskWidgets();
 
-    void rebindSelectedWidget();
+    void rebindTaskDetailWidgets();
 
-    void setModelForSelectedWidget(Task model);
+    void setModelTaskDetailWidgets(Task model);
+
+    void rebindConditionWidgetToModel(Condition model);
 
     void setAvailableVarsForSelectedTask(List<Variable> variables);
 
@@ -110,5 +106,6 @@ public interface ProcessTasksPageView extends IsWidget {
 
     void setSplitButtonVisibility(boolean value);
 
-    void selectAllWidgetsOfHolder(TasksHolder holder);
+    void setConditionPanelVisibility(boolean value);
+
 }

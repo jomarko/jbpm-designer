@@ -24,6 +24,7 @@ import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
+import org.jbpm.designer.model.Condition;
 import org.jbpm.designer.model.Task;
 
 
@@ -35,7 +36,21 @@ public class ListTaskDetail extends Composite implements HasModel<Task> {
 
     private Icon indicator = new Icon(IconType.USER);
 
+    private static int lastId = 0;
+
+    private int id;
+
+    private boolean initialized;
+
+    private Condition condition;
+
+    private boolean isMerged;
+
+    private int isMergedWith;
+
     public ListTaskDetail() {
+        id = ++lastId;
+        initialized = false;
         HorizontalPanel panel = new HorizontalPanel();
         panel.add(indicator);
         panel.add(name);
@@ -71,5 +86,41 @@ public class ListTaskDetail extends Composite implements HasModel<Task> {
 
     public void rebind() {
         dataBinder.bind(name, "name");
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public boolean isInitialized() {
+        return initialized;
+    }
+
+    public void setInitialized(boolean initialized) {
+        this.initialized = initialized;
+    }
+
+    public Condition getCondition() {
+        return condition;
+    }
+
+    public void setCondition(Condition condition) {
+        this.condition = condition;
+    }
+
+    public boolean isMerged() {
+        return isMerged;
+    }
+
+    public void setMerged(boolean merged) {
+        isMerged = merged;
+    }
+
+    public int getIsMergedWith() {
+        return isMergedWith;
+    }
+
+    public void setIsMergedWith(int isMergedWith) {
+        this.isMergedWith = isMergedWith;
     }
 }

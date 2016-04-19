@@ -4,7 +4,6 @@ import org.jboss.errai.common.client.api.annotations.Portable;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Portable
 public class BusinessProcess {
@@ -19,7 +18,7 @@ public class BusinessProcess {
 
     private Map<Integer, List<Task>> tasks;
 
-    private Set<Integer> conditionBasedGroups;
+    private Map<Integer, List<Condition>> conditions;
 
     public BusinessProcess() {
     }
@@ -64,11 +63,11 @@ public class BusinessProcess {
         this.tasks = tasks;
     }
 
-    public Set<Integer> getConditionBasedGroups() {
-        return conditionBasedGroups;
+    public Map<Integer, List<Condition>> getConditions() {
+        return conditions;
     }
 
-    public void setConditionBasedGroups(Set<Integer> conditionBasedGroups) {
-        this.conditionBasedGroups = conditionBasedGroups;
+    public void setConditions(Map<Integer, List<Condition>> conditions) {
+        this.conditions = conditions;
     }
 }

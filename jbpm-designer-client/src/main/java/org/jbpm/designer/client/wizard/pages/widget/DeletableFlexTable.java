@@ -29,15 +29,15 @@ import org.gwtbootstrap3.client.ui.constants.IconType;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class DeletableFlexTable<T extends Widget, U> extends Composite implements MouseDownHandler, MouseUpHandler, MouseMoveHandler,MouseOutHandler {
+public abstract class DeletableFlexTable extends Composite implements MouseDownHandler, MouseUpHandler, MouseMoveHandler,MouseOutHandler {
 
     interface DeletableFlexTableBinder
             extends
             UiBinder<Widget, DeletableFlexTable> {
     }
 
-    public interface RowsHandler<T> {
-        void addedRow(Widget widget);
+    public interface RowsHandler {
+        void addedRow(List<Widget> widgets);
 
         void rowDeleted();
     }
@@ -124,17 +124,23 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
         leftButtonDown = false;
     }
 
-    public abstract T getNewRowWidget();
+    public abstract List<Widget> getNewRowWidgets();
 
-    public abstract List<U> getModels();
-
-    public void addNewRow() {
-        final Widget newRowWidget = getNewRowWidget();
+    public void addNewRow(List<Widget> newRowWidgets) {
         int row = container.getRowCount();
-        container.setWidget(row, 0, newRowWidget);
-        container.setWidget(row, 1, getDeleteButton());
+        addNewRow(row, newRowWidgets);
+    }
+
+    public void addNewRow(int rowPosition, List<Widget> newRowWidgets) {
+        int column = 0;
+        for(Widget newWidget : newRowWidgets) {
+            container.setWidget(rowPosition, column++, newWidget);
+        }
+
+        container.setWidget(rowPosition, container.getCellCount(rowPosition), getDeleteButton());
+
         for(RowsHandler handler : handlers) {
-            handler.addedRow(newRowWidget);
+            handler.addedRow(newRowWidgets);
         }
     }
 
@@ -167,14 +173,14 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
         container.removeAllRows();
     }
 
-    public void setRedRowColor(int row, int column) {
+    public void setRedColor(int row, int column) {
         if(!container.getCellFormatter().getStyleName(row, column).contains("redRow") &&
                 !container.getCellFormatter().getStyleName(row, column).contains("selectedRow")) {
             container.getCellFormatter().addStyleName(row, column, "redRow");
         }
     }
 
-    public void setNormalRowColor(int row, int column) {
+    public void setNormalColor(int row, int column) {
         if(container.getCellFormatter().getStyleName(row, column).contains("redRow")) {
             container.getCellFormatter().removeStyleName(row, column, "redRow");
         }
@@ -188,7 +194,7 @@ public abstract class DeletableFlexTable<T extends Widget, U> extends Composite 
             public void onClick(ClickEvent clickEvent) {
 
                 for(int row = 0; row < container.getRowCount(); row++) {
-                    if(container.getWidget(row, 1) == delete) {
+                    if(container.getWidget(row, container.getCellCount(row) - 1) == delete) {
                         container.removeRow(row);
                         break;
                     }

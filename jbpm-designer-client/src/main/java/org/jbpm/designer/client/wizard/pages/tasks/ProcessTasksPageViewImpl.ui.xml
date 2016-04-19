@@ -41,24 +41,34 @@
                     <widget:TasksTable ui:field="tasksContainer"/>
                 </bHtml:Div>
                 <bHtml:Div styleName="col-md-6">
-                    <b:TabPanel>
-                        <b:NavTabs>
-                            <b:TabListItem active="true" dataTarget="#tab1" text="General"/>
-                            <b:TabListItem dataTarget="#tab2" text="I/O"/>
-                            <b:TabListItem dataTarget="#tab3" text="Condition"/>
-                        </b:NavTabs>
-                        <b:TabContent>
-                            <b:TabPane active="true" b:id="tab1">
-                                <widget:TaskDetail ui:field="taskDetail"/>
-                            </b:TabPane>
-                            <b:TabPane b:id="tab2">
-                                <widget:TaskIO ui:field="taskIO"/>
-                            </b:TabPane>
-                            <b:TabPane b:id="tab3">
-                                <widget:ConditionWidget ui:field="conditionWidget"/>
-                            </b:TabPane>
-                        </b:TabContent>
-                    </b:TabPanel>
+                    <bHtml:Div styleName="row">
+                        <b:TabPanel>
+                            <b:NavTabs>
+                                <b:TabListItem active="true" dataTarget="#tab1" text="General"/>
+                                <b:TabListItem dataTarget="#tab2" text="I/O"/>
+                            </b:NavTabs>
+                            <b:TabContent>
+                                <b:TabPane active="true" b:id="tab1">
+                                    <widget:TaskDetail ui:field="taskDetail"/>
+                                </b:TabPane>
+                                <b:TabPane b:id="tab2">
+                                    <widget:TaskIO ui:field="taskIO"/>
+                                </b:TabPane>
+                            </b:TabContent>
+                        </b:TabPanel>
+                    </bHtml:Div>
+                    <bHtml:Div styleName="row">
+                        <b:TabPanel ui:field="conditionPanel" visible="false">
+                            <b:NavTabs>
+                                <b:TabListItem active="true" dataTarget="#tab1" text="Condition"/>
+                            </b:NavTabs>
+                            <b:TabContent>
+                                <b:TabPane active="true" b:id="tab1">
+                                    <widget:ConditionWidget ui:field="conditionWidget"/>
+                                </b:TabPane>
+                            </b:TabContent>
+                        </b:TabPanel>
+                    </bHtml:Div>
                 </bHtml:Div>
             </bHtml:Div>
         </bHtml:Div>

@@ -75,7 +75,7 @@ public class GuidedProcessWizardTest {
 
     @Test
     public void testGetPageWidget() {
-        for(int i = 0; i < 5; i++) {
+        for(int i = 0; i < 4; i++) {
             wizard.getPageWidget(i);
         }
 
@@ -83,9 +83,8 @@ public class GuidedProcessWizardTest {
         verify(inputsPage).prepareView();
         verify(startEventPage).prepareView();
         verify(tasksPage).prepareView();
-        verify(previewPage).prepareView();
 
-        for(int i = 0; i < 5; i++) {
+        for(int i = 0; i < 4; i++) {
             wizard.getPageWidget(i);
         }
 
@@ -93,6 +92,5 @@ public class GuidedProcessWizardTest {
         verify(inputsPage, times(2)).prepareView();
         verify(startEventPage, times(2)).prepareView();
         verify(tasksPage, times(2)).prepareView();
-        verify(previewPage, times(2)).prepareView();
     }
 }

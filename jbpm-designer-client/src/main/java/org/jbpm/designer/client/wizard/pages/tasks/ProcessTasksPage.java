@@ -21,9 +21,7 @@ import org.jboss.errai.common.client.api.RemoteCallback;
 
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.wizard.GuidedProcessWizard;
-import org.jbpm.designer.client.wizard.pages.widget.ConstraintHolder;
 import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
-import org.jbpm.designer.client.wizard.pages.widget.TasksHolder;
 import org.jbpm.designer.model.*;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.security.management.api.AbstractEntityManager;
@@ -150,48 +148,45 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     @Override
     public void splitTasks() {
         List<Widget> selectedWidgets = view.getSelectedWidgets();
-        if(selectedWidgets.size() == 1) {
-            if(selectedWidgets.get(0) instanceof TasksHolder) {
-                ((TasksHolder) selectedWidgets.get(0)).removeHandlers();
-                view.split((TasksHolder)selectedWidgets.get(0));
+        if(selectedWidgets.size() == 2) {
+            if(!canBeMerged(selectedWidgets) && areFromSameRow(selectedWidgets)) {
+                ((ListTaskDetail)selectedWidgets.get(0)).setMerged(false);
+                ((ListTaskDetail)selectedWidgets.get(1)).setMerged(false);
+                ((ListTaskDetail) selectedWidgets.get(0)).setCondition(null);
+                ((ListTaskDetail) selectedWidgets.get(1)).setCondition(null);
+                view.splitSelectedWidgets();
                 view.deselectAll();
                 view.setSplitButtonVisibility(false);
+                view.setConditionPanelVisibility(false);
                 firePageChangedEvent();
             }
         } else {
             view.showSplitInvalidCount();
         }
+
     }
 
     @Override
-    public void mergeTasksCondition() {
+    public void mergeTasks(boolean conditionBased) {
         List<Widget> selectedWidgets = view.getSelectedWidgets();
         if(selectedWidgets.size() == 2) {
             if(canBeMerged(selectedWidgets)) {
-                List<ListTaskDetail> details = new ArrayList<ListTaskDetail>();
-                details.add((ListTaskDetail) selectedWidgets.get(0));
-                details.add((ListTaskDetail) selectedWidgets.get(1));
-                view.mergeCondition(details);
-                view.deselectAll();
-                view.setMergeButtonsVisibility(false);
-                firePageChangedEvent();
-            } else {
-                view.showAlreadyContainsMerged();
-            }
-        } else {
-            view.showMergeInvalidCount();
-        }
-    }
-
-    @Override
-    public void mergeTasksParallel() {
-        List<Widget> selectedWidgets = view.getSelectedWidgets();
-        if(selectedWidgets.size() == 2) {
-            if(canBeMerged(selectedWidgets)) {
-                List<ListTaskDetail> details = new ArrayList<ListTaskDetail>();
-                details.add((ListTaskDetail) selectedWidgets.get(0));
-                details.add((ListTaskDetail) selectedWidgets.get(1));
-                view.mergeParallel(details);
+                ((ListTaskDetail)selectedWidgets.get(0)).setMerged(true);
+                ((ListTaskDetail)selectedWidgets.get(1)).setMerged(true);
+                ((ListTaskDetail)selectedWidgets.get(0)).setIsMergedWith(((ListTaskDetail) selectedWidgets.get(1)).getId());
+                ((ListTaskDetail)selectedWidgets.get(1)).setIsMergedWith(((ListTaskDetail) selectedWidgets.get(0)).getId());
+                if(conditionBased) {
+                    Constraint constraint = new Constraint();
+                    Condition positive = new Condition();
+                    positive.setConstraint(constraint);
+                    positive.setExecuteIfConstraintSatisfied(true);
+                    Condition negative = new Condition();
+                    negative.setConstraint(constraint);
+                    negative.setExecuteIfConstraintSatisfied(false);
+                    ((ListTaskDetail) selectedWidgets.get(0)).setCondition(positive);
+                    ((ListTaskDetail) selectedWidgets.get(1)).setCondition(negative);
+                }
+                view.mergeSelectedWidgets();
                 view.deselectAll();
                 view.setMergeButtonsVisibility(false);
                 firePageChangedEvent();
@@ -208,12 +203,14 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         view.deselectAll();
         view.setSplitButtonVisibility(false);
         view.setMergeButtonsVisibility(false);
+        view.setConditionPanelVisibility(false);
         firePageChangedEvent();
     }
 
     @Override
     public void taskDetailSelected(ListTaskDetail detail) {
-        view.unbindAllWidgets();
+        view.setConditionPanelVisibility(detail.getCondition() != null);
+        view.unbindAllTaskWidgets();
 
         Task model = detail.getModel();
         if(model.getTaskType() == Task.HUMAN_TYPE) {
@@ -225,37 +222,30 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
 
         view.setAvailableVarsForSelectedTask(getVariablesForTask(model));
         detail.setModel(model);
-        view.setModelForSelectedWidget(model);
-
+        view.setModelTaskDetailWidgets(model);
+        if(detail.getCondition() != null) {
+            view.rebindConditionWidgetToModel(detail.getCondition());
+        }
         detail.rebind();
-        view.rebindSelectedWidget();
+        view.rebindTaskDetailWidgets();
         view.highlightSelected();
-        if( view.getSelectedWidgets().size() > 1 ) {
+        List<Widget> selectedWidgets = view.getSelectedWidgets();
+
+        if(selectedWidgets.size() != 2) {
+            view.setMergeButtonsVisibility(false);
+            view.setSplitButtonVisibility(false);
+        } else if( canBeMerged(selectedWidgets)) {
             view.setMergeButtonsVisibility(true);
             view.setSplitButtonVisibility(false);
         } else {
             view.setMergeButtonsVisibility(false);
-            if(view.getSelectedWidgets().size() == 1 && view.getSelectedWidgets().get(0) instanceof TasksHolder) {
+            if(areFromSameRow(selectedWidgets)) {
                 view.setSplitButtonVisibility(true);
             } else {
                 view.setSplitButtonVisibility(false);
             }
         }
         firePageChangedEvent();
-    }
-
-    @Override
-    public void holderSelected(TasksHolder holder) {
-        view.selectAllWidgetsOfHolder(holder);
-        view.highlightSelected();
-        view.setSplitButtonVisibility(true);
-        if(holder instanceof ConstraintHolder) {
-            if (holder.getTasks() != null) {
-                for (ListTaskDetail detail : holder.getTasks()) {
-                    detail.getModel().getCondition().setConstraint(((ConstraintHolder)holder).getModel());
-                }
-            }
-        }
     }
 
     public List<Variable> getVariablesForTask(Task task) {
@@ -341,8 +331,25 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         return tasks;
     }
 
-    public Set<Integer> getConditionBasedGroups() {
-        return view.getConditionBasedGroups();
+    public Map<Integer, List<Condition>> getMergedRowsWithConditions() {
+        Map<Integer, List<Condition>> rowsWithConditions = new HashMap<Integer, List<Condition>>();
+        for (int row = 0; row < view.getRowsCount(); row++) {
+            List<Widget> rowWidgets = view.getWidgets(row);
+            List<Condition> rowConditions = new ArrayList<Condition>();
+            for(Widget widget : rowWidgets) {
+                if(widget instanceof ListTaskDetail) {
+                    ListTaskDetail detail = (ListTaskDetail) widget;
+                    if(detail.isMerged() && detail.getCondition() != null) {
+                        rowConditions.add(detail.getCondition());
+                    }
+                }
+            }
+            if(rowConditions.size() > 1) {
+                rowsWithConditions.put(row, rowConditions);
+            }
+        }
+
+        return rowsWithConditions;
     }
 
     public void showHelpForSelectedTask(@Observes WizardPageStatusChangeEvent event) {
@@ -380,13 +387,33 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         }
     }
 
-    private boolean canBeMerged(List<Widget> widgets) {
-        for(Widget widget : widgets) {
-            if(!(widget instanceof  ListTaskDetail)) {
-                return false;
+    private boolean areFromSameRow(List<Widget> widgets) {
+        List<Integer> from = new ArrayList<Integer>();
+        List<Integer> to = new ArrayList<Integer>();
+
+        for (Widget widget : widgets) {
+            if(widget instanceof ListTaskDetail) {
+                ListTaskDetail detail = (ListTaskDetail) widget;
+                if(detail.isMerged()) {
+                    from.add(detail.getId());
+                    to.add(detail.getIsMergedWith());
+                }
             }
         }
 
+        if(from.size() > 0 && to.size() > 0 && from.containsAll(to) && to.containsAll(from)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean canBeMerged(List<Widget> widgets) {
+        for(Widget widget : widgets) {
+            if (((ListTaskDetail)widget).isMerged()) {
+                return false;
+            }
+        }
         return true;
     }
 }

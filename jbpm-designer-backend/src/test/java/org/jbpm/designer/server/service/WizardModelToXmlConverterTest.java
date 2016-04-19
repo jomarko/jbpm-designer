@@ -22,6 +22,7 @@ import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.Task;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.util.*;
 
@@ -143,9 +144,12 @@ public class WizardModelToXmlConverterTest {
     @Test
     public void testExclusiveGateway() {
         taskGroups.get(0).add(humanTask);
-        Set<Integer> conditionBasedGroups = new HashSet<Integer>();
-        conditionBasedGroups.add(0);
-        process.setConditionBasedGroups(conditionBasedGroups);
+        Map<Integer, List<Condition>> conditionGroups = new HashMap<Integer, List<Condition>>();
+        List<Condition> conditions = new ArrayList<Condition>();
+        conditions.add(Mockito.mock(Condition.class));
+        conditions.add(Mockito.mock(Condition.class));
+        conditionGroups.put(0, conditions);
+        process.setConditions(conditionGroups);
         process.setTasks(taskGroups);
 
         converter.convertProcessToXml(process);

@@ -47,8 +47,6 @@ public class TaskDetail extends Composite implements HasModel<Task> {
 
     private DataBinder<Task> dataBinder = DataBinder.forType(Task.class);
 
-    private ProcessTasksPageView.Presenter presenter;
-
     @UiField(provided = true)
     ValueListBox<String> taskType = new ValueListBox<String>(new ToStringRenderer());
 
@@ -99,17 +97,6 @@ public class TaskDetail extends Composite implements HasModel<Task> {
 
         taskType.setValue(Task.SERVICE_TYPE, true);
         taskType.setValue(Task.HUMAN_TYPE, true);
-
-        dataBinder.addPropertyChangeHandler(new PropertyChangeHandler() {
-            @Override
-            public void onPropertyChange(PropertyChangeEvent propertyChangeEvent) {
-                presenter.firePageChangedEvent();
-            }
-        });
-    }
-
-    public void init(ProcessTasksPageView.Presenter presenter) {
-        this.presenter = presenter;
     }
 
     @Override

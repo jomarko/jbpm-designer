@@ -34,35 +34,26 @@ public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> 
 
     private DataBinder<Task> dataBinder = DataBinder.forType(Task.class);
 
-    private ProcessTasksPageView.Presenter presenter;
-
     @UiField
     FlexTable variables;
 
     @UiField
     InputRow output;
 
-    private Map<Variable, CheckBox> variabeCheckBoxes = new HashMap<Variable, CheckBox>();
+    private Map<Variable, CheckBox> variableCheckBoxes = new HashMap<Variable, CheckBox>();
 
     public TaskIO() {
         initWidget(uiBinder.createAndBindUi(this));
         dataBinder.bind(output, "output");
-
-        dataBinder.addPropertyChangeHandler(new PropertyChangeHandler() {
-            @Override
-            public void onPropertyChange(PropertyChangeEvent propertyChangeEvent) {
-                presenter.firePageChangedEvent();
-            }
-        });
     }
 
-    public void init(ProcessTasksPageView.Presenter presenter) {
-        this.presenter = presenter;
+    public void setPropertyChangeChandler(PropertyChangeHandler handler) {
+        dataBinder.addPropertyChangeHandler(handler);
     }
 
     public void setAcceptableValues(List<Variable> vars) {
         variables.removeAllRows();
-        variabeCheckBoxes.clear();
+        variableCheckBoxes.clear();
         for(final Variable variable : vars) {
             int newRow = variables.getRowCount();
             CheckBox checkBox = new CheckBox();
@@ -70,8 +61,8 @@ public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> 
                 @Override
                 public void onValueChange(ValueChangeEvent<Boolean> valueChangeEvent) {
                     List<Variable> selected = new ArrayList<Variable>();
-                    for(Variable variable : variabeCheckBoxes.keySet()) {
-                        if(variabeCheckBoxes.get(variable).getValue()) {
+                    for(Variable variable : variableCheckBoxes.keySet()) {
+                        if(variableCheckBoxes.get(variable).getValue()) {
                             selected.add(variable);
                         }
                     }
@@ -82,7 +73,7 @@ public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> 
             });
             variables.setWidget(newRow, 0, checkBox);
             variables.setWidget(newRow, 1, new Text(variable.getName() + ":" + variable.getDataType()));
-            variabeCheckBoxes.put(variable, checkBox);
+            variableCheckBoxes.put(variable, checkBox);
         }
     }
 
@@ -97,8 +88,8 @@ public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> 
         if (task.getInputs() != null) {
             List<Variable> taskInputs = task.getInputs();
             for (Variable variable : task.getInputs()) {
-                if(variabeCheckBoxes.containsKey(variable)) {
-                    variabeCheckBoxes.get(variable).setValue(true);
+                if(variableCheckBoxes.containsKey(variable)) {
+                    variableCheckBoxes.get(variable).setValue(true);
                 } else {
                     taskInputs.remove(variable);
                 }

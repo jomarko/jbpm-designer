@@ -21,14 +21,16 @@ import org.jbpm.designer.model.Task;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TasksTable extends DeletableFlexTable<ListTaskDetail, Task> {
+public class TasksTable extends DeletableFlexTable {
 
     @Override
-    public ListTaskDetail getNewRowWidget() {
-        return new ListTaskDetail();
+    public List<Widget> getNewRowWidgets() {
+        List<Widget> newWidgets = new ArrayList<Widget>();
+        newWidgets.add(new MergedTasksIndicator());
+        newWidgets.add(new ListTaskDetail());
+        return newWidgets;
     }
 
-    @Override
     public List<Task> getModels() {
         List<Task> result = new ArrayList<Task>();
         for(int row = 0; row < container.getRowCount(); row++) {
@@ -41,15 +43,8 @@ public class TasksTable extends DeletableFlexTable<ListTaskDetail, Task> {
         List<Task> result = new ArrayList<Task>();
         for(int i = 0; i < container.getCellCount(row) - 1; i++) {
             Widget widget = container.getWidget(row, i);
-            if(widget != null) {
-                if(widget instanceof ListTaskDetail) {
-                    result.add(((ListTaskDetail) widget).getModel());
-                }
-                if(widget instanceof TasksHolder) {
-                    for(ListTaskDetail detail : ((TasksHolder)widget).getTasks()) {
-                        result.add(detail.getModel());
-                    }
-                }
+            if(widget != null && widget instanceof ListTaskDetail) {
+                result.add(((ListTaskDetail) widget).getModel());
             }
         }
         return result;
@@ -70,18 +65,25 @@ public class TasksTable extends DeletableFlexTable<ListTaskDetail, Task> {
         return container.getRowCount();
     }
 
-    public boolean isRowConditionBased(int row) {
-        return (container.getWidget(row, 0) instanceof ConstraintHolder);
-    }
-
-    public void split(TasksHolder holder) {
-        for(int i = 1; i < holder.getTasks().size(); i++) {
-            int newRow = container.insertRow(getRowOfWidget(holder));
-            container.setWidget(newRow, 0, holder.getTasks().get(i));
-            container.setWidget(newRow, 1, getDeleteButton());
+    public void split(int row) {
+        List<Widget> widgetsToMove = new ArrayList<Widget>();
+        for(int column = 2; column < container.getCellCount(row) - 1; column++) {
+            widgetsToMove.add(container.getWidget(row, 2));
+            container.removeCell(row, 2);
         }
 
-        container.setWidget(getRowOfWidget(holder), 0, holder.getTasks().get(0));
+        if(container.getWidget(row, 0) instanceof MergedTasksIndicator) {
+            MergedTasksIndicator indicator = (MergedTasksIndicator) container.getWidget(row, 0);
+            indicator.setVisible(false);
+        }
+
+        for(Widget widget : widgetsToMove) {
+            int newRow = container.insertRow(row);
+            List<Widget> newWidgets = new ArrayList<Widget>();
+            newWidgets.add(new MergedTasksIndicator());
+            newWidgets.add(widget);
+            addNewRow(newRow, newWidgets);
+        }
     }
 
     public void highlightWidgets(List<Widget> widgets) {
@@ -90,8 +92,7 @@ public class TasksTable extends DeletableFlexTable<ListTaskDetail, Task> {
                 container.getCellFormatter().removeStyleName(row, column, "selectedRow");
                 container.getCellFormatter().removeStyleName(row, column, "redRow");
 
-                Widget widget = container.getWidget(row, column);
-                if (widgets.contains(widget)) {
+                if (widgets.contains(container.getWidget(row, column))) {
                     container.getCellFormatter().addStyleName(row, column, "selectedRow");
                 }
             }
@@ -115,7 +116,8 @@ public class TasksTable extends DeletableFlexTable<ListTaskDetail, Task> {
         container.removeRow(row);
     }
 
-    public void setWidget(int row, int column, Widget widget) {
-        container.setWidget(row, column, widget);
+    public void addWidgetToEnd(int row, Widget widget) {
+        container.insertCell(row, container.getCellCount(row) - 1);
+        container.setWidget(row, container.getCellCount(row) - 2, widget);
     }
 }

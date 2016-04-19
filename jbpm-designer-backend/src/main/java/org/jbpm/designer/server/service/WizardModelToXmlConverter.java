@@ -50,19 +50,23 @@ public class WizardModelToXmlConverter {
                 if (businessProcess.getTasks().get(row).size() > 1) {
                     horizontalOffset += 150;
                     boolean createAsExclusive = false;
-                    if(businessProcess.getConditionBasedGroups() != null && businessProcess.getConditionBasedGroups().contains(row)) {
+                    if(businessProcess.getConditions() != null && businessProcess.getConditions().containsKey(row)) {
                         createAsExclusive = true;
                     }
                     FlowElement fromGateway = createGateway(horizontalOffset, createAsExclusive, false);
                     FlowElement toGateway = createGateway(horizontalOffset + 300, createAsExclusive, true);
                     createEdge(from, fromGateway, null);
                     int verticalRelativeOffset = 0;
+                    int counter = 0;
                     for (org.jbpm.designer.model.Task task : businessProcess.getTasks().get(row)) {
                         FlowElement middle = createTask(task, horizontalOffset + 150, verticalRelativeOffset);
-                        if (task.getCondition() != null) {
-                            createEdge(fromGateway, middle, task.getCondition().getConstraint());
-                        } else {
-                            createEdge(fromGateway, middle, null);
+                        Condition condition = null;
+                        if(businessProcess.getConditions() != null && businessProcess.getConditions().containsKey(row)) {
+                            condition = businessProcess.getConditions().get(row).get(counter);
+                        }
+                        SequenceFlow flow = createEdge(fromGateway, middle, condition);
+                        if(condition != null && condition.isExecuteIfConstraintSatisfied()) {
+                            ((ExclusiveGateway)fromGateway).setDefault(flow);
                         }
                         createEdge(middle, toGateway, null);
                         verticalRelativeOffset += 150;
@@ -308,7 +312,7 @@ public class WizardModelToXmlConverter {
         return gateway;
     }
 
-    private FlowElement createEdge(FlowElement from, FlowElement to, Constraint constraint) {
+    private SequenceFlow createEdge(FlowElement from, FlowElement to, Condition condition) {
         if(process == null) {
             throw new RuntimeException("Create process at first");
         }
@@ -322,16 +326,19 @@ public class WizardModelToXmlConverter {
         flow.setTargetRef((FlowNode) to);
         flow.setId(id);
 
-        if(constraint != null && constraint.getConstraint() != null && constraint.getVariable() != null && constraint.getConstraintValue() != null) {
-            FormalExpression expression = Bpmn2Factory.eINSTANCE.createFormalExpression();
-            expression.setId(UUID.randomUUID().toString());
-            String expressionBody = "return KieFunctions.equalsTo(";
-            expressionBody += constraint.getVariable().getName();
-            expressionBody += ",\"";
-            expressionBody += constraint.getConstraintValue();
-            expressionBody += "\");";
-            expression.setBody(expressionBody);
-            flow.setConditionExpression(expression);
+        if(condition != null) {
+            Constraint constraint = condition.getConstraint();
+            if (constraint != null && constraint.getConstraint() != null && constraint.getVariable() != null && constraint.getConstraintValue() != null) {
+                FormalExpression expression = Bpmn2Factory.eINSTANCE.createFormalExpression();
+                expression.setId(UUID.randomUUID().toString());
+                String expressionBody = "return KieFunctions.equalsTo(";
+                expressionBody += constraint.getVariable().getName();
+                expressionBody += ",\"";
+                expressionBody += constraint.getConstraintValue();
+                expressionBody += "\");";
+                expression.setBody(expressionBody);
+                flow.setConditionExpression(expression);
+            }
         }
 
         BPMNEdge edge = BpmnDiFactory.eINSTANCE.createBPMNEdge();

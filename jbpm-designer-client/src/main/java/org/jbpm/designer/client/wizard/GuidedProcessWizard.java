@@ -157,7 +157,7 @@ public class GuidedProcessWizard extends AbstractWizard {
                 }
             }
         }
-        businessProcess.setConditionBasedGroups(tasksPage.getConditionBasedGroups());
+        businessProcess.setConditions(tasksPage.getMergedRowsWithConditions());
         businessProcess.setVariables(variables);
         businessProcess.setTasks(tasksPage.getTasks());
         return businessProcess;

@@ -21,19 +21,21 @@ import org.jbpm.designer.model.Variable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InputsTable extends DeletableFlexTable<InputRow, Variable> {
+public class InputsTable extends DeletableFlexTable {
 
     @Override
-    public InputRow getNewRowWidget() {
-        return new InputRow();
+    public List<Widget> getNewRowWidgets() {
+        List<Widget> newWidgets = new ArrayList<Widget>();
+        newWidgets.add(new InputRow());
+        return newWidgets;
     }
 
-    @Override
+
     public List<Variable> getModels() {
         List<Variable> result = new ArrayList<Variable>();
         for(int row = 0; row < container.getRowCount(); row++) {
             Widget widget = container.getWidget(row, 0);
-            if(widget != null) {
+            if(widget != null && widget instanceof InputRow) {
                 result.add(((InputRow)widget).getModel());
             }
         }

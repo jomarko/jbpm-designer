@@ -44,16 +44,16 @@ public class ProcessInputsPageViewImpl extends Composite implements ProcessInput
 
     @UiHandler("addButton")
     public void addButtonHandler(ClickEvent event) {
-        inputs.addNewRow();
+        inputs.addNewRow(inputs.getNewRowWidgets());
     }
 
     @UiField
     InputsTable inputs;
 
     @Override
-    public void addedRow(Widget widget) {
-        ((InputRow) widget).setModel(presenter.getDefaultModel());
-        ((InputRow) widget).setPropertyChangeHandler(handler);
+    public void addedRow(List<Widget> widgets) {
+        ((InputRow) widgets.get(0)).setModel(presenter.getDefaultModel());
+        ((InputRow) widgets.get(0)).setPropertyChangeHandler(handler);
         presenter.firePageChangedEvent();
     }
 
@@ -75,11 +75,11 @@ public class ProcessInputsPageViewImpl extends Composite implements ProcessInput
 
     @Override
     public void showAsValid(int row) {
-        inputs.setNormalRowColor(row, 0);
+        inputs.setNormalColor(row, 0);
     }
 
     @Override
     public void showAsInvalid(int row) {
-        inputs.setRedRowColor(row, 0);
+        inputs.setRedColor(row, 0);
     }
 }
