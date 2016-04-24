@@ -33,6 +33,7 @@ import org.jbpm.designer.model.Task;
 import org.jbpm.designer.model.User;
 
 import javax.enterprise.context.Dependent;
+import java.util.ArrayList;
 import java.util.List;
 
 @Dependent
@@ -46,6 +47,9 @@ public class TaskDetail extends Composite implements HasModel<Task> {
     private static TaskDetailBinder uiBinder = GWT.create(TaskDetailBinder.class);
 
     private DataBinder<Task> dataBinder = DataBinder.forType(Task.class);
+
+    private List<User> acceptableUsers;
+    private List<Group> acceptableGroups;
 
     @UiField(provided = true)
     ValueListBox<String> taskType = new ValueListBox<String>(new ToStringRenderer());
@@ -97,6 +101,8 @@ public class TaskDetail extends Composite implements HasModel<Task> {
 
         taskType.setValue(Task.SERVICE_TYPE, true);
         taskType.setValue(Task.HUMAN_TYPE, true);
+        acceptableUsers = new ArrayList<User>();
+        acceptableGroups = new ArrayList<Group>();
     }
 
     @Override
@@ -109,12 +115,14 @@ public class TaskDetail extends Composite implements HasModel<Task> {
         dataBinder.setModel(task);
     }
 
-    public void setHumanParticipants(List<User> users) {
-        responsibleHuman.setAcceptableValues(users);
+    public void addHumanParticipants(List<User> users) {
+        acceptableUsers.addAll(users);
+        responsibleHuman.setAcceptableValues(acceptableUsers);
     }
 
-    public void setGroupParticipants(List<Group> groups) {
-        responsibleGroup.setAcceptableValues(groups);
+    public void addGroupParticipants(List<Group> groups) {
+        acceptableGroups.addAll(groups);
+        responsibleGroup.setAcceptableValues(acceptableGroups);
     }
 
     public void unbind() {

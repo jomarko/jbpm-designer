@@ -56,9 +56,9 @@ public interface ProcessTasksPageView extends IsWidget {
 
     void splitSelectedWidgets();
 
-    void setAvailableHumanParticipants(List<User> users);
+    void addAvailableHumanParticipants(List<User> users);
 
-    void setAvailableGroupParticipants(List<Group> groups);
+    void addAvailableGroupParticipants(List<Group> groups);
 
     List<Widget> getSelectedWidgets();
 

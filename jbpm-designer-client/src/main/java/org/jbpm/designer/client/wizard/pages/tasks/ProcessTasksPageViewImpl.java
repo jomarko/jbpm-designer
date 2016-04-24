@@ -117,13 +117,13 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
-    public void setAvailableHumanParticipants(List<User> users) {
-        taskDetail.setHumanParticipants(users);
+    public void addAvailableHumanParticipants(List<User> users) {
+        taskDetail.addHumanParticipants(users);
     }
 
     @Override
-    public void setAvailableGroupParticipants(List<Group> groups) {
-        taskDetail.setGroupParticipants(groups);
+    public void addAvailableGroupParticipants(List<Group> groups) {
+        taskDetail.addGroupParticipants(groups);
     }
 
     @Override

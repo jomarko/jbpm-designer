@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.jbpm.designer.client.wizard.pages.tasks;/**/
+package org.jbpm.designer.client.wizard.pages.tasks;
 
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Widget;
@@ -23,6 +23,8 @@ import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.wizard.GuidedProcessWizard;
 import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
 import org.jbpm.designer.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.security.management.api.AbstractEntityManager;
 import org.uberfire.ext.security.management.client.ClientUserSystemManager;
@@ -38,6 +40,9 @@ import java.util.*;
 
 @Dependent
 public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presenter {
+
+    private static final Logger logger = LoggerFactory.getLogger(ProcessTasksPage.class);
+    private static int RESULT_MAX_COUNT = 100;
 
     @Inject
     ProcessTasksPageView view;
@@ -81,39 +86,8 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
 
     @Override
     public void prepareView() {
-        manager.users(new RemoteCallback<AbstractEntityManager.SearchResponse<org.jboss.errai.security.shared.api.identity.User>>() {
-            @Override
-            public void callback(final AbstractEntityManager.SearchResponse<org.jboss.errai.security.shared.api.identity.User> response) {
-                List<User> availableUsers = new ArrayList<User>();
-                for(org.jboss.errai.security.shared.api.identity.User u : response.getResults()) {
-                    availableUsers.add(new User(u.getIdentifier()));
-                }
-                view.setAvailableHumanParticipants(availableUsers);
-            }
-        }, new ErrorCallback() {
-            @Override
-            public boolean error(Object o, Throwable throwable) {
-                Window.alert("<!>" + throwable.getMessage());
-                return false;
-            }
-        }).search(new SearchRequestImpl("", 1, 10));
-
-        manager.groups(new RemoteCallback<AbstractEntityManager.SearchResponse<org.jboss.errai.security.shared.api.Group>>() {
-            @Override
-            public void callback(final AbstractEntityManager.SearchResponse<org.jboss.errai.security.shared.api.Group> response) {
-                List<Group> availableGroups = new ArrayList<Group>();
-                for(org.jboss.errai.security.shared.api.Group g : response.getResults()) {
-                    availableGroups.add(new Group(g.getName()));
-                }
-                view.setAvailableGroupParticipants(availableGroups);
-            }
-        }, new ErrorCallback() {
-            @Override
-            public boolean error(Object o, Throwable throwable) {
-                Window.alert("<!>" + throwable.getMessage());
-                return false;
-            }
-        }).search(new SearchRequestImpl("", 1, 10));
+        sendRequestForExistingUsers(1);
+        sendRequestForExistingGroups(1);
     }
 
     @Override
@@ -415,5 +389,49 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
             }
         }
         return true;
+    }
+
+    private void sendRequestForExistingUsers(final int getResultFromPage) {
+        manager.users(new RemoteCallback<AbstractEntityManager.SearchResponse<org.jboss.errai.security.shared.api.identity.User>>() {
+            @Override
+            public void callback(final AbstractEntityManager.SearchResponse<org.jboss.errai.security.shared.api.identity.User> response) {
+                List<User> availableUsers = new ArrayList<User>();
+                for(org.jboss.errai.security.shared.api.identity.User u : response.getResults()) {
+                    availableUsers.add(new User(u.getIdentifier()));
+                }
+                view.addAvailableHumanParticipants(availableUsers);
+                if(availableUsers.size() == RESULT_MAX_COUNT) {
+                    sendRequestForExistingUsers(getResultFromPage + 1);
+                }
+            }
+        }, new ErrorCallback() {
+            @Override
+            public boolean error(Object o, Throwable throwable) {
+                logger.error("Request for existing users failed: " + throwable.getMessage());
+                return true;
+            }
+        }).search(new SearchRequestImpl("", getResultFromPage, RESULT_MAX_COUNT));
+    }
+
+    private void sendRequestForExistingGroups(final int getResultFromPage) {
+        manager.groups(new RemoteCallback<AbstractEntityManager.SearchResponse<org.jboss.errai.security.shared.api.Group>>() {
+            @Override
+            public void callback(final AbstractEntityManager.SearchResponse<org.jboss.errai.security.shared.api.Group> response) {
+                List<Group> availableGroups = new ArrayList<Group>();
+                for(org.jboss.errai.security.shared.api.Group g : response.getResults()) {
+                    availableGroups.add(new Group(g.getName()));
+                }
+                view.addAvailableGroupParticipants(availableGroups);
+                if(availableGroups.size() == RESULT_MAX_COUNT) {
+                    sendRequestForExistingUsers(getResultFromPage + 1);
+                }
+            }
+        }, new ErrorCallback() {
+            @Override
+            public boolean error(Object o, Throwable throwable) {
+                logger.error("Request for existing groups failed: " + throwable.getMessage());
+                return true;
+            }
+        }).search(new SearchRequestImpl("", getResultFromPage, RESULT_MAX_COUNT));
     }
 }
