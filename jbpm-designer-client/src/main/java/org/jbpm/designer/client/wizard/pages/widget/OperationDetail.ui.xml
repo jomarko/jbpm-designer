@@ -20,13 +20,15 @@
              xmlns:gwt="urn:import:com.google.gwt.user.client.ui"
              xmlns:widget="urn:import:org.jbpm.designer.client.wizard.pages.widget">
 
-    <ui:with field="i18n" type="org.jbpm.designer.client.resources.i18n.DesignerEditorConstants"/>
 
-
-    <b:Form type="HORIZONTAL" ui:field="taskDetailForm">
+    <b:Form type="HORIZONTAL">
         <b:FieldSet>
-            <b:FormLabel for="taskType" text="Task Type" />
-            <b:ValueListBox ui:field="taskType" />
+            <b:FormLabel for="description" text="Description" />
+            <b:TextArea ui:field="description" readOnly="true"/>
+        </b:FieldSet>
+        <b:FieldSet ui:field="parametersFieldSet">
+            <b:FormLabel for="parameters" text="Parameters" />
+
         </b:FieldSet>
     </b:Form>
 

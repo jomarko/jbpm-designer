@@ -20,13 +20,17 @@
              xmlns:gwt="urn:import:com.google.gwt.user.client.ui"
              xmlns:widget="urn:import:org.jbpm.designer.client.wizard.pages.widget">
 
-    <ui:with field="i18n" type="org.jbpm.designer.client.resources.i18n.DesignerEditorConstants"/>
 
-
-    <b:Form type="HORIZONTAL" ui:field="taskDetailForm">
+    <b:Form type="HORIZONTAL" ui:field="serviceTaskDetailForm">
         <b:FieldSet>
-            <b:FormLabel for="taskType" text="Task Type" />
-            <b:ValueListBox ui:field="taskType" />
+            <b:FormLabel for="name" text="Name" showRequiredIndicator="true"/>
+            <b:TextBox ui:field="name" />
+            <b:HelpBlock ui:field="nameHelp" text="Please provide name of task" visible="false"/>
+        </b:FieldSet>
+        <b:FieldSet ui:field="operationWrapper">
+            <b:FormLabel for="operation" text="Operation" showRequiredIndicator="true"/>
+            <b:ValueListBox ui:field="operation" />
+            <b:HelpBlock ui:field="operationHelp" text="Operation is mandatory for service task" visible="false"/>
         </b:FieldSet>
     </b:Form>
 

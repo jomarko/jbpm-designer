@@ -21,8 +21,10 @@ import org.eclipse.bpmn2.di.*;
 import org.eclipse.dd.dc.Bounds;
 import org.eclipse.dd.dc.DcFactory;
 import org.eclipse.dd.di.DiagramElement;
+import org.jboss.drools.impl.DroolsPackageImpl;
 import org.jbpm.designer.bpmn2.impl.Bpmn2JsonMarshaller;
 import org.jbpm.designer.model.*;
+import org.jbpm.designer.model.ServiceTask;
 import org.jbpm.designer.web.profile.impl.JbpmProfileImpl;
 
 import javax.enterprise.context.Dependent;
@@ -90,7 +92,7 @@ public class WizardModelToXmlConverter {
         marshaller.setProfile(profile);
 
         try {
-            return profile.createMarshaller().parseModel(marshaller.marshall(definitions, ""), "");
+            return profile.createMarshaller().parseModel(marshaller.marshall(definitions, "Rest"), "Rest");
         } catch (Exception e) {
             throw new RuntimeException("Unable to convert your model to xml", e);
         }
@@ -128,38 +130,40 @@ public class WizardModelToXmlConverter {
 
         String taskId = UUID.randomUUID().toString();
         org.eclipse.bpmn2.Task bpmnTask = null;
-        if (org.jbpm.designer.model.Task.HUMAN_TYPE.compareTo(task.getTaskType()) == 0) {
+        if (task instanceof HumanTask) {
+            HumanTask humanTask = (HumanTask) task;
             bpmnTask = Bpmn2Factory.eINSTANCE.createUserTask();
             bpmnTask.setId(taskId);
-            bpmnTask.setName(task.getName());
-            if(task.getResponsibleHuman() != null
-                    && task.getResponsibleHuman().getName() != null
-                    && !task.getResponsibleHuman().getName().isEmpty()) {
+            bpmnTask.setName(humanTask.getName());
+            if(humanTask.getResponsibleHuman() != null
+                    && humanTask.getResponsibleHuman().getName() != null
+                    && !humanTask.getResponsibleHuman().getName().isEmpty()) {
                 PotentialOwner potentialOwner = Bpmn2Factory.eINSTANCE.createPotentialOwner();
                 FormalExpression expression = Bpmn2Factory.eINSTANCE.createFormalExpression();
-                expression.setBody(task.getResponsibleHuman().getName());
+                expression.setBody(humanTask.getResponsibleHuman().getName());
                 ResourceAssignmentExpression resourceAssignmentExpression = Bpmn2Factory.eINSTANCE.createResourceAssignmentExpression();
                 resourceAssignmentExpression.setExpression(expression);
                 potentialOwner.setResourceAssignmentExpression(resourceAssignmentExpression);
                 bpmnTask.getResources().add(potentialOwner);
             }
-            if(task.getResponsibleGroup() != null
-                    && task.getResponsibleGroup().getName() != null
-                    && !task.getResponsibleGroup().getName().isEmpty()) {
+            if(humanTask.getResponsibleGroup() != null
+                    && humanTask.getResponsibleGroup().getName() != null
+                    && !humanTask.getResponsibleGroup().getName().isEmpty()) {
                 Variable groupId = new Variable();
                 groupId.setDataType("String");
                 groupId.setName("GroupId");
-                if(task.getInputs() == null) {
-                    task.setInputs(new ArrayList<Variable>());
+                if(humanTask.getInputs() == null) {
+                    humanTask.setInputs(new ArrayList<Variable>());
                 }
-                task.getInputs().add(groupId);
+                humanTask.getInputs().add(groupId);
             }
         }
 
-        if (org.jbpm.designer.model.Task.SERVICE_TYPE.compareTo(task.getTaskType()) == 0) {
-            bpmnTask = Bpmn2Factory.eINSTANCE.createServiceTask();
+        if (task instanceof ServiceTask) {
+            bpmnTask = Bpmn2Factory.eINSTANCE.createTask();
             bpmnTask.setId(taskId);
             bpmnTask.setName(task.getName());
+            bpmnTask.eSet(DroolsPackageImpl.init().getDocumentRoot_TaskName(), "Rest");
         }
 
         createInputOutputAssociations(bpmnTask, task);
@@ -185,11 +189,11 @@ public class WizardModelToXmlConverter {
 
                 DataInputAssociation inputAssociation = Bpmn2Factory.eINSTANCE.createDataInputAssociation();
 
-                if("GroupId".compareTo(variable.getName()) == 0) {
+                if(wizardTask instanceof HumanTask && "GroupId".compareTo(variable.getName()) == 0) {
                     dataInput.setName(variable.getName());
                     Assignment assignment = Bpmn2Factory.eINSTANCE.createAssignment();
                     FormalExpression fromExpression = Bpmn2Factory.eINSTANCE.createFormalExpression();
-                    fromExpression.setBody(wizardTask.getResponsibleGroup().getName());
+                    fromExpression.setBody(((HumanTask)wizardTask).getResponsibleGroup().getName());
                     assignment.setFrom(fromExpression);
                     FormalExpression toExpression = Bpmn2Factory.eINSTANCE.createFormalExpression();
                     toExpression.setBody(dataInput.getId());

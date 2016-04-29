@@ -29,7 +29,9 @@ import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jbpm.designer.client.wizard.pages.widget.*;
 import org.jbpm.designer.model.*;
+import org.jbpm.designer.model.operation.Operation;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.util.*;
@@ -54,7 +56,10 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @UiField
-    TaskDetail taskDetail;
+    TabPane taskDetailPane;
+
+    @Inject
+    private TaskDetail taskDetail;
 
     @UiField
     TaskIO taskIO;
@@ -81,9 +86,12 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     public void init(Presenter presenter) {
         this.presenter = presenter;
 
+        taskDetailPane.add(taskDetail);
+        taskDetail.init(presenter);
+
         tasksContainer.registerRowsHandler(this);
         taskIO.setPropertyChangeChandler(getHandler());
-        taskDetail.setPropertyChangeChandler(getHandler());
+        taskDetail.setPropertyChangeHandler(getHandler());
         conditionWidget.setPropertyChangeHandler(getHandler());
 
         tasksContainer.clear();
@@ -246,6 +254,7 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     public void setAvailableVarsForSelectedTask(List<Variable> variables) {
         conditionWidget.setVariables(variables);
         taskIO.setAcceptableValues(variables);
+        taskDetail.setVariablesForParameterMapping(variables);
     }
 
     @Override
@@ -326,6 +335,11 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     @Override
     public void setConditionPanelVisibility(boolean value) {
         conditionPanel.setVisible(value);
+    }
+
+    @Override
+    public void addAvailableOperation(Operation operation) {
+        taskDetail.addAvailableOperation(operation);
     }
 
     private PropertyChangeHandler getHandler() {

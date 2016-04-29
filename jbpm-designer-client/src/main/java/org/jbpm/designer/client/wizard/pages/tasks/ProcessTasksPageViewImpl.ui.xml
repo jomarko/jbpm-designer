@@ -48,9 +48,7 @@
                                 <b:TabListItem dataTarget="#tab2" text="I/O"/>
                             </b:NavTabs>
                             <b:TabContent>
-                                <b:TabPane active="true" b:id="tab1">
-                                    <widget:TaskDetail ui:field="taskDetail"/>
-                                </b:TabPane>
+                                <b:TabPane active="true" b:id="tab1" ui:field="taskDetailPane" />
                                 <b:TabPane b:id="tab2">
                                     <widget:TaskIO ui:field="taskIO"/>
                                 </b:TabPane>

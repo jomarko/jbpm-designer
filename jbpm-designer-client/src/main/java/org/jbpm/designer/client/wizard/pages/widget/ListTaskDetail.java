@@ -21,10 +21,10 @@ import org.gwtbootstrap3.client.ui.Icon;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.constants.IconType;
 import org.jboss.errai.databinding.client.api.DataBinder;
-import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
-import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
 import org.jbpm.designer.model.Condition;
+import org.jbpm.designer.model.HumanTask;
+import org.jbpm.designer.model.ServiceTask;
 import org.jbpm.designer.model.Task;
 
 
@@ -56,16 +56,6 @@ public class ListTaskDetail extends Composite implements HasModel<Task> {
         panel.add(name);
         initWidget(panel);
         dataBinder.bind(name, "name");
-        dataBinder.addPropertyChangeHandler("taskType", new PropertyChangeHandler<String>() {
-            @Override
-            public void onPropertyChange(PropertyChangeEvent<String> propertyChangeEvent) {
-                if(propertyChangeEvent.getNewValue().equals("Human")) {
-                    indicator.setType(IconType.USER);
-                } else if(propertyChangeEvent.getNewValue().equals("Service")) {
-                    indicator.setType(IconType.COG);
-                }
-            }
-        });
 
         setStyleName("cellWithMargin");
     }
@@ -78,6 +68,11 @@ public class ListTaskDetail extends Composite implements HasModel<Task> {
     @Override
     public void setModel(Task task) {
         dataBinder.setModel(task);
+        if(task instanceof HumanTask) {
+            indicator.setType(IconType.USER);
+        } else if(task instanceof ServiceTask) {
+            indicator.setType(IconType.COG);
+        }
     }
 
     public void unbind() {

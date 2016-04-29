@@ -18,11 +18,10 @@ package org.jbpm.designer.client.wizard.pages.tasks;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
-import org.jbpm.designer.client.wizard.pages.widget.MergedTasksIndicator;
 import org.jbpm.designer.model.*;
+import org.jbpm.designer.model.operation.Operation;
 
 import java.util.List;
-import java.util.Set;
 
 
 public interface ProcessTasksPageView extends IsWidget {
@@ -40,6 +39,8 @@ public interface ProcessTasksPageView extends IsWidget {
         boolean isTaskValid(Task task);
 
         boolean isConstraintValid(Constraint constraint);
+
+        void selectedWidgetModelChanged(Task model);
 
         void firePageChangedEvent();
     }
@@ -107,5 +108,7 @@ public interface ProcessTasksPageView extends IsWidget {
     void setSplitButtonVisibility(boolean value);
 
     void setConditionPanelVisibility(boolean value);
+
+    void addAvailableOperation(Operation operation);
 
 }

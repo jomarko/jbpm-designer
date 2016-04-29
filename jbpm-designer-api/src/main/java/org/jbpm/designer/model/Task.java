@@ -9,22 +9,11 @@ import java.util.List;
 @Portable
 public class Task {
 
-    public static final String HUMAN_TYPE = "Human";
-    public static final String SERVICE_TYPE = "Service";
-
     private static int lastId = 1;
 
     private int id;
 
     private String name;
-
-    private Participant responsibleHuman;
-
-    private Participant responsibleGroup;
-
-    private String operation;
-
-    private String taskType;
 
     private List<Variable> inputs;
 
@@ -55,38 +44,6 @@ public class Task {
         this.name = name;
     }
 
-    public Participant getResponsibleHuman() {
-        return responsibleHuman;
-    }
-
-    public void setResponsibleHuman(Participant responsibleHuman) {
-        this.responsibleHuman = responsibleHuman;
-    }
-
-    public Participant getResponsibleGroup() {
-        return responsibleGroup;
-    }
-
-    public void setResponsibleGroup(Participant responsibleGroup) {
-        this.responsibleGroup = responsibleGroup;
-    }
-
-    public String getOperation() {
-        return operation;
-    }
-
-    public void setOperation(String operation) {
-        this.operation = operation;
-    }
-
-    public String getTaskType() {
-        return taskType;
-    }
-
-    public void setTaskType(String taskType) {
-        this.taskType = taskType;
-    }
-
     public List<Variable> getInputs() {
         return inputs;
     }
@@ -110,30 +67,17 @@ public class Task {
 
         Task task = (Task) o;
 
-        if (id != task.id) return false;
+        if (getId() != task.getId()) return false;
         if (getName() != null ? !getName().equals(task.getName()) : task.getName() != null) return false;
-        if (getResponsibleHuman() != null ? !getResponsibleHuman().equals(task.getResponsibleHuman()) : task.getResponsibleHuman() != null)
-            return false;
-        if (getResponsibleGroup() != null ? !getResponsibleGroup().equals(task.getResponsibleGroup()) : task.getResponsibleGroup() != null)
-            return false;
-        if (getOperation() != null ? !getOperation().equals(task.getOperation()) : task.getOperation() != null)
-            return false;
-        if (getInputs() != null ? !getInputs().equals(task.getInputs()) : task.getInputs() != null)
-            return false;
-        if (getOutput() != null ? !getOutput().equals(task.getOutput()) : task.getOutput() != null)
-            return false;
-        return getTaskType() != null ? getTaskType().equals(task.getTaskType()) : task.getTaskType() == null;
+        if (getInputs() != null ? !getInputs().equals(task.getInputs()) : task.getInputs() != null) return false;
+        return getOutput() != null ? getOutput().equals(task.getOutput()) : task.getOutput() == null;
 
     }
 
     @Override
     public int hashCode() {
-        int result = getName() != null ? getName().hashCode() : 0;
-        result = 31 * result + id;
-        result = 31 * result + (getResponsibleHuman() != null ? getResponsibleHuman().hashCode() : 0);
-        result = 31 * result + (getResponsibleGroup() != null ? getResponsibleGroup().hashCode() : 0);
-        result = 31 * result + (getOperation() != null ? getOperation().hashCode() : 0);
-        result = 31 * result + (getTaskType() != null ? getTaskType().hashCode() : 0);
+        int result = getId();
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getInputs() != null ? getInputs().hashCode() : 0);
         result = 31 * result + (getOutput() != null ? getOutput().hashCode() : 0);
         return result;
@@ -143,11 +87,7 @@ public class Task {
     public String toString() {
         return "Task{" +
                 "id=" + id +
-                "name='" + name + '\'' +
-                ", responsibleHuman=" + responsibleHuman +
-                ", responsibleGroup=" + responsibleGroup +
-                ", operation='" + operation + '\'' +
-                ", taskType='" + taskType + '\'' +
+                ", name='" + name + '\'' +
                 '}';
     }
 }

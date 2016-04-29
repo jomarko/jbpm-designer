@@ -19,6 +19,7 @@ package org.jbpm.designer.server.service;
 import org.eclipse.bpmn2.*;
 
 import org.jbpm.designer.model.*;
+import org.jbpm.designer.model.ServiceTask;
 import org.jbpm.designer.model.Task;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,7 +34,7 @@ public class WizardModelToXmlConverterTest {
 
     private WizardModelToXmlConverter converter;
     private BusinessProcess process;
-    private Task humanTask;
+    private HumanTask humanTask;
     private Variable stringVariable;
     private List<Variable> variables;
     private Map<Integer, List<Task>> taskGroups;
@@ -45,11 +46,10 @@ public class WizardModelToXmlConverterTest {
         process = new BusinessProcess();
         process.setStartEvent(new StandardEvent());
 
-        humanTask = new Task();
+        humanTask = new HumanTask();
         humanTask.setName("a");
         humanTask.setResponsibleHuman(new User("user_nick"));
         humanTask.setResponsibleGroup(new User("group_nick"));
-        humanTask.setTaskType(org.jbpm.designer.model.Task.HUMAN_TYPE);
         humanTask.setInputs(new ArrayList<Variable>());
         humanTask.setOutput(new Variable());
 
@@ -157,6 +157,18 @@ public class WizardModelToXmlConverterTest {
         assertEquals(0, converter.process.getProperties().size());
         assertEquals(12, converter.process.getFlowElements().size());
         assertEquals(2, extractBpmnGateways(converter.process.getFlowElements(), true).size());
+    }
+
+    @Test
+    public void testRestTask() {
+        ServiceTask serviceTask = new ServiceTask();
+        serviceTask.setName("abc");
+        taskGroups.get(0).clear();
+        taskGroups.get(0).add(serviceTask);
+
+        process.setTasks(taskGroups);
+        String xml = converter.convertProcessToXml(process);
+        xml.toString();
     }
 
     private List<org.eclipse.bpmn2.Task> extractBpmnTasks(List<FlowElement> flowElements) {

@@ -3,9 +3,7 @@ package org.jbpm.designer.client.wizard.pages.tasks;
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import org.jboss.errai.common.client.api.ErrorCallback;
 import org.jboss.errai.common.client.api.RemoteCallback;
-import org.jbpm.designer.model.Task;
-import org.jbpm.designer.model.User;
-import org.jbpm.designer.model.Variable;
+import org.jbpm.designer.model.*;
 import org.jbpm.designer.client.wizard.GuidedProcessWizard;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,8 +55,8 @@ public class ProcessTasksPageTest {
     private Variable varA;
     private Variable varB;
 
-    private Task taskOne;
-    private Task taskTwo;
+    private HumanTask taskOne;
+    private ServiceTask taskTwo;
 
     @Before
     public void setUp() {
@@ -69,8 +67,8 @@ public class ProcessTasksPageTest {
         inputs.add(varB);
         when(wizard.getInitialInputs()).thenReturn(inputs);
 
-        taskOne = new Task("one");
-        taskTwo = new Task("two");
+        taskOne = new HumanTask("one");
+        taskTwo = new ServiceTask("two");
 
         page.setWizard(wizard);
 
@@ -97,10 +95,10 @@ public class ProcessTasksPageTest {
 
     @Test
     public void testIsComplete() {
-        taskOne.setTaskType(Task.HUMAN_TYPE);
+
         taskOne.setResponsibleHuman(new User());
-        taskTwo.setTaskType(Task.SERVICE_TYPE);
-        taskTwo.setOperation("operation");
+
+
         List<Task> tasks = new ArrayList<Task>();
         tasks.add(taskOne);
         tasks.add(taskTwo);
@@ -115,9 +113,7 @@ public class ProcessTasksPageTest {
 
     @Test
     public void testIsCompleteIncompleteHuman() {
-        taskOne.setTaskType(Task.HUMAN_TYPE);
-        taskTwo.setTaskType(Task.SERVICE_TYPE);
-        taskTwo.setOperation("operation");
+
         List<Task> tasks = new ArrayList<Task>();
         tasks.add(taskOne);
         tasks.add(taskTwo);
@@ -132,9 +128,9 @@ public class ProcessTasksPageTest {
 
     @Test
     public void testIsCompleteIncompleteService() {
-        taskOne.setTaskType(Task.HUMAN_TYPE);
+
         taskOne.setResponsibleHuman(new User());
-        taskTwo.setTaskType(Task.SERVICE_TYPE);
+
         List<Task> tasks = new ArrayList<Task>();
         tasks.add(taskOne);
         tasks.add(taskTwo);
@@ -149,7 +145,7 @@ public class ProcessTasksPageTest {
 
     @Test
     public void testIsCompleteIncompleteCondition() {
-        taskOne.setTaskType(Task.HUMAN_TYPE);
+
         taskOne.setResponsibleHuman(new User());
         List<Task> tasks = new ArrayList<Task>();
         tasks.add(taskOne);
@@ -165,7 +161,7 @@ public class ProcessTasksPageTest {
     @Test
     public void testGetDefaultModel() {
         Task model = page.getDefaultModel();
-        assertEquals(Task.HUMAN_TYPE, model.getTaskType());
+
         assertEquals("", model.getName());
     }
 

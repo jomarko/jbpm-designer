@@ -73,12 +73,7 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
 
     public ConditionWidget() {
         initWidget(uiBinder.createAndBindUi(this));
-
-        binder.bind(variable, "constraint.variable")
-            .bind(constraint, "constraint.constraint")
-            .bind(constraintValue, "constraint.constraintValue")
-            .bind(constraintSatisfied, "executeIfConstraintSatisfied")
-            .getModel();
+        bindDataBinder();
 
         variable.addValueChangeHandler(new ValueChangeHandler<Variable>() {
             @Override
@@ -131,10 +126,7 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
     }
 
     public void rebind() {
-        binder.bind(variable, "constraint.variable")
-                .bind(constraint, "constraint.constraint")
-                .bind(constraintValue, "constraint.constraintValue")
-                .bind(constraintSatisfied, "executeIfConstraintSatisfied");
+        bindDataBinder();
     }
 
     public void setPropertyChangeHandler(PropertyChangeHandler handler) {
@@ -162,5 +154,13 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
             constraints.add("lesser");
         }a
         return constraints;
+    }
+
+    private void bindDataBinder() {
+        binder.bind(variable, "constraint.variable")
+                .bind(constraint, "constraint.constraint")
+                .bind(constraintValue, "constraint.constraintValue")
+                .bind(constraintSatisfied, "executeIfConstraintSatisfied")
+                .getModel();
     }
 }

@@ -20,24 +20,26 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.*;
-import org.jboss.errai.databinding.client.api.DataBinder;
-import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
 import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPageView;
-import org.jbpm.designer.model.Group;
-import org.jbpm.designer.model.Task;
-import org.jbpm.designer.model.User;
+import org.jbpm.designer.model.*;
+import org.jbpm.designer.model.operation.Operation;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
-import java.util.ArrayList;
+import javax.inject.Inject;
 import java.util.List;
 
 @Dependent
 public class TaskDetail extends Composite implements HasModel<Task> {
+
+    private String SERVICE_TYPE = "Service";
+    private String HUMAN_TYPE = "Human";
 
     interface TaskDetailBinder
             extends
@@ -46,125 +48,121 @@ public class TaskDetail extends Composite implements HasModel<Task> {
 
     private static TaskDetailBinder uiBinder = GWT.create(TaskDetailBinder.class);
 
-    private DataBinder<Task> dataBinder = DataBinder.forType(Task.class);
-
-    private List<User> acceptableUsers;
-    private List<Group> acceptableGroups;
-
     @UiField(provided = true)
     ValueListBox<String> taskType = new ValueListBox<String>(new ToStringRenderer());
 
     @UiField
-    TextBox name;
+    Form taskDetailForm;
 
-    @UiField
-    HelpBlock nameHelp;
+    @Inject
+    private HumanTaskDetail humanTaskDetail;
 
-    @UiField
-    FieldSet participantWrapper;
+    @Inject
+    private ServiceTaskDetail serviceTaskDetail;
 
-    @UiField(provided = true)
-    ValueListBox<User> responsibleHuman = new ValueListBox<User>(new ToStringRenderer());
-
-    @UiField(provided = true)
-    ValueListBox<Group> responsibleGroup = new ValueListBox<Group>(new ToStringRenderer());
-
-    @UiField
-    HelpBlock participantHelp;
-
-    @UiField
-    FieldSet operationWrapper;
-
-    @UiField
-    HelpBlock operationHelp;
-
-    @UiField(provided = true)
-    ValueListBox<String> operation = new ValueListBox<String>(new ToStringRenderer());
+    private ProcessTasksPageView.Presenter presenter;
 
     public TaskDetail() {
         initWidget(uiBinder.createAndBindUi(this));
-        bindDataBinder();
 
-        operation.setValue("operationA");
-        operation.setValue("operationB");
+        taskType.setValue(SERVICE_TYPE, true);
+        taskType.setValue(HUMAN_TYPE, true);
 
         taskType.addValueChangeHandler(new ValueChangeHandler<String>() {
             @Override
             public void onValueChange(ValueChangeEvent<String> valueChangeEvent) {
-                if(valueChangeEvent.getValue().equals(Task.HUMAN_TYPE)) {
-                    showHumanDetails();
-                }else if(valueChangeEvent.getValue().equals(Task.SERVICE_TYPE)) {
-                    showServiceDetails();
+                if(presenter != null) {
+                    presenter.selectedWidgetModelChanged(getModel());
                 }
             }
         });
+    }
 
-        taskType.setValue(Task.SERVICE_TYPE, true);
-        taskType.setValue(Task.HUMAN_TYPE, true);
-        acceptableUsers = new ArrayList<User>();
-        acceptableGroups = new ArrayList<Group>();
+
+    @PostConstruct
+    public void initialize() {
+        taskDetailForm.add( humanTaskDetail );
+        taskDetailForm.add( serviceTaskDetail );
+    }
+
+    public void init(ProcessTasksPageView.Presenter presenter) {
+        this.presenter = presenter;
     }
 
     @Override
     public Task getModel() {
-        return dataBinder.getModel();
+        if(taskType.getValue().equals(HUMAN_TYPE)) {
+            return humanTaskDetail.getModel();
+        } else {
+            return serviceTaskDetail.getModel();
+        }
     }
 
     @Override
     public void setModel(Task task) {
-        dataBinder.setModel(task);
-    }
-
-    public void addHumanParticipants(List<User> users) {
-        acceptableUsers.addAll(users);
-        responsibleHuman.setAcceptableValues(acceptableUsers);
-    }
-
-    public void addGroupParticipants(List<Group> groups) {
-        acceptableGroups.addAll(groups);
-        responsibleGroup.setAcceptableValues(acceptableGroups);
+        if(task instanceof HumanTask) {
+            humanTaskDetail.setModel((HumanTask) task);
+        } else {
+            serviceTaskDetail.setModel((ServiceTask) task);
+        }
     }
 
     public void unbind() {
-        dataBinder.unbind();
+        serviceTaskDetail.unbind();
+        humanTaskDetail.unbind();
     }
 
     public void rebind() {
-        bindDataBinder();
+        if(taskType.getValue().equals(HUMAN_TYPE)) {
+            humanTaskDetail.bindDataBinder();
+        } else {
+            serviceTaskDetail.bindDataBinder();
+        }
     }
 
-    public void setPropertyChangeChandler(PropertyChangeHandler handler) {
-        dataBinder.addPropertyChangeHandler(handler);
+    public void setPropertyChangeHandler(PropertyChangeHandler handler) {
+        humanTaskDetail.setPropertyChangeHandler(handler);
+        serviceTaskDetail.setPropertyChangeHandler(handler);
+    }
+
+    public void addHumanParticipants(List<User> participants) {
+        humanTaskDetail.addHumanParticipants(participants);
+    }
+
+    public void addGroupParticipants(List<Group> participants) {
+        humanTaskDetail.addGroupParticipants(participants);
     }
 
     public void showHumanDetails() {
-        operationWrapper.setVisible(false);
-        participantWrapper.setVisible(true);
+        humanTaskDetail.setVisible(true);
+        serviceTaskDetail.setVisible(false);
+        taskType.setValue(HUMAN_TYPE, false);
     }
 
     public void showServiceDetails() {
-        operationWrapper.setVisible(true);
-        participantWrapper.setVisible(false);
+        humanTaskDetail.setVisible(false);
+        serviceTaskDetail.setVisible(true);
+        taskType.setValue(SERVICE_TYPE, false);
     }
 
     public void setNameHelpVisibility(boolean value) {
-        nameHelp.setVisible(value);
+        humanTaskDetail.setNameHelpVisibility(value);
+        serviceTaskDetail.setNameHelpVisibility(value);
     }
 
     public void setParticipantHelpVisibility(boolean value) {
-        participantHelp.setVisible(value);
+        humanTaskDetail.setParticipantHelpVisibility(value);
     }
 
     public void setOperationHelpVisibility(boolean value) {
-        operationHelp.setVisible(value);
+        serviceTaskDetail.setOperationHelpVisibility(value);
     }
 
-    private void bindDataBinder() {
-        dataBinder.bind(name, "name")
-                .bind(responsibleHuman, "responsibleHuman")
-                .bind(responsibleGroup, "responsibleGroup")
-                .bind(taskType, "taskType")
-                .bind(operation, "operation")
-                .getModel();
+    public void addAvailableOperation(Operation operation) {
+        serviceTaskDetail.addAvailableOperation(operation);
+    }
+
+    public void setVariablesForParameterMapping(List<Variable> variables) {
+        serviceTaskDetail.setVariablesForParameterMapping(variables);
     }
 }
