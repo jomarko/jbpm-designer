@@ -1,7 +1,6 @@
 package org.jbpm.designer.client.wizard.pages.widget;
 
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.HasValue;
 import org.jboss.errai.ui.client.widget.ListWidget;
 import org.jboss.errai.ui.client.widget.Table;
 import org.jboss.errai.ui.shared.api.annotations.DataField;
@@ -28,5 +27,16 @@ public class ParametersDetail extends Composite {
 
     public ListWidget getListWidget() {
         return parameters;
+    }
+
+    public void setRequiredParametersHelpVisibility(boolean visibility) {
+        for(ParameterMapping parameterMapping : parameters.getValue()) {
+            ParameterDetail widget = parameters.getWidget(parameterMapping);
+            if(visibility && parameterMapping.isRequired()) {
+                widget.showNameAsRequired(true);
+            } else {
+                widget.showNameAsRequired(false);
+            }
+        }
     }
 }

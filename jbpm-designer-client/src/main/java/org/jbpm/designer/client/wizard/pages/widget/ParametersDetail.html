@@ -11,6 +11,9 @@
                                 Name
                             </th>
                             <th>
+                                Description
+                            </th>
+                            <th>
                                 Variable
                             </th>
                         </tr>
@@ -18,7 +21,19 @@
                         <tbody id="parameters">
                         <tr id="parameterMapping">
                             <td>
-                                <input type="text" class="form-control"style="width: 11em;" data-field="name"/>
+                                <table>
+                                    <tr>
+                                        <td>
+                                            <sup data-field="requiredIndicator"><i style="font-size: 6px; padding-left: 2px; padding-right: 5px; color: rgb(185, 74, 72);" class="fa fa-star"></i></sup>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control"style="width: 11em;" data-field="name" readonly/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td>
+                                <input type="text" class="form-control"style="width: 11em;" data-field="description" readonly/>
                             </td>
                             <td>
                                 <select data-field="variable" class="form-control"style="width: 11em;"/>

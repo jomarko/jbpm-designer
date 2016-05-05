@@ -19,6 +19,7 @@ import com.google.gwt.user.client.ui.Widget;
 import org.jbpm.designer.client.handlers.NewProcessHandler;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.model.BusinessProcess;
+import org.jbpm.designer.model.ServiceTask;
 import org.jbpm.designer.model.Task;
 import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.client.wizard.pages.general.GeneralProcessInfoPage;

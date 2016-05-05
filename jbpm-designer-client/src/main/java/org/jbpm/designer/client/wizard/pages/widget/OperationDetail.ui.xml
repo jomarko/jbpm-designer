@@ -30,6 +30,10 @@
             <b:FormLabel for="parameters" text="Parameters" />
 
         </b:FieldSet>
+        <b:FieldSet ui:field="contentParametersFieldSet">
+            <b:FormLabel for="contentParameters" text="Content parameters" />
+
+        </b:FieldSet>
     </b:Form>
 
 </ui:UiBinder>

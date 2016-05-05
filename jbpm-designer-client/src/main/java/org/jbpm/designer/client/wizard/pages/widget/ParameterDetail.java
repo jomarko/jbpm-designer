@@ -1,6 +1,10 @@
 package org.jbpm.designer.client.wizard.pages.widget;
 
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.user.client.ui.Composite;
+import org.gwtbootstrap3.client.ui.CheckBox;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.ValueListBox;
 import org.jboss.errai.databinding.client.api.DataBinder;
@@ -22,13 +26,21 @@ public class ParameterDetail extends Composite implements HasModel<ParameterMapp
     protected DataBinder<ParameterMapping> parameterMapping;
 
     @Inject
-    @Bound(property = "parameterName")
+    @Bound(property = "parameter.name")
     @DataField
     protected TextBox name;
+
+    @Inject
+    @Bound(property = "parameter.description")
+    @DataField
+    protected TextBox description;
 
     @Bound
     @DataField
     protected ValueListBox<Variable> variable = new ValueListBox(new ToStringRenderer());
+
+    @DataField
+    Element requiredIndicator = Document.get().createElement("sup");
 
     @Override
     public ParameterMapping getModel() {
@@ -42,5 +54,13 @@ public class ParameterDetail extends Composite implements HasModel<ParameterMapp
 
     public void setAcceptableVariables(List<Variable> variables) {
         variable.setAcceptableValues(variables);
+    }
+
+    public void showNameAsRequired(boolean required) {
+        if(required) {
+            requiredIndicator.getStyle().setVisibility(Style.Visibility.VISIBLE);
+        } else {
+            requiredIndicator.getStyle().setVisibility(Style.Visibility.HIDDEN);
+        }
     }
 }

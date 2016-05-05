@@ -10,6 +10,7 @@ public class SwaggerParameter {
     private String name;
     private String description;
     private boolean required;
+    private SwaggerSchema schema;
 
     public String getIn() {
         return in;
@@ -41,5 +42,13 @@ public class SwaggerParameter {
 
     public void setRequired(boolean required) {
         this.required = required;
+    }
+
+    public SwaggerSchema getSchema() {
+        return schema;
+    }
+
+    public void setSchema(SwaggerSchema schema) {
+        this.schema = schema;
     }
 }

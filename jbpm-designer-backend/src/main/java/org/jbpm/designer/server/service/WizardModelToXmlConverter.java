@@ -15,22 +15,32 @@
 
 package org.jbpm.designer.server.service;
 
+
+
 import org.eclipse.bpmn2.*;
 import org.eclipse.bpmn2.Process;
+import org.eclipse.bpmn2.Task;
 import org.eclipse.bpmn2.di.*;
 import org.eclipse.dd.dc.Bounds;
 import org.eclipse.dd.dc.DcFactory;
 import org.eclipse.dd.di.DiagramElement;
+import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.emf.ecore.impl.EStructuralFeatureImpl;
+import org.eclipse.emf.ecore.util.FeatureMap;
+import org.jboss.drools.DroolsFactory;
+import org.jboss.drools.DroolsPackage;
+import org.jboss.drools.OnEntryScriptType;
 import org.jboss.drools.impl.DroolsPackageImpl;
 import org.jbpm.designer.bpmn2.impl.Bpmn2JsonMarshaller;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.ServiceTask;
+import org.jbpm.designer.model.operation.Operation;
+import org.jbpm.designer.model.operation.ParameterMapping;
+import org.jbpm.designer.model.operation.SwaggerParameter;
 import org.jbpm.designer.web.profile.impl.JbpmProfileImpl;
 
 import javax.enterprise.context.Dependent;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Dependent
 public class WizardModelToXmlConverter {
@@ -130,6 +140,7 @@ public class WizardModelToXmlConverter {
 
         String taskId = UUID.randomUUID().toString();
         org.eclipse.bpmn2.Task bpmnTask = null;
+        Map<Variable, Object> inputAssignments = new HashMap<Variable, Object>();
         if (task instanceof HumanTask) {
             HumanTask humanTask = (HumanTask) task;
             bpmnTask = Bpmn2Factory.eINSTANCE.createUserTask();
@@ -152,10 +163,7 @@ public class WizardModelToXmlConverter {
                 Variable groupId = new Variable();
                 groupId.setDataType("String");
                 groupId.setName("GroupId");
-                if(humanTask.getInputs() == null) {
-                    humanTask.setInputs(new ArrayList<Variable>());
-                }
-                humanTask.getInputs().add(groupId);
+                inputAssignments.put(groupId, humanTask.getResponsibleGroup().getName());
             }
         }
 
@@ -164,9 +172,26 @@ public class WizardModelToXmlConverter {
             bpmnTask.setId(taskId);
             bpmnTask.setName(task.getName());
             bpmnTask.eSet(DroolsPackageImpl.init().getDocumentRoot_TaskName(), "Rest");
+
+            if(((ServiceTask) task).getOperation() != null) {
+                Variable method = new Variable();
+                method.setDataType("String");
+                method.setName("Method");
+                inputAssignments.put(method, ((ServiceTask) task).getOperation().getMethod());
+
+                Variable url = new Variable();
+                url.setDataType("String");
+                url.setName("Url");
+                inputAssignments.put(url, constructUrl(((ServiceTask) task).getOperation()));
+
+                Variable content = new Variable();
+                content.setDataType("String");
+                content.setName("Content");
+                inputAssignments.put(content, constructContent(((ServiceTask) task).getOperation()));
+            }
         }
 
-        createInputOutputAssociations(bpmnTask, task);
+        createInputOutputAssociations(bpmnTask, task, inputAssignments);
 
         BPMNShape shape = getShape(100, 80, horizontalOffset, 100 + verticalRelativeOffset);
         shape.setBpmnElement(bpmnTask);
@@ -177,7 +202,63 @@ public class WizardModelToXmlConverter {
         return bpmnTask;
     }
 
-    private void createInputOutputAssociations(org.eclipse.bpmn2.Task bpmnTask, org.jbpm.designer.model.Task wizardTask) {
+    private String constructUrl(Operation operation) {
+        if(operation != null && operation.getParameterMappings() != null && operation.getUrl() != null) {
+            String url = operation.getUrl();
+            boolean questionMarkAdded = false;
+            for(ParameterMapping parameterMapping : operation.getParameterMappings()) {
+                SwaggerParameter parameter = parameterMapping.getParameter();
+                Variable variable = parameterMapping.getVariable();
+                if(parameter != null && variable != null && parameter.getName() != null && variable.getName() != null) {
+                    if(parameter.getIn() != null && parameter.getIn().compareTo("path") == 0) {
+                        String keyToReplace = "{" + parameter.getName() + "}";
+                        url = url.replace(keyToReplace, "#{" + variable.getName() + "}");
+                    } else if(parameter.getIn() != null && parameter.getIn().compareTo("query") == 0) {
+                        if(!questionMarkAdded) {
+                            url += "?";
+                            questionMarkAdded = true;
+                        }
+
+                        url += parameter.getName() + "=#{" + variable.getName() +"}&";
+                    }
+                }
+            }
+            if(url.endsWith("&")) {
+                url = url.substring(0, url.length() - 1);
+            }
+            return url;
+        }
+
+        return "";
+    }
+
+    private String constructContent(Operation operation) {
+        if(operation != null && operation.getContentParameterMappings() != null) {
+            String content = "";
+            for(ParameterMapping parameterMapping : operation.getContentParameterMappings()) {
+                SwaggerParameter parameter = parameterMapping.getParameter();
+                Variable variable = parameterMapping.getVariable();
+                if(parameter != null && variable != null && parameter.getName() != null && variable.getName() != null) {
+                    if(parameter.getIn() != null && parameter.getIn().compareTo("body") == 0) {
+                        content += "\"" + parameter.getName() + "\":";
+                        if(variable.getDataType().compareTo("String") == 0) {
+                            content += "\"#{" + variable.getName() + "}\",";
+                        } else {
+                            content += "#{" + variable.getName() + "},";
+                        }
+                    }
+                }
+            }
+            if(content.endsWith(",")) {
+                content = content.substring(0, content.length() - 1);
+            }
+            return "{"+content+"}";
+        }
+
+        return "{}";
+    }
+
+    private void createInputOutputAssociations(org.eclipse.bpmn2.Task bpmnTask, org.jbpm.designer.model.Task wizardTask, Map<Variable, Object> inputAssignments) {
         InputOutputSpecification specification = Bpmn2Factory.eINSTANCE.createInputOutputSpecification();
         InputSet inputSet = Bpmn2Factory.eINSTANCE.createInputSet();
         OutputSet outputSet = Bpmn2Factory.eINSTANCE.createOutputSet();
@@ -188,23 +269,12 @@ public class WizardModelToXmlConverter {
                 setItemSubjectRef(dataInput, variable);
 
                 DataInputAssociation inputAssociation = Bpmn2Factory.eINSTANCE.createDataInputAssociation();
-
-                if(wizardTask instanceof HumanTask && "GroupId".compareTo(variable.getName()) == 0) {
-                    dataInput.setName(variable.getName());
-                    Assignment assignment = Bpmn2Factory.eINSTANCE.createAssignment();
-                    FormalExpression fromExpression = Bpmn2Factory.eINSTANCE.createFormalExpression();
-                    fromExpression.setBody(((HumanTask)wizardTask).getResponsibleGroup().getName());
-                    assignment.setFrom(fromExpression);
-                    FormalExpression toExpression = Bpmn2Factory.eINSTANCE.createFormalExpression();
-                    toExpression.setBody(dataInput.getId());
-                    assignment.setTo(toExpression);
-                    inputAssociation.getAssignment().add(assignment);
-                } else {
-                    dataInput.setName(variable.getName() + "_inner");
-                    for (Property property : process.getProperties()) {
-                        if (property.getName().compareTo(variable.getName()) == 0) {
-                            inputAssociation.getSourceRef().add(property);
-                        }
+                dataInput.setName(variable.getName());
+                for (Property property : process.getProperties()) {
+                    if (property.getName().compareTo(variable.getName()) == 0
+                            || property.getName().compareTo(wizardTask.getName() + "_url") == 0
+                            || property.getName().compareTo(wizardTask.getName() + "_content") == 0) {
+                        inputAssociation.getSourceRef().add(property);
                     }
                 }
 
@@ -213,15 +283,33 @@ public class WizardModelToXmlConverter {
                 inputSet.getDataInputRefs().add(dataInput);
                 bpmnTask.getDataInputAssociations().add(inputAssociation);
             }
-
-            specification.getInputSets().add(inputSet);
         }
+
+        for(Map.Entry<Variable, Object> inputAssignment : inputAssignments.entrySet()) {
+            DataInput dataInput = Bpmn2Factory.eINSTANCE.createDataInput();
+            DataInputAssociation inputAssociation = Bpmn2Factory.eINSTANCE.createDataInputAssociation();
+            dataInput.setName(inputAssignment.getKey().getName());
+            Assignment assignment = Bpmn2Factory.eINSTANCE.createAssignment();
+            FormalExpression fromExpression = Bpmn2Factory.eINSTANCE.createFormalExpression();
+            fromExpression.setBody(inputAssignment.getValue().toString());
+            assignment.setFrom(fromExpression);
+            FormalExpression toExpression = Bpmn2Factory.eINSTANCE.createFormalExpression();
+            toExpression.setBody(dataInput.getId());
+            assignment.setTo(toExpression);
+            inputAssociation.getAssignment().add(assignment);
+            inputAssociation.setTargetRef(dataInput);
+            specification.getDataInputs().add(dataInput);
+            inputSet.getDataInputRefs().add(dataInput);
+            bpmnTask.getDataInputAssociations().add(inputAssociation);
+        }
+
+        specification.getInputSets().add(inputSet);
 
         Variable taskOutput = wizardTask.getOutput();
         if(taskOutput != null && taskOutput.getName() != null && !taskOutput.getName().isEmpty()) {
             DataOutput dataOutput = Bpmn2Factory.eINSTANCE.createDataOutput();
             setItemSubjectRef(dataOutput, taskOutput);
-            dataOutput.setName(taskOutput.getName() + "_inner");
+            dataOutput.setName("Result");
 
             DataOutputAssociation outputAssociation = Bpmn2Factory.eINSTANCE.createDataOutputAssociation();
             for (Property property : process.getProperties()) {

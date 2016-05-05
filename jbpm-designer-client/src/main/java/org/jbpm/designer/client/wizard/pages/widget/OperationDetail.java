@@ -9,6 +9,7 @@ import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.FieldSet;
 import org.gwtbootstrap3.client.ui.TextArea;
 import org.jboss.errai.databinding.client.api.DataBinder;
+import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
 import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.model.operation.Operation;
@@ -36,8 +37,14 @@ public class OperationDetail extends Composite implements HasModel<Operation> {
     @UiField
     FieldSet parametersFieldSet;
 
+    @UiField
+    FieldSet contentParametersFieldSet;
+
     @Inject
     private ParametersDetail parameters;
+
+    @Inject
+    private ParametersDetail contentParameters;
 
     public OperationDetail() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -46,6 +53,7 @@ public class OperationDetail extends Composite implements HasModel<Operation> {
     @PostConstruct
     public void initialize() {
         parametersFieldSet.add(parameters);
+        contentParametersFieldSet.add(contentParameters);
     }
 
     @Override
@@ -60,12 +68,23 @@ public class OperationDetail extends Composite implements HasModel<Operation> {
 
     public void setVariablesForParameterMapping(List<Variable> variables) {
         parameters.setAcceptableVariables(variables);
+        contentParameters.setAcceptableVariables(variables);
     }
 
     public void rebindToModel(Operation operation) {
         dataBinder.unbind();
         dataBinder.setModel(operation);
         dataBinder.bind(description, "description")
-                  .bind(parameters.getListWidget(), "parameterMappings").getModel();
+                  .bind(parameters.getListWidget(), "parameterMappings")
+                  .bind(contentParameters.getListWidget(), "contentParameterMappings").getModel();
+    }
+
+    public void setRequiredParametersHelpVisibility(boolean value) {
+        parameters.setRequiredParametersHelpVisibility(value);
+        contentParameters.setRequiredParametersHelpVisibility(value);
+    }
+
+    public void addPropertyChangeHandler(PropertyChangeHandler handler) {
+        dataBinder.addPropertyChangeHandler(handler);
     }
 }

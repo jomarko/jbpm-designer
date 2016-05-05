@@ -3,20 +3,22 @@ package org.jbpm.designer.server.service;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.jboss.errai.bus.server.annotations.Service;
-import org.jbpm.designer.model.operation.SwaggerDefinition;
-import org.jbpm.designer.service.SwaggerDefinitionService;
+import org.jbpm.designer.model.operation.Swagger;
+import org.jbpm.designer.service.SwaggerService;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 
 @Service
 @ApplicationScoped
-public class DefaultSwaggerDefinitionService implements SwaggerDefinitionService {
+public class DefaultSwaggerService implements SwaggerService {
     @Override
-    public SwaggerDefinition getDefinition() throws IOException {
+    public Swagger getSwagger() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return mapper.readValue(mockJson, SwaggerDefinition.class);
+        Swagger swagger = mapper.readValue(mockJson, Swagger.class);
+        swagger.setUrlBase("http://private-e985ca-diplomathesis.apiary-mock.com/api");
+        return swagger;
     }
 
     private String mockJson = "\n" +

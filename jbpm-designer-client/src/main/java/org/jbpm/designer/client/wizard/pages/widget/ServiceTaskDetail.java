@@ -35,8 +35,8 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
 
     private static ServiceTaskDetailBinder uiBinder = GWT.create(ServiceTaskDetailBinder.class);
 
-
     private List<Operation> acceptableOperations;
+    private List<Variable> acceptableVariables;
 
     @UiField
     TextBox name;
@@ -82,11 +82,15 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
         if(acceptableOperations == null) {
             acceptableOperations = new ArrayList<Operation>();
         }
+        if(acceptableVariables == null) {
+            acceptableVariables = new ArrayList<Variable>();
+        }
 
         operation.addValueChangeHandler(new ValueChangeHandler<Operation>() {
             @Override
             public void onValueChange(ValueChangeEvent<Operation> valueChangeEvent) {
                 operationDetail.rebindToModel(valueChangeEvent.getValue());
+                operationDetail.setVariablesForParameterMapping(acceptableVariables);
             }
         });
 
@@ -127,6 +131,7 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
 
     public void setPropertyChangeHandler(PropertyChangeHandler handler) {
         dataBinder.addPropertyChangeHandler(handler);
+        operationDetail.addPropertyChangeHandler(handler);
     }
 
     public void setNameHelpVisibility(boolean value) {
@@ -135,6 +140,7 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
 
     public void setOperationHelpVisibility(boolean value) {
         operationHelp.setVisible( value );
+        operationDetail.setRequiredParametersHelpVisibility( value );
     }
 
     public void addAvailableOperation(Operation availableOperation) {
@@ -146,6 +152,11 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
     }
 
     public void setVariablesForParameterMapping(List<Variable> variables) {
-        operationDetail.setVariablesForParameterMapping(variables);
+        if(variables != null) {
+            acceptableVariables = variables;
+        } else {
+            acceptableVariables = new ArrayList<Variable>();
+        }
+        operationDetail.setVariablesForParameterMapping(acceptableVariables);
     }
 }

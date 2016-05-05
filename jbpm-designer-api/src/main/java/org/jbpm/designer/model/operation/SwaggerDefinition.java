@@ -3,25 +3,28 @@ package org.jbpm.designer.model.operation;
 import org.jboss.errai.common.client.api.annotations.Portable;
 import org.jboss.errai.databinding.client.api.Bindable;
 
+import java.util.List;
 import java.util.Map;
 
-@Portable
 @Bindable
+@Portable
 public class SwaggerDefinition {
-    private Map<String, SwaggerPath> paths;
+    private List<String> required;
+    private Map<String, SwaggerProperty> properties;
 
-    public Map<String, SwaggerPath> getPaths() {
-        return paths;
+    public List<String> getRequired() {
+        return required;
     }
 
-    public void setPaths(Map<String, SwaggerPath> paths) {
-        this.paths = paths;
+    public void setRequired(List<String> required) {
+        this.required = required;
     }
 
-    @Override
-    public String toString() {
-        return "SwaggerDefinition{" +
-                "paths=" + paths +
-                '}';
+    public Map<String, SwaggerProperty> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Map<String, SwaggerProperty> properties) {
+        this.properties = properties;
     }
 }

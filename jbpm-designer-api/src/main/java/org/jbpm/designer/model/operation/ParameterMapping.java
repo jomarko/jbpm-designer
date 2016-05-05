@@ -7,16 +7,26 @@ import org.jbpm.designer.model.Variable;
 @Portable
 @Bindable
 public class ParameterMapping {
-    private String parameterName;
+    private SwaggerParameter parameter;
+
+    private boolean required;
 
     private Variable variable;
 
-    public String getParameterName() {
-        return parameterName;
+    public SwaggerParameter getParameter() {
+        return parameter;
     }
 
-    public void setParameterName(String parameterName) {
-        this.parameterName = parameterName;
+    public void setParameter(SwaggerParameter parameter) {
+        this.parameter = parameter;
+    }
+
+    public boolean isRequired() {
+        return required;
+    }
+
+    public void setRequired(boolean required) {
+        this.required = required;
     }
 
     public Variable getVariable() {

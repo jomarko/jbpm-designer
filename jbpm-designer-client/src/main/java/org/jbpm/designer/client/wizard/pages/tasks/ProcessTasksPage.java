@@ -25,7 +25,7 @@ import org.jbpm.designer.client.wizard.GuidedProcessWizard;
 import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.operation.*;
-import org.jbpm.designer.service.SwaggerDefinitionService;
+import org.jbpm.designer.service.SwaggerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.uberfire.client.callbacks.Callback;
@@ -47,6 +47,10 @@ import java.util.*;
 public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presenter {
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessTasksPage.class);
+    private static final String METHOD_GET = "GET";
+    private static final String METHOD_POST = "POST";
+    private static final String METHOD_DELETE = "DELETE";
+
     private static int RESULT_MAX_COUNT = 100;
 
     @Inject
@@ -63,7 +67,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     private Event<WizardPageStatusChangeEvent> event;
 
     @Inject
-    private Caller<SwaggerDefinitionService> swaggerDefinitionService;
+    private Caller<SwaggerService> swaggerDefinitionService;
 
     @Override
     public String getTitle() {
@@ -280,7 +284,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
 
         if(task instanceof ServiceTask) {
             ServiceTask serviceTask = (ServiceTask) task;
-            if(serviceTask.getOperation() == null) {
+            if(serviceTask.getOperation() == null || !isOperationValid(serviceTask.getOperation())) {
                 return false;
             }
         }
@@ -292,6 +296,27 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
             }
         }
 
+        return true;
+    }
+
+    private boolean isOperationValid(Operation operation) {
+        boolean valid = true;
+
+        if(operation.getParameterMappings() != null) {
+            valid = valid && checkRequiredMappings(operation.getParameterMappings());
+        }
+        if(operation.getContentParameterMappings() != null) {
+            valid = valid && checkRequiredMappings(operation.getContentParameterMappings());
+        }
+        return valid;
+    }
+
+    private boolean checkRequiredMappings(List<ParameterMapping> mappings) {
+        for(ParameterMapping parameterMapping : mappings) {
+            if(parameterMapping.isRequired() && parameterMapping.getVariable() == null) {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -386,6 +411,8 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
                 ServiceTask serviceTask = (ServiceTask) task;
                 if (serviceTask.getOperation() == null) {
                     view.setOperationHelpVisibility(true);
+                } else if(!isOperationValid(serviceTask.getOperation())) {
+                    view.setOperationHelpVisibility(true);
                 } else {
                     view.setOperationHelpVisibility(false);
                 }
@@ -470,32 +497,93 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     private void sendRequestForExistingOperations() {
         try {
             swaggerDefinitionService
-                    .call(new RemoteCallback<SwaggerDefinition>() {
+                    .call(new RemoteCallback<Swagger>() {
                         @Override
-                        public void callback(SwaggerDefinition swaggerDefinition) {
-                            if(swaggerDefinition != null && swaggerDefinition.getPaths() != null && swaggerDefinition.getPaths().entrySet() != null) {
-                                for (Map.Entry<String, SwaggerPath> path : swaggerDefinition.getPaths().entrySet()) {
-                                    Operation operation = new Operation();
-                                    if(path != null && path.getValue() != null & path.getValue().getGet() != null) {
-                                        SwaggerOperation swaggerOperation = path.getValue().getGet();
-                                        operation.setOperationId(swaggerOperation.getOperationId());
-                                        operation.setDescription(swaggerOperation.getDescription());
-                                        List<ParameterMapping> parameterMappings = new ArrayList<ParameterMapping>();
-                                        for(SwaggerParameter swaggerParameter : swaggerOperation.getParameters()) {
-                                            ParameterMapping parameterMapping = new ParameterMapping();
-                                            parameterMapping.setParameterName(swaggerParameter.getName());
-                                            parameterMappings.add(parameterMapping);
+                        public void callback(Swagger swagger) {
+                            if(swagger != null && swagger.getPaths() != null && swagger.getPaths().entrySet() != null) {
+                                for (Map.Entry<String, SwaggerPath> path : swagger.getPaths().entrySet()) {
+                                    if(path != null && path.getValue() != null) {
+                                        if (path.getValue().getGet() != null) {
+                                            Operation operation = new Operation();
+                                            operation.setUrl(swagger.getUrlBase() + path.getKey());
+                                            operation.setMethod(METHOD_GET);
+                                            SwaggerOperation swaggerOperation = path.getValue().getGet();
+                                            addOperation(swagger, swaggerOperation, operation);
                                         }
-                                        operation.setParameterMappings(parameterMappings);
-                                        view.addAvailableOperation(operation);
+                                        if (path.getValue().getPost() != null) {
+                                            Operation operation = new Operation();
+                                            operation.setUrl(swagger.getUrlBase() + path.getKey());
+                                            operation.setMethod(METHOD_POST);
+                                            SwaggerOperation swaggerOperation = path.getValue().getPost();
+                                            addOperation(swagger, swaggerOperation, operation);
+                                        }
+                                        if (path.getValue().getDelete() != null) {
+                                            Operation operation = new Operation();
+                                            operation.setUrl(swagger.getUrlBase() + path.getKey());
+                                            operation.setMethod(METHOD_DELETE);
+                                            SwaggerOperation swaggerOperation = path.getValue().getDelete();
+                                            addOperation(swagger, swaggerOperation, operation);
+                                        }
                                     }
                                 }
                             }
                         }
                     }, new DefaultErrorCallback())
-                    .getDefinition();
+                    .getSwagger();
         } catch (IOException e) {
             logger.error("Request for existing operations failed: " + e.getMessage());
         }
+    }
+
+    private void addOperation(Swagger swagger, SwaggerOperation swaggerOperation, Operation operation) {
+        if(swaggerOperation != null) {
+            operation.setOperationId(swaggerOperation.getOperationId());
+            operation.setDescription(swaggerOperation.getDescription());
+            List<ParameterMapping> parameterMappings = new ArrayList<ParameterMapping>();
+            List<ParameterMapping> contentParameterMappings = new ArrayList<ParameterMapping>();
+            for (SwaggerParameter swaggerParameter : swaggerOperation.getParameters()) {
+                if(swaggerParameter.getIn().compareTo("body") != 0) {
+                    ParameterMapping parameterMapping = new ParameterMapping();
+                    parameterMapping.setParameter(swaggerParameter);
+                    parameterMapping.setRequired(swaggerParameter.isRequired());
+                    parameterMappings.add(parameterMapping);
+                } else {
+                    SwaggerDefinition swaggerDefinition = findDefinitionBySchema(swagger.getDefinitions(), swaggerParameter.getSchema());
+                    if(swaggerDefinition != null) {
+                        for(Map.Entry<String, SwaggerProperty> property : swaggerDefinition.getProperties().entrySet()) {
+                            SwaggerParameter parameter = new SwaggerParameter();
+                            parameter.setIn("body");
+                            parameter.setName(property.getKey());
+                            if(swaggerDefinition.getRequired() != null && swaggerDefinition.getRequired().contains(property.getKey())) {
+                                parameter.setRequired(true);
+                            } else {
+                                parameter.setRequired(false);
+                            }
+                            parameter.setDescription(property.getKey() + " of: " +swaggerParameter.getDescription());
+                            ParameterMapping parameterMapping = new ParameterMapping();
+                            parameterMapping.setParameter(parameter);
+                            parameterMapping.setRequired(parameter.isRequired());
+                            contentParameterMappings.add(parameterMapping);
+                        }
+                    }
+                }
+            }
+            operation.setParameterMappings(parameterMappings);
+            operation.setContentParameterMappings(contentParameterMappings);
+            view.addAvailableOperation(operation);
+        }
+    }
+
+    private SwaggerDefinition findDefinitionBySchema(Map<String, SwaggerDefinition> definitions, SwaggerSchema schema) {
+        if(definitions != null && schema != null && schema.get$ref() != null) {
+            String[] refParts = schema.get$ref().split("/");
+            for(String definitionName : definitions.keySet()) {
+                if(definitionName.equals(refParts[refParts.length - 1])) {
+                    return definitions.get(definitionName);
+                }
+            }
+        }
+
+        return null;
     }
 }

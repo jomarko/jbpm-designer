@@ -21,6 +21,8 @@ import org.eclipse.bpmn2.*;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.ServiceTask;
 import org.jbpm.designer.model.Task;
+import org.jbpm.designer.model.operation.*;
+import org.jbpm.designer.model.operation.Operation;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -161,14 +163,56 @@ public class WizardModelToXmlConverterTest {
 
     @Test
     public void testRestTask() {
+        SwaggerParameter pathParameter = new SwaggerParameter();
+        pathParameter.setName("xyz");
+        pathParameter.setIn("path");
+
+        SwaggerParameter queryParameter = new SwaggerParameter();
+        queryParameter.setName("zyx");
+        queryParameter.setIn("query");
+
+        SwaggerParameter secondQueryParameter = new SwaggerParameter();
+        secondQueryParameter.setName("xxx");
+        secondQueryParameter.setIn("body");
+
+        List<ParameterMapping> mappings = new ArrayList<ParameterMapping>();
+        ParameterMapping mapping = new ParameterMapping();
+        mapping.setParameter(pathParameter);
+        mapping.setVariable(stringVariable);
+        mappings.add(mapping);
+
+        ParameterMapping mappingQuery = new ParameterMapping();
+        mappingQuery.setParameter(queryParameter);
+        mappingQuery.setVariable(stringVariable);
+        mappings.add(mappingQuery);
+
+        ParameterMapping mappingQuerySecond = new ParameterMapping();
+        mappingQuerySecond.setParameter(secondQueryParameter);
+        mappingQuerySecond.setVariable(stringVariable);
+        mappings.add(mappingQuerySecond);
+
+        Operation operation = new Operation();
+        operation.setMethod("GET");
+        operation.setUrl("/{xyz}/{xyz}/{xyz}");
+        operation.setParameterMappings(mappings);
+        operation.setContentParameterMappings(mappings);
+
         ServiceTask serviceTask = new ServiceTask();
         serviceTask.setName("abc");
+        serviceTask.setOperation(operation);
+
         taskGroups.get(0).clear();
         taskGroups.get(0).add(serviceTask);
 
         process.setTasks(taskGroups);
-        String xml = converter.convertProcessToXml(process);
-        xml.toString();
+        String s = converter.convertProcessToXml(process);
+
+        assertEquals(5, converter.process.getFlowElements().size());
+        assertEquals(1, extractBpmnTasks(converter.process.getFlowElements()).size());
+
+        org.eclipse.bpmn2.Task bpmnTask = extractBpmnTasks(converter.process.getFlowElements()).get(0);
+        assertEquals(2, bpmnTask.getIoSpecification().getDataInputs().size());
+        assertEquals(2, bpmnTask.getDataInputAssociations().size());
     }
 
     private List<org.eclipse.bpmn2.Task> extractBpmnTasks(List<FlowElement> flowElements) {
