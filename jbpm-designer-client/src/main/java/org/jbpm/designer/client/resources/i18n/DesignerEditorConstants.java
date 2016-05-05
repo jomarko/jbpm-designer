@@ -107,6 +107,8 @@ public interface DesignerEditorConstants extends
 
     String timerEventType();
 
+    String variablesHelp();
+
     String Removed_invalid_characters_from_name();
 
     String A_Data_Input_with_this_name_already_exists();

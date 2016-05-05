@@ -37,14 +37,14 @@ public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> 
     @UiField
     FlexTable variables;
 
-    @UiField
-    InputRow output;
+//    @UiField
+//    InputRow output;
 
     private Map<Variable, CheckBox> variableCheckBoxes = new HashMap<Variable, CheckBox>();
 
     public TaskIO() {
         initWidget(uiBinder.createAndBindUi(this));
-        dataBinder.bind(output, "output");
+//        dataBinder.bind(output, "output");
     }
 
     public void setPropertyChangeChandler(PropertyChangeHandler handler) {
@@ -129,7 +129,7 @@ public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> 
     }
 
     public void rebind() {
-        dataBinder.bind(output, "output").getModel();
+//        dataBinder.bind(output, "output").getModel();
     }
 }
 

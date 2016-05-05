@@ -50,7 +50,7 @@
                             <b:TabContent>
                                 <b:TabPane active="true" b:id="tab1" ui:field="taskDetailPane" />
                                 <b:TabPane b:id="tab2">
-                                    <widget:TaskIO ui:field="taskIO"/>
+                                    <!--widget:TaskIO ui:field="taskIO"/-->
                                 </b:TabPane>
                             </b:TabContent>
                         </b:TabPanel>

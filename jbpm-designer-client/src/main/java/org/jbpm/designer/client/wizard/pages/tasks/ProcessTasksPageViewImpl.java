@@ -61,8 +61,8 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     @Inject
     private TaskDetail taskDetail;
 
-    @UiField
-    TaskIO taskIO;
+//    @UiField
+//    TaskIO taskIO;
 
     @UiField
     ConditionWidget conditionWidget;
@@ -90,7 +90,7 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         taskDetail.init(presenter);
 
         tasksContainer.registerRowsHandler(this);
-        taskIO.setPropertyChangeChandler(getHandler());
+//        taskIO.setPropertyChangeChandler(getHandler());
         taskDetail.setPropertyChangeHandler(getHandler());
         conditionWidget.setPropertyChangeHandler(getHandler());
 
@@ -235,25 +235,25 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         }
 
         taskDetail.unbind();
-        taskIO.unbind();
+//        taskIO.unbind();
     }
 
     @Override
     public void rebindTaskDetailWidgets() {
         taskDetail.rebind();
-        taskIO.rebind();
+//        taskIO.rebind();
     }
 
     @Override
     public void setModelTaskDetailWidgets(Task model) {
         taskDetail.setModel(model);
-        taskIO.setModel(model);
+//        taskIO.setModel(model);
     }
 
     @Override
     public void setAvailableVarsForSelectedTask(List<Variable> variables) {
         conditionWidget.setVariables(variables);
-        taskIO.setAcceptableValues(variables);
+//        taskIO.setAcceptableValues(variables);
         taskDetail.setVariablesForParameterMapping(variables);
     }
 

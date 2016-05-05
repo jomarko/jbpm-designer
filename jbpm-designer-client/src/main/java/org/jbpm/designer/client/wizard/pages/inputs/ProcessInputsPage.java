@@ -46,16 +46,15 @@ public class ProcessInputsPage implements WizardPage, ProcessInputsPageView.Pres
     @Override
     public void isComplete(Callback<Boolean> callback) {
         boolean allVariablesValid = true;
-        int row = 0;
         for(Variable variable : view.getInputs()) {
             if(!isVariableValid(variable)) {
                 allVariablesValid = false;
-                view.showAsInvalid(row);
+                view.showAsInvalid(variable);
             } else {
-                view.showAsValid(row);
+                view.showAsValid(variable);
             }
-            row++;
         }
+        view.setVariablesHelpVisibility(!allVariablesValid);
         callback.callback(allVariablesValid);
     }
 
@@ -99,7 +98,6 @@ public class ProcessInputsPage implements WizardPage, ProcessInputsPageView.Pres
         if(variable.getDataType() == null || variable.getDataType().isEmpty()) {
             return false;
         }
-
         return true;
     }
 
