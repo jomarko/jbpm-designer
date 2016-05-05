@@ -7,15 +7,14 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.RadioButton;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
-import org.jboss.errai.databinding.client.api.DataBinder;
-import org.jboss.errai.ui.client.widget.HasModel;
 import org.jbpm.designer.model.StandardEvent;
 
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
-import java.util.ArrayList;
 
 @Dependent
 public class ProcessStartEventPageViewImpl extends Composite implements ProcessStartEventPageView {
@@ -45,11 +44,14 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
     @UiField
     RadioButton signal;
 
-    @UiField
-    TimerWidget timerDetails;
+    @Inject
+    private TimerWidget timerDetails;
+
+    @Inject
+    private SignalWidget signalDetails;
 
     @UiField
-    SignalWidget signalDetails;
+    VerticalPanel container;
 
     @UiHandler("standard")
     void standardClicked(ClickEvent event) {
@@ -72,16 +74,19 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
         presenter.firePageChangedEvent();
     }
 
+    @PostConstruct
+    public void initializeView() {
+        container.add(timerDetails);
+        container.add(signalDetails);
+        timerDetails.setVisible(false);
+        signalDetails.setVisible(false);
+    }
+
     @Override
     public void init(Presenter presenter) {
         this.presenter = presenter;
         timerDetails.setPresenter(presenter);
         signalDetails.setPresenter(presenter);
-    }
-
-    @Override
-    public boolean isSelectedNormalStart() {
-        return standard.getValue();
     }
 
     @Override
@@ -92,6 +97,11 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
     @Override
     public String getDefinedSignal() {
         return signalDetails.getSignal();
+    }
+
+    @Override
+    public boolean isSelectedDateStart() {
+        return timer.getValue() && timerDetails.isDateSelected();
     }
 
     @Override
@@ -107,26 +117,6 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
     @Override
     public String getDefinedTimeValue() {
         return timerDetails.getTimerValue();
-    }
-
-    @Override
-    public void showSignalError() {
-        signalDetails.showHelp();
-    }
-
-    @Override
-    public void hideSignalError() {
-        signalDetails.hideHelp();
-    }
-
-    @Override
-    public void showTimeError() {
-        timerDetails.showHelp();
-    }
-
-    @Override
-    public void hideTimeError() {
-        timerDetails.hideHelp();
     }
 
     @Override

@@ -11,9 +11,13 @@ import org.gwtbootstrap3.client.ui.HelpBlock;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.ui.client.widget.HasModel;
+import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.model.SignalEvent;
+import org.uberfire.workbench.events.NotificationEvent;
 
 import javax.enterprise.context.Dependent;
+import javax.enterprise.event.Event;
+import javax.inject.Inject;
 
 @Dependent
 public class SignalWidget extends Composite implements HasModel<SignalEvent> {
@@ -29,6 +33,9 @@ public class SignalWidget extends Composite implements HasModel<SignalEvent> {
 
     private ProcessStartEventPageView.Presenter presenter;
 
+    @Inject
+    Event<NotificationEvent> notification;
+
     @UiField
     TextBox signal;
 
@@ -42,6 +49,11 @@ public class SignalWidget extends Composite implements HasModel<SignalEvent> {
             @Override
             public void onValueChange(ValueChangeEvent<String> valueChangeEvent) {
                 presenter.firePageChangedEvent();
+                if(!presenter.isStartValid()) {
+                    notification.fire( new NotificationEvent(
+                            DesignerEditorConstants.INSTANCE.signalFormat(),
+                            NotificationEvent.NotificationType.ERROR));
+                }
             }
         });
     }
@@ -52,14 +64,6 @@ public class SignalWidget extends Composite implements HasModel<SignalEvent> {
 
     public void setPresenter(ProcessStartEventPageView.Presenter presenter) {
         this.presenter = presenter;
-    }
-
-    public void showHelp() {
-        signalHelp.setVisible(true);
-    }
-
-    public void hideHelp() {
-        signalHelp.setVisible(false);
     }
 
     @Override

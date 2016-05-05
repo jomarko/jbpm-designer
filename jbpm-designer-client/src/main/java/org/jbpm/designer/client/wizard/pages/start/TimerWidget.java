@@ -13,7 +13,12 @@ import org.gwtbootstrap3.client.ui.HelpBlock;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.ui.client.widget.HasModel;
+import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.model.TimerEvent;
+import org.uberfire.workbench.events.NotificationEvent;
+
+import javax.enterprise.event.Event;
+import javax.inject.Inject;
 
 public class TimerWidget extends Composite implements HasModel<TimerEvent> {
 
@@ -27,6 +32,9 @@ public class TimerWidget extends Composite implements HasModel<TimerEvent> {
     private static TimerWidgetBinder uiBinder = GWT.create(TimerWidgetBinder.class);
 
     private ProcessStartEventPageView.Presenter presenter;
+
+    @Inject
+    Event<NotificationEvent> notification;
 
     @UiField
     RadioButton date;
@@ -51,13 +59,14 @@ public class TimerWidget extends Composite implements HasModel<TimerEvent> {
         delay.addValueChangeHandler(getHandler());
         cycle.addValueChangeHandler(getHandler());
         timerValue.addValueChangeHandler(getHandler());
-
+        timerHelp.setText(DesignerEditorConstants.INSTANCE.timerDelayHelp());
     }
 
     @UiHandler("date")
     void dateClicked(ClickEvent event) {
         TimerEvent startEvent = dataBinder.getModel();
         startEvent.setTimerType(TimerEvent.DATE);
+        timerHelp.setText(DesignerEditorConstants.INSTANCE.timerDateHelp());
         dataBinder.setModel(startEvent);
     }
 
@@ -65,6 +74,7 @@ public class TimerWidget extends Composite implements HasModel<TimerEvent> {
     void delayClicked(ClickEvent event) {
         TimerEvent startEvent = dataBinder.getModel();
         startEvent.setTimerType(TimerEvent.DURATION);
+        timerHelp.setText(DesignerEditorConstants.INSTANCE.timerDelayHelp());
         dataBinder.setModel(startEvent);
     }
 
@@ -72,7 +82,12 @@ public class TimerWidget extends Composite implements HasModel<TimerEvent> {
     void cycleClicked(ClickEvent event) {
         TimerEvent startEvent = dataBinder.getModel();
         startEvent.setTimerType(TimerEvent.CYCLE);
+        timerHelp.setText(DesignerEditorConstants.INSTANCE.timerCycleHelp());
         dataBinder.setModel(startEvent);
+    }
+
+    public boolean isDateSelected() {
+        return date.getValue();
     }
 
     public boolean isDelaySelected() {
@@ -91,19 +106,23 @@ public class TimerWidget extends Composite implements HasModel<TimerEvent> {
         this.presenter = presenter;
     }
 
-    public void showHelp() {
-        timerHelp.setVisible(true);
-    }
-
-    public void hideHelp() {
-        timerHelp.setVisible(false);
-    }
-
     private ValueChangeHandler getHandler() {
         return new ValueChangeHandler() {
             @Override
             public void onValueChange(ValueChangeEvent valueChangeEvent) {
                 presenter.firePageChangedEvent();
+                if(!presenter.isStartValid()) {
+                    if(isDelaySelected() || isCycleSelected()) {
+                        notification.fire( new NotificationEvent(
+                                DesignerEditorConstants.INSTANCE.timerCycleAndDelayFormat(),
+                                NotificationEvent.NotificationType.ERROR));
+                    }
+                    if(isDateSelected()) {
+                        notification.fire( new NotificationEvent(
+                                DesignerEditorConstants.INSTANCE.timerDateFormat(),
+                                NotificationEvent.NotificationType.ERROR));
+                    }
+                }
             }
         };
     }

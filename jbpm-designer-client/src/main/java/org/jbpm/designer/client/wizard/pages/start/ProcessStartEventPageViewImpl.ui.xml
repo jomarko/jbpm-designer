@@ -29,7 +29,7 @@
             <hr/>
         </gwt:HTML>
         <b:Form type="HORIZONTAL">
-            <b:FormGroup>
+            <b:FieldSet>
                 <b:FormLabel for="eventType" text="{i18n.eventType}" addStyleNames="col-lg-3"/>
                 <gwt:VerticalPanel addStyleNames="col-lg-8">
                     <gwt:RadioButton ui:field="standard" name="eventType" value="true" enabled="true" text="{i18n.standardEventType}" />
@@ -37,10 +37,8 @@
                     <gwt:RadioButton ui:field="signal" name="eventType" value="false" enabled="true" text="{i18n.signalEventType}" />
                     <b:HelpBlock ui:field="eventTypeHelp" text="{i18n.eventTypeHelp}" visible="false"/>
                 </gwt:VerticalPanel>
-            </b:FormGroup>
+            </b:FieldSet>
         </b:Form>
-        <start:TimerWidget ui:field="timerDetails" visible="false"/>
-        <start:SignalWidget ui:field="signalDetails" visible="false"/>
     </gwt:VerticalPanel>
 
 </ui:UiBinder>

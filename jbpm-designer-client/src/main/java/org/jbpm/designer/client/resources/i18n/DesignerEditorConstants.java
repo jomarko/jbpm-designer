@@ -97,15 +97,29 @@ public interface DesignerEditorConstants extends
 
     String signalEventType();
 
+    String signalHelp();
+
     String Source();
 
     String standardEventType();
+
+    String signalFormat();
 
     String Target();
 
     String This_input_should_be_entered_as_a_property_for_the_task();
 
     String timerEventType();
+
+    String timerDateFormat();
+
+    String timerDateHelp();
+
+    String timerCycleAndDelayFormat();
+
+    String timerCycleHelp();
+
+    String timerDelayHelp();
 
     String variablesHelp();
 

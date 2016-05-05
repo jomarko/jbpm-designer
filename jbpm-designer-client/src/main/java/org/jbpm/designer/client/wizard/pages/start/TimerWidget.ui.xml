@@ -22,23 +22,22 @@
     <ui:with field="i18n" type="org.jbpm.designer.client.resources.i18n.DesignerEditorConstants"/>
 
     <b:Form type="HORIZONTAL">
-        <b:FormGroup>
+        <b:FieldSet>
             <b:FormLabel for="timerType" text="Timer type" addStyleNames="col-lg-3"/>
             <gwt:VerticalPanel addStyleNames="col-lg-8">
                 <gwt:RadioButton ui:field="delay" name="timerType" value="true" enabled="true" text="Start with delay" />
                 <gwt:RadioButton ui:field="date" name="timerType" value="false" enabled="true" text="Start on date" />
                 <gwt:RadioButton ui:field="cycle" name="timerType" value="false" enabled="true" text="Repeat in cycle" />
-                <b:HelpBlock ui:field="timerTypeHelp" text="Timer type help" visible="false"/>
             </gwt:VerticalPanel>
-        </b:FormGroup>
+        </b:FieldSet>
 
-        <b:FormGroup>
+        <b:FieldSet>
             <b:FormLabel for="timerValue" text="Timer value" showRequiredIndicator="true" addStyleNames="col-lg-3"/>
             <gwt:VerticalPanel addStyleNames="col-lg-8">
                 <b:TextBox ui:field="timerValue"/>
-                <b:HelpBlock ui:field="timerHelp" text="Timer value can't be empty" visible="false"/>
+                <b:HelpBlock ui:field="timerHelp"/>
             </gwt:VerticalPanel>
-        </b:FormGroup>
+        </b:FieldSet>
     </b:Form>
 
 </ui:UiBinder>

@@ -13,9 +13,9 @@ public interface ProcessStartEventPageView extends IsWidget {
 
     void init(Presenter presenter);
 
-    boolean isSelectedNormalStart();
-
     boolean isSelectedSignalStart();
+
+    boolean isSelectedDateStart();
 
     boolean isSelectedDelayStart();
 
@@ -24,14 +24,6 @@ public interface ProcessStartEventPageView extends IsWidget {
     String getDefinedSignal();
 
     String getDefinedTimeValue();
-
-    void showSignalError();
-
-    void hideSignalError();
-
-    void showTimeError();
-
-    void hideTimeError();
 
     StandardEvent getDefinedEvent();
 }

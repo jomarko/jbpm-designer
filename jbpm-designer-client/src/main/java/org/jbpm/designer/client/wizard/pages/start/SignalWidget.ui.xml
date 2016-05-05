@@ -22,13 +22,13 @@
     <ui:with field="i18n" type="org.jbpm.designer.client.resources.i18n.DesignerEditorConstants"/>
 
     <b:Form type="HORIZONTAL">
-        <b:FormGroup>
+        <b:FieldSet>
             <b:FormLabel for="signal" text="Signal name" showRequiredIndicator="true" addStyleNames="col-lg-3"/>
             <gwt:VerticalPanel addStyleNames="col-lg-8">
                 <b:TextBox ui:field="signal"/>
-                <b:HelpBlock ui:field="signalHelp" text="Signal name can't be empty" visible="false"/>
+                <b:HelpBlock ui:field="signalHelp" text="{i18n.signalHelp}"/>
             </gwt:VerticalPanel>
-        </b:FormGroup>
+        </b:FieldSet>
     </b:Form>
 
 </ui:UiBinder>

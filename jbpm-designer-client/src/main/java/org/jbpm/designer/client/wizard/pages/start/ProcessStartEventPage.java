@@ -15,6 +15,8 @@
 package org.jbpm.designer.client.wizard.pages.start;
 
 
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.user.client.ui.Widget;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.model.StandardEvent;
@@ -25,14 +27,19 @@ import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
+import java.util.Date;
 
 @Dependent
 public class ProcessStartEventPage implements WizardPage, ProcessStartEventPageView.Presenter {
 
     private WizardPageStatusChangeEvent pageChanged = new WizardPageStatusChangeEvent(this);
 
+    private DateTimeFormat dateFormat = DateTimeFormat.getFormat("yyyy-MM-dd'T'HH:mm");
+    private RegExp cronRegExp = RegExp.compile("^([1-9]+[0-9]*[d])?([ ])*([1-9]+[0-9]*[h])?([ ])*([1-9]+[0-9]*[m])?([ ])*([1-9]+[0-9]*[s])?([ ])*([1-9]+[0-9]*[m][s])?$");
+    private RegExp signalRegExp = RegExp.compile("^[a-zA-Z0-9\\-\\.\\_]*$");
+
     @Inject
-    private Event<WizardPageStatusChangeEvent> event;
+    Event<WizardPageStatusChangeEvent> event;
 
     @Inject
     ProcessStartEventPageView view;
@@ -44,6 +51,7 @@ public class ProcessStartEventPage implements WizardPage, ProcessStartEventPageV
 
     @Override
     public void isComplete(Callback<Boolean> callback) {
+
         callback.callback(isStartValid());
     }
 
@@ -64,23 +72,48 @@ public class ProcessStartEventPage implements WizardPage, ProcessStartEventPageV
 
     @Override
     public boolean isStartValid() {
-        if(view.isSelectedCycleStart() || view.isSelectedDelayStart()) {
-            boolean valid = view.getDefinedTimeValue() != null && !view.getDefinedTimeValue().isEmpty();
-            if(!valid) {
-                view.showTimeError();
+
+        if(view.isSelectedDateStart()) {
+            String value = view.getDefinedTimeValue();
+            if(value != null && !value.trim().isEmpty()) {
+                value = value.trim();
+                Date date = null;
+                try {
+                    date = dateFormat.parse(value);
+                } catch (Exception e) {
+                    return false;
+                }
+                if(date == null) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        if(view.isSelectedDelayStart() || view.isSelectedCycleStart()) {
+            String value = view.getDefinedTimeValue();
+            if(value != null && !value.trim().isEmpty()) {
+                value = value.trim();
+                if (!cronRegExp.test(value)) {
+                    return false;
+                }
+            } else {
                 return false;
             }
         }
 
         if(view.isSelectedSignalStart()) {
-            boolean valid = view.getDefinedSignal() != null && !view.getDefinedSignal().isEmpty();
-            if(!valid) {
-                view.showSignalError();
+            String value = view.getDefinedSignal();
+            if(value!= null && !value.trim().isEmpty()) {
+                value = value.trim();
+                if(!signalRegExp.test(value)) {
+                    return false;
+                }
+            } else {
                 return false;
             }
         }
-        view.hideSignalError();
-        view.hideTimeError();
         return true;
     }
 
