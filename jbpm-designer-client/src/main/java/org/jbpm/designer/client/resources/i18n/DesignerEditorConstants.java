@@ -61,7 +61,7 @@ public interface DesignerEditorConstants extends
 
     String eventType();
 
-    String eventTypeHelp();
+    String standardHelp();
 
     String generalProcessInfo();
 

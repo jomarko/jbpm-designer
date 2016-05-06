@@ -96,10 +96,7 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
 
         ServiceTask task = new ServiceTask("");
 
-        Variable output = new Variable();
-        output.setName("");
-        output.setDataType("String");
-        task.setOutput(output);
+        task.setOutputs(new ArrayList<Variable>());
         task.setInputs(new ArrayList<Variable>());
         setModel(task);
     }

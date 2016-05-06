@@ -9,6 +9,7 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
+import org.gwtbootstrap3.client.ui.HelpBlock;
 import org.jbpm.designer.model.StandardEvent;
 
 
@@ -44,6 +45,9 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
     @UiField
     RadioButton signal;
 
+    @UiField
+    HelpBlock standardHelp;
+
     @Inject
     private TimerWidget timerDetails;
 
@@ -55,6 +59,7 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
 
     @UiHandler("standard")
     void standardClicked(ClickEvent event) {
+        standardHelp.setVisible(true);
         timerDetails.setVisible(false);
         signalDetails.setVisible(false);
         presenter.firePageChangedEvent();
@@ -62,6 +67,7 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
 
     @UiHandler("timer")
     void timerClicked(ClickEvent event) {
+        standardHelp.setVisible(false);
         timerDetails.setVisible(true);
         signalDetails.setVisible(false);
         presenter.firePageChangedEvent();
@@ -69,6 +75,7 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
 
     @UiHandler("signal")
     void signalClicked(ClickEvent event) {
+        standardHelp.setVisible(false);
         timerDetails.setVisible(false);
         signalDetails.setVisible(true);
         presenter.firePageChangedEvent();
@@ -80,6 +87,7 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
         container.add(signalDetails);
         timerDetails.setVisible(false);
         signalDetails.setVisible(false);
+        standardHelp.setVisible(true);
     }
 
     @Override

@@ -151,10 +151,13 @@ public class GuidedProcessWizard extends AbstractWizard {
         List<Variable> variables = inputsPage.getInputs();
         for(Map.Entry<Integer, List<Task>> tasksGroup: tasksPage.getTasks().entrySet()) {
             for(Task task : tasksGroup.getValue()) {
-                Variable taskOutput = task.getOutput();
-                if(taskOutput != null && taskOutput.getName() != null &&
-                    !taskOutput.getName().isEmpty() && !variables.contains(taskOutput)) {
-                    variables.add(taskOutput);
+                Variable taskOutput = null;
+                if(task.getOutputs() != null && task.getOutputs().size() == 1) {
+                    taskOutput = task.getOutputs().get(0);
+                    if (taskOutput != null && taskOutput.getName() != null &&
+                            !taskOutput.getName().isEmpty() && !variables.contains(taskOutput)) {
+                        variables.add(taskOutput);
+                    }
                 }
             }
         }

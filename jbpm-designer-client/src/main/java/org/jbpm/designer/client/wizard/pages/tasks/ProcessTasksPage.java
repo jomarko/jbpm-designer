@@ -14,7 +14,6 @@
 */
 package org.jbpm.designer.client.wizard.pages.tasks;
 
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Widget;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.ErrorCallback;
@@ -116,10 +115,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     public Task getDefaultModel() {
         HumanTask task = new HumanTask("");
 
-        Variable output = new Variable();
-        output.setName("");
-        output.setDataType("String");
-        task.setOutput(output);
+        task.setOutputs(new ArrayList<Variable>());
         task.setInputs(new ArrayList<Variable>());
 
         firePageChangedEvent();
@@ -259,10 +255,13 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         for(Map.Entry<Integer, List<Task>> tasksGroup : getTasks().entrySet()) {
             for(Task previousTask : tasksGroup.getValue()) {
                 if(task != null && task != previousTask) {
-                    Variable taskOutput = previousTask.getOutput();
-                    if (taskOutput != null && taskOutput.getName() != null &&
-                        !taskOutput.getName().isEmpty() && !possibleInputs.contains(taskOutput)) {
-                        possibleInputs.add(taskOutput);
+                    Variable taskOutput = null;
+                    if(previousTask.getOutputs() != null && previousTask.getOutputs().size() == 1) {
+                        taskOutput = previousTask.getOutputs().get(0);
+                        if (taskOutput != null && taskOutput.getName() != null &&
+                                !taskOutput.getName().isEmpty() && !possibleInputs.contains(taskOutput)) {
+                            possibleInputs.add(taskOutput);
+                        }
                     }
                 } else {
                     return possibleInputs;

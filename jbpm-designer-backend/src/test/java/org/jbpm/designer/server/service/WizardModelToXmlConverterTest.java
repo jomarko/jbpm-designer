@@ -53,7 +53,7 @@ public class WizardModelToXmlConverterTest {
         humanTask.setResponsibleHuman(new User("user_nick"));
         humanTask.setResponsibleGroup(new User("group_nick"));
         humanTask.setInputs(new ArrayList<Variable>());
-        humanTask.setOutput(new Variable());
+        humanTask.setOutputs(new ArrayList<Variable>());
 
         taskGroups = new HashMap<Integer, List<Task>>();
         List<Task> group = new ArrayList<Task>();
@@ -116,7 +116,9 @@ public class WizardModelToXmlConverterTest {
 
     @Test
     public void testTaskOutput() {
-        humanTask.setOutput(stringVariable);
+        List<Variable> outputs = humanTask.getOutputs();
+        outputs.add(stringVariable);
+        humanTask.setOutputs(outputs);
         process.setVariables(variables);
         process.setTasks(taskGroups);
 

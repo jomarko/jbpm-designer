@@ -49,9 +49,7 @@
                             </b:NavTabs>
                             <b:TabContent>
                                 <b:TabPane active="true" b:id="tab1" ui:field="taskDetailPane" />
-                                <b:TabPane b:id="tab2">
-                                    <!--widget:TaskIO ui:field="taskIO"/-->
-                                </b:TabPane>
+                                <b:TabPane b:id="tab2" ui:field="taskIoPane" />
                             </b:TabContent>
                         </b:TabPanel>
                     </bHtml:Div>

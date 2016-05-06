@@ -1,6 +1,7 @@
 package org.jbpm.designer.client.wizard.pages.widget;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -10,16 +11,20 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HasValue;
 import com.google.gwt.user.client.ui.Widget;
+import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.CheckBox;
+import org.gwtbootstrap3.client.ui.FieldSet;
 import org.gwtbootstrap3.client.ui.html.Text;
 import org.jboss.errai.databinding.client.api.DataBinder;
-import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
+import org.jboss.errai.ui.shared.api.annotations.EventHandler;
+import org.jbpm.designer.client.wizard.pages.inputs.ProcessInputsTable;
 import org.jbpm.designer.model.Task;
 import org.jbpm.designer.model.Variable;
-import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPageView;
 
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,14 +42,40 @@ public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> 
     @UiField
     FlexTable variables;
 
-//    @UiField
-//    InputRow output;
+    @UiField
+    FieldSet outputsFieldSet;
+
+    @Inject
+    private ProcessInputsTable outputs;
+
+    @UiField
+    Button addButton;
 
     private Map<Variable, CheckBox> variableCheckBoxes = new HashMap<Variable, CheckBox>();
 
+    private List<String> dataTypes = new ArrayList<String>();
+
     public TaskIO() {
         initWidget(uiBinder.createAndBindUi(this));
-//        dataBinder.bind(output, "output");
+    }
+
+    @PostConstruct
+    public void initializeView() {
+        outputsFieldSet.add(outputs);
+        dataBinder.bind(outputs.getListWidget(), "outputs");
+        dataTypes.clear();
+        dataTypes.add("String");
+        dataTypes.add("Float");
+        dataTypes.add("Boolean");
+    }
+
+    @EventHandler("addButton")
+    public void handleAddButton(ClickEvent e) {
+        Variable defaultModel = new Variable();
+        defaultModel.setVariableType(Variable.VariableType.OUTPUT);
+        defaultModel.setName("");
+        defaultModel.setDataType("String");
+        outputs.addVariable(defaultModel, dataTypes);
     }
 
     public void setPropertyChangeChandler(PropertyChangeHandler handler) {
@@ -129,7 +160,7 @@ public class TaskIO extends Composite implements HasModel<Task>, HasValue<Task> 
     }
 
     public void rebind() {
-//        dataBinder.bind(output, "output").getModel();
+        dataBinder.bind(outputs.getListWidget(), "outputs").getModel();
     }
 }
 

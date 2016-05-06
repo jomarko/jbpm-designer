@@ -305,26 +305,29 @@ public class WizardModelToXmlConverter {
 
         specification.getInputSets().add(inputSet);
 
-        Variable taskOutput = wizardTask.getOutput();
-        if(taskOutput != null && taskOutput.getName() != null && !taskOutput.getName().isEmpty()) {
-            DataOutput dataOutput = Bpmn2Factory.eINSTANCE.createDataOutput();
-            setItemSubjectRef(dataOutput, taskOutput);
-            dataOutput.setName("Result");
+        List<Variable> taskOutputs = wizardTask.getOutputs();
+        if(taskOutputs != null && taskOutputs.size() == 1){
+            Variable taskOutput = taskOutputs.get(0);
+            if( taskOutput.getName() != null && !taskOutput.getName().isEmpty()) {
+                DataOutput dataOutput = Bpmn2Factory.eINSTANCE.createDataOutput();
+                setItemSubjectRef(dataOutput, taskOutput);
+                dataOutput.setName("Result");
 
-            DataOutputAssociation outputAssociation = Bpmn2Factory.eINSTANCE.createDataOutputAssociation();
-            for (Property property : process.getProperties()) {
-                if (property.getName().compareTo(taskOutput.getName()) == 0) {
-                    outputAssociation.setTargetRef(property);
+                DataOutputAssociation outputAssociation = Bpmn2Factory.eINSTANCE.createDataOutputAssociation();
+                for (Property property : process.getProperties()) {
+                    if (property.getName().compareTo(taskOutput.getName()) == 0) {
+                        outputAssociation.setTargetRef(property);
+                    }
                 }
+
+                outputAssociation.getSourceRef().add(dataOutput);
+
+                specification.getDataOutputs().add(dataOutput);
+                outputSet.getDataOutputRefs().add(dataOutput);
+                bpmnTask.getDataOutputAssociations().add(outputAssociation);
+
+                specification.getOutputSets().add(outputSet);
             }
-
-            outputAssociation.getSourceRef().add(dataOutput);
-
-            specification.getDataOutputs().add(dataOutput);
-            outputSet.getDataOutputRefs().add(dataOutput);
-            bpmnTask.getDataOutputAssociations().add(outputAssociation);
-
-            specification.getOutputSets().add(outputSet);
         }
 
         bpmnTask.setIoSpecification(specification);

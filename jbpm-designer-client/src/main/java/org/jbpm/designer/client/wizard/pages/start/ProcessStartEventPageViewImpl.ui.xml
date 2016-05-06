@@ -35,7 +35,7 @@
                     <gwt:RadioButton ui:field="standard" name="eventType" value="true" enabled="true" text="{i18n.standardEventType}" />
                     <gwt:RadioButton ui:field="timer" name="eventType" value="false" enabled="true" text="{i18n.timerEventType}" />
                     <gwt:RadioButton ui:field="signal" name="eventType" value="false" enabled="true" text="{i18n.signalEventType}" />
-                    <b:HelpBlock ui:field="eventTypeHelp" text="{i18n.eventTypeHelp}" visible="false"/>
+                    <b:HelpBlock ui:field="standardHelp" text="{i18n.standardHelp}"/>
                 </gwt:VerticalPanel>
             </b:FieldSet>
         </b:Form>

@@ -17,7 +17,7 @@ public class Task {
 
     private List<Variable> inputs;
 
-    private Variable output;
+    private List<Variable> outputs;
 
     public Task() {
         id = lastId++;
@@ -52,12 +52,12 @@ public class Task {
         this.inputs = inputs;
     }
 
-    public Variable getOutput() {
-        return output;
+    public List<Variable> getOutputs() {
+        return outputs;
     }
 
-    public void setOutput(Variable output) {
-        this.output = output;
+    public void setOutputs(List<Variable> outputs) {
+        this.outputs = outputs;
     }
 
     @Override
@@ -70,7 +70,7 @@ public class Task {
         if (getId() != task.getId()) return false;
         if (getName() != null ? !getName().equals(task.getName()) : task.getName() != null) return false;
         if (getInputs() != null ? !getInputs().equals(task.getInputs()) : task.getInputs() != null) return false;
-        return getOutput() != null ? getOutput().equals(task.getOutput()) : task.getOutput() == null;
+        return getOutputs() != null ? getOutputs().equals(task.getOutputs()) : task.getOutputs() == null;
 
     }
 
@@ -79,7 +79,7 @@ public class Task {
         int result = getId();
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getInputs() != null ? getInputs().hashCode() : 0);
-        result = 31 * result + (getOutput() != null ? getOutput().hashCode() : 0);
+        result = 31 * result + (getOutputs() != null ? getOutputs().hashCode() : 0);
         return result;
     }
 
