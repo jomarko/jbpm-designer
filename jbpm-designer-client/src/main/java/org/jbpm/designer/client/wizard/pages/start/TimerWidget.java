@@ -17,12 +17,13 @@ import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.model.TimerEvent;
 import org.uberfire.workbench.events.NotificationEvent;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
 public class TimerWidget extends Composite implements HasModel<TimerEvent> {
 
-    private DataBinder<TimerEvent> dataBinder = DataBinder.forType(TimerEvent.class);
+    private DataBinder<TimerEvent> dataBinder;
 
     interface TimerWidgetBinder
             extends
@@ -31,7 +32,7 @@ public class TimerWidget extends Composite implements HasModel<TimerEvent> {
 
     private static TimerWidgetBinder uiBinder = GWT.create(TimerWidgetBinder.class);
 
-    private ProcessStartEventPageView.Presenter presenter;
+    protected ProcessStartEventPageView.Presenter presenter;
 
     @Inject
     Event<NotificationEvent> notification;
@@ -53,13 +54,21 @@ public class TimerWidget extends Composite implements HasModel<TimerEvent> {
 
     public TimerWidget() {
         initWidget(uiBinder.createAndBindUi(this));
+        timerHelp.setText(DesignerEditorConstants.INSTANCE.timerDelayHelp());
+    }
 
+    @PostConstruct
+    public void initDataBinder() {
+        dataBinder = DataBinder.forType(TimerEvent.class);
         dataBinder.bind(timerValue, "timerExpression").getModel();
+    }
+
+    @PostConstruct
+    public void initValueChangeHandlers() {
         date.addValueChangeHandler(getHandler());
         delay.addValueChangeHandler(getHandler());
         cycle.addValueChangeHandler(getHandler());
         timerValue.addValueChangeHandler(getHandler());
-        timerHelp.setText(DesignerEditorConstants.INSTANCE.timerDelayHelp());
     }
 
     @UiHandler("date")

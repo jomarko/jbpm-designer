@@ -17,10 +17,12 @@ package org.jbpm.designer.client.wizard.pages.inputs;
 
 import com.google.gwt.user.client.ui.Widget;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
+import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.Variable;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPage;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
+import org.uberfire.workbench.events.NotificationEvent;
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
@@ -36,7 +38,12 @@ public class ProcessInputsPage implements WizardPage, ProcessInputsPageView.Pres
     private Event<WizardPageStatusChangeEvent> event;
 
     @Inject
+    private Event<NotificationEvent> notification;
+
+    @Inject
     ProcessInputsPageView view;
+
+    private DefaultValues defaultValues = new DefaultValues();
 
     @Override
     public String getTitle() {
@@ -61,6 +68,7 @@ public class ProcessInputsPage implements WizardPage, ProcessInputsPageView.Pres
     @Override
     public void initialise() {
         view.init(this);
+        event.fire(pageChanged);
     }
 
     @Override
@@ -74,31 +82,35 @@ public class ProcessInputsPage implements WizardPage, ProcessInputsPageView.Pres
     }
 
     @Override
-    public Variable getDefaultModel() {
-        Variable defaultModel = new Variable();
-        defaultModel.setVariableType(Variable.VariableType.INPUT);
-        defaultModel.setName("");
-        defaultModel.setDataType("String");
-        return defaultModel;
-    }
-
-    @Override
     public void firePageChangedEvent() {
         event.fire(pageChanged);
     }
 
     @Override
     public boolean isVariableValid(Variable variable) {
+        boolean validationResult = true;
         if(variable == null) {
-            return false;
+            validationResult = false;
+        } else if(variable.getName() == null || variable.getName().trim().isEmpty()) {
+            validationResult = false;
+        } else  if(variable.getDataType() == null || variable.getDataType().trim().isEmpty()) {
+            validationResult = false;
         }
-        if(variable.getName() == null || variable.getName().isEmpty()) {
-            return false;
+
+        String variableName = variable.getName();
+        int occurrences = 0;
+        for(Variable model : view.getInputs()) {
+            if(model.getName().compareTo(variableName) == 0) {
+                occurrences++;
+            }
         }
-        if(variable.getDataType() == null || variable.getDataType().isEmpty()) {
-            return false;
+        if(occurrences > 1) {
+            view.deleteVariable(variable);
+            notification.fire(new NotificationEvent(DesignerEditorConstants.INSTANCE.A_Data_Input_with_this_name_already_exists(), NotificationEvent.NotificationType.ERROR));
+            validationResult = false;
         }
-        return true;
+
+        return validationResult;
     }
 
     public List<Variable> getInputs() {

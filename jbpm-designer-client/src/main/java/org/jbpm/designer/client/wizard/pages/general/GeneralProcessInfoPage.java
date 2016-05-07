@@ -55,6 +55,7 @@ public class GeneralProcessInfoPage implements WizardPage, GeneralProcessInfoPag
     @Override
     public void initialise() {
         view.init(this);
+        event.fire(pageChanged);
     }
 
     @Override

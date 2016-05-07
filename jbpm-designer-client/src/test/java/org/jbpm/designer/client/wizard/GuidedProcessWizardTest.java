@@ -59,7 +59,6 @@ public class GuidedProcessWizardTest {
         verify(inputsPage).initialise();
         verify(startEventPage).initialise();
         verify(tasksPage).initialise();
-        verify(previewPage).initialise();
     }
 
     @Test
@@ -70,7 +69,6 @@ public class GuidedProcessWizardTest {
         verify(inputsPage).isComplete(any(Callback.class));
         verify(startEventPage).isComplete(any(Callback.class));
         verify(tasksPage).isComplete(any(Callback.class));
-        verify(previewPage).isComplete(any(Callback.class));
     }
 
     @Test

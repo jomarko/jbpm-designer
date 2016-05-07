@@ -18,10 +18,10 @@ import com.google.gwt.user.client.ui.Widget;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.ErrorCallback;
 import org.jboss.errai.common.client.api.RemoteCallback;
-
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.wizard.GuidedProcessWizard;
 import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
+import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.operation.*;
 import org.jbpm.designer.service.SwaggerService;
@@ -40,7 +40,10 @@ import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Dependent
 public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presenter {
@@ -66,7 +69,9 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     private Event<WizardPageStatusChangeEvent> event;
 
     @Inject
-    private Caller<SwaggerService> swaggerDefinitionService;
+    Caller<SwaggerService> swaggerDefinitionService;
+
+    private DefaultValues defaultValues = new DefaultValues();
 
     @Override
     public String getTitle() {
@@ -94,6 +99,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     public void initialise() {
         view.init(this);
         sendRequestForExistingOperations();
+        event.fire(pageChanged);
     }
 
     @Override
@@ -113,10 +119,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
 
     @Override
     public Task getDefaultModel() {
-        HumanTask task = new HumanTask("");
-
-        task.setOutputs(new ArrayList<Variable>());
-        task.setInputs(new ArrayList<Variable>());
+        HumanTask task = defaultValues.getDefaultHumanTask();
 
         firePageChangedEvent();
 
@@ -228,7 +231,6 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     }
 
     private void rebindSelectedWidget(ListTaskDetail detail, Task model) {
-
         view.unbindAllTaskWidgets();
 
         if (model instanceof HumanTask) {

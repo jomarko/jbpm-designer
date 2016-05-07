@@ -13,6 +13,8 @@ import org.gwtbootstrap3.client.ui.ValueListBox;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
+import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
+import org.jbpm.designer.client.util.DataIOEditorNameTextBox;
 import org.jbpm.designer.model.Group;
 import org.jbpm.designer.model.HumanTask;
 import org.jbpm.designer.model.User;
@@ -38,7 +40,7 @@ public class HumanTaskDetail extends Composite implements HasModel<HumanTask> {
     private List<Group> acceptableGroups;
 
     @UiField
-    TextBox name;
+    DataIOEditorNameTextBox name;
 
     @UiField
     HelpBlock nameHelp;
@@ -61,6 +63,10 @@ public class HumanTaskDetail extends Composite implements HasModel<HumanTask> {
 
         acceptableUsers = new ArrayList<User>();
         acceptableGroups = new ArrayList<Group>();
+
+        name.setRegExp("^[a-zA-Z0-9\\-\\.\\_]*$",
+                DesignerEditorConstants.INSTANCE.Removed_invalid_characters_from_name(),
+                DesignerEditorConstants.INSTANCE.Invalid_character_in_name());
     }
 
     public void addHumanParticipants(List<User> users) {

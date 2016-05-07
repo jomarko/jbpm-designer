@@ -18,15 +18,14 @@ package org.jbpm.designer.client.wizard;
 import com.google.gwt.user.client.ui.Widget;
 import org.jbpm.designer.client.handlers.NewProcessHandler;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
-import org.jbpm.designer.model.BusinessProcess;
-import org.jbpm.designer.model.ServiceTask;
-import org.jbpm.designer.model.Task;
-import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.client.wizard.pages.general.GeneralProcessInfoPage;
 import org.jbpm.designer.client.wizard.pages.inputs.ProcessInputsPage;
 import org.jbpm.designer.client.wizard.pages.preview.ProcessPreviewPage;
 import org.jbpm.designer.client.wizard.pages.start.ProcessStartEventPage;
 import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPage;
+import org.jbpm.designer.model.BusinessProcess;
+import org.jbpm.designer.model.Task;
+import org.jbpm.designer.model.Variable;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.core.client.wizards.AbstractWizard;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPage;
@@ -34,7 +33,9 @@ import org.uberfire.ext.widgets.core.client.wizards.WizardPage;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Dependent
 public class GuidedProcessWizard extends AbstractWizard {
@@ -136,7 +137,16 @@ public class GuidedProcessWizard extends AbstractWizard {
     }
 
     public List<Variable> getInitialInputs() {
-        return inputsPage.getInputs();
+        List<Variable> inputs = inputsPage.getInputs();
+        List<Variable> copiedUnboundValues = new ArrayList<Variable>();
+        for(Variable variable : inputs) {
+            Variable copy = new Variable();
+            copy.setName(variable.getName());
+            copy.setDataType(variable.getDataType());
+            copiedUnboundValues.add(copy);
+        }
+
+        return copiedUnboundValues;
     }
 
     public void setCompleteProcessCallback(Callback<BusinessProcess> completeProcessCallback) {

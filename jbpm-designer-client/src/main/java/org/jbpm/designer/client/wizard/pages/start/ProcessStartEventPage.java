@@ -58,6 +58,7 @@ public class ProcessStartEventPage implements WizardPage, ProcessStartEventPageV
     @Override
     public void initialise() {
         view.init(this);
+        event.fire(pageChanged);
     }
 
     @Override

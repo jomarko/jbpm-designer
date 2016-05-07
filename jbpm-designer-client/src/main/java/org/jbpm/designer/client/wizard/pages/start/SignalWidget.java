@@ -15,6 +15,7 @@ import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.model.SignalEvent;
 import org.uberfire.workbench.events.NotificationEvent;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
@@ -22,7 +23,7 @@ import javax.inject.Inject;
 @Dependent
 public class SignalWidget extends Composite implements HasModel<SignalEvent> {
 
-    private DataBinder<SignalEvent> dataBinder = DataBinder.forType(SignalEvent.class);
+    private DataBinder<SignalEvent> dataBinder;
 
     interface SignalWidgetBinder
             extends
@@ -31,7 +32,7 @@ public class SignalWidget extends Composite implements HasModel<SignalEvent> {
 
     private static SignalWidgetBinder uiBinder = GWT.create(SignalWidgetBinder.class);
 
-    private ProcessStartEventPageView.Presenter presenter;
+    protected ProcessStartEventPageView.Presenter presenter;
 
     @Inject
     Event<NotificationEvent> notification;
@@ -44,7 +45,16 @@ public class SignalWidget extends Composite implements HasModel<SignalEvent> {
 
     public SignalWidget() {
         initWidget(uiBinder.createAndBindUi(this));
+    }
+
+    @PostConstruct
+    public void initDataBinder() {
+        dataBinder = DataBinder.forType(SignalEvent.class);
         dataBinder.bind(signal, "signalName").getModel();
+    }
+
+    @PostConstruct
+    public void initChangeHandler() {
         signal.addValueChangeHandler(new ValueChangeHandler<String>() {
             @Override
             public void onValueChange(ValueChangeEvent<String> valueChangeEvent) {

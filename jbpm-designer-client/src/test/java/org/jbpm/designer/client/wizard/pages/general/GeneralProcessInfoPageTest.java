@@ -28,6 +28,13 @@ public class GeneralProcessInfoPageTest {
     Callback<Boolean> callback;
 
     @Test
+    public void testInitialise() throws Exception {
+        page.initialise();
+        verify(view).init(page);
+        verify(event).fire(any(WizardPageStatusChangeEvent.class));
+    }
+
+    @Test
     public void testIsComplete() {
         when(view.getName()).thenReturn("abc");
         page.isComplete(callback);

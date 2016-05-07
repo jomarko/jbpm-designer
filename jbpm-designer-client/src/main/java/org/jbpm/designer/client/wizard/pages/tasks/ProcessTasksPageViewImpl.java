@@ -24,17 +24,19 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
-import org.gwtbootstrap3.client.ui.*;
+import org.gwtbootstrap3.client.ui.Button;
+import org.gwtbootstrap3.client.ui.TabPane;
+import org.gwtbootstrap3.client.ui.TabPanel;
 import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jbpm.designer.client.wizard.pages.widget.*;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.operation.Operation;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Dependent
 public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksPageView, DeletableFlexTable.RowsHandler {
@@ -59,13 +61,13 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     TabPane taskDetailPane;
 
     @Inject
-    private TaskDetail taskDetail;
+    protected TaskDetail taskDetail;
 
     @UiField
     TabPane taskIoPane;
 
     @Inject
-    private TaskIO taskIO;
+    protected TaskIO taskIO;
 
     @UiField
     ConditionWidget conditionWidget;
@@ -238,13 +240,11 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         }
 
         taskDetail.unbind();
-        taskIO.unbind();
     }
 
     @Override
     public void rebindTaskDetailWidgets() {
         taskDetail.rebind();
-        taskIO.rebind();
     }
 
     @Override

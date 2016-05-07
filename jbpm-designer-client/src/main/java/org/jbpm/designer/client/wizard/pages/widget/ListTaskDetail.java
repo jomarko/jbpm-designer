@@ -18,10 +18,11 @@ package org.jbpm.designer.client.wizard.pages.widget;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import org.gwtbootstrap3.client.ui.Icon;
-import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.constants.IconType;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.ui.client.widget.HasModel;
+import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
+import org.jbpm.designer.client.util.DataIOEditorNameTextBox;
 import org.jbpm.designer.model.Condition;
 import org.jbpm.designer.model.HumanTask;
 import org.jbpm.designer.model.ServiceTask;
@@ -32,7 +33,7 @@ public class ListTaskDetail extends Composite implements HasModel<Task> {
 
     private DataBinder<Task> dataBinder = DataBinder.forType(Task.class);
 
-    private TextBox name = new TextBox();
+    private DataIOEditorNameTextBox name = new DataIOEditorNameTextBox();
 
     private Icon indicator = new Icon(IconType.USER);
 
@@ -56,7 +57,9 @@ public class ListTaskDetail extends Composite implements HasModel<Task> {
         panel.add(name);
         initWidget(panel);
         dataBinder.bind(name, "name");
-
+        name.setRegExp("^[a-zA-Z0-9\\-\\.\\_]*$",
+                DesignerEditorConstants.INSTANCE.Removed_invalid_characters_from_name(),
+                DesignerEditorConstants.INSTANCE.Invalid_character_in_name());
         setStyleName("cellWithMargin");
     }
 

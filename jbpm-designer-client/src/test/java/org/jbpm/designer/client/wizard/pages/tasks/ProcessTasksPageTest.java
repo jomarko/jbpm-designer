@@ -1,10 +1,13 @@
 package org.jbpm.designer.client.wizard.pages.tasks;
 
 import com.google.gwtmockito.GwtMockitoTestRunner;
+import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.ErrorCallback;
 import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.client.wizard.GuidedProcessWizard;
+import org.jbpm.designer.model.operation.Swagger;
+import org.jbpm.designer.service.SwaggerService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,6 +18,7 @@ import org.uberfire.ext.security.management.api.GroupManager;
 import org.uberfire.ext.security.management.api.UserManager;
 import org.uberfire.ext.security.management.client.ClientUserSystemManager;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
+import org.uberfire.mocks.CallerMock;
 import org.uberfire.mocks.EventSourceMock;
 
 import javax.enterprise.event.Event;
@@ -45,6 +49,9 @@ public class ProcessTasksPageTest {
     @Mock
     GroupManager groupManager;
 
+    @Mock
+    SwaggerService swaggerService;
+
     @Captor
     ArgumentCaptor<AbstractEntityManager.SearchRequest> requestCaptor;
 
@@ -60,6 +67,9 @@ public class ProcessTasksPageTest {
 
     @Before
     public void setUp() {
+        Caller<SwaggerService> swaggerServiceCaller = new CallerMock<SwaggerService>(swaggerService);
+        page.swaggerDefinitionService = swaggerServiceCaller;
+
         varA = new Variable("a", Variable.VariableType.INPUT, null, null);
         varB = new Variable("b", Variable.VariableType.OUTPUT, null, null);
         List<Variable> inputs = new ArrayList<Variable>();
@@ -80,111 +90,6 @@ public class ProcessTasksPageTest {
     public void testInitialise()  {
         page.initialise();
         verify(view).init(page);
-    }
-
-    @Test
-    public void testPrepareView() {
-        page.prepareView();
-
-
-        verify(userManager).search(requestCaptor.capture());
-        assertEquals("", requestCaptor.getValue().getSearchPattern());
-        verify(groupManager).search(requestCaptor.capture());
-        assertEquals("", requestCaptor.getValue().getSearchPattern());
-    }
-
-    @Test
-    public void testIsComplete() {
-
-        taskOne.setResponsibleHuman(new User());
-
-
-        List<Task> tasks = new ArrayList<Task>();
-        tasks.add(taskOne);
-        tasks.add(taskTwo);
-
-//        when(view.getTasks()).thenReturn(tasks);
-
-        Callback<Boolean> callback = mock(Callback.class);
-        page.isComplete(callback);
-
-        verify(callback).callback(true);
-    }
-
-    @Test
-    public void testIsCompleteIncompleteHuman() {
-
-        List<Task> tasks = new ArrayList<Task>();
-        tasks.add(taskOne);
-        tasks.add(taskTwo);
-
-//        when(view.getTasks()).thenReturn(tasks);
-
-        Callback<Boolean> callback = mock(Callback.class);
-        page.isComplete(callback);
-
-        verify(callback).callback(false);
-    }
-
-    @Test
-    public void testIsCompleteIncompleteService() {
-
-        taskOne.setResponsibleHuman(new User());
-
-        List<Task> tasks = new ArrayList<Task>();
-        tasks.add(taskOne);
-        tasks.add(taskTwo);
-
-//        when(view.getTasks()).thenReturn(tasks);
-
-        Callback<Boolean> callback = mock(Callback.class);
-        page.isComplete(callback);
-
-        verify(callback).callback(false);
-    }
-
-    @Test
-    public void testIsCompleteIncompleteCondition() {
-
-        taskOne.setResponsibleHuman(new User());
-        List<Task> tasks = new ArrayList<Task>();
-        tasks.add(taskOne);
-
-//        when(view.getTasks()).thenReturn(tasks);
-
-        Callback<Boolean> callback = mock(Callback.class);
-        page.isComplete(callback);
-
-        verify(callback).callback(false);
-    }
-
-    @Test
-    public void testGetDefaultModel() {
-        Task model = page.getDefaultModel();
-
-        assertEquals("", model.getName());
-    }
-
-    @Test
-    public void testGetVariablesForTaskBase() {
-        Task task = mock(Task.class);
-        List<Variable> result = page.getVariablesForTask(task);
-
-        verify(wizard).getInitialInputs();
-
-        assertTrue(result.contains(varA));
-        assertTrue(result.contains(varB));
-
-    }
-
-    @Test
-    public void testRowDeleted() {
-        List<Task> tasks = new ArrayList<Task>();
-        tasks.add(taskOne);
-//        when(view.getTasks()).thenReturn(tasks);
-
-        page.rowDeleted();
-
-        verify(view).deselectAll();
+        verify(event).fire(any(WizardPageStatusChangeEvent.class));
     }
 }

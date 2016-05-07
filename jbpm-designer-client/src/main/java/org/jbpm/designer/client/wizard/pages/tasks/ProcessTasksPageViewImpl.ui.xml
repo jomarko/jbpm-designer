@@ -33,7 +33,7 @@
             <bHtml:Div styleName="row">
                 <bHtml:Div styleName="col-md-6">
                     <gwt:HorizontalPanel>
-                        <b:Button ui:field="addButton" text="Add" />
+                        <b:Button ui:field="addButton" text="Add task"/>
                         <b:Button ui:field="parallelButton" text="Parallel" visible="false" />
                         <b:Button ui:field="conditionButton" text="Condition" visible="false" />
                         <b:Button ui:field="splitButton" text="Split" visible="false" />

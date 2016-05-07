@@ -27,7 +27,7 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
 
     private static ProcessStartEventPageViewImplBinder uiBinder = GWT.create(ProcessStartEventPageViewImplBinder.class);
 
-    private Presenter presenter;
+    protected Presenter presenter;
 
     private StandardEvent standardStartEvent = new StandardEvent();
 
@@ -49,10 +49,10 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
     HelpBlock standardHelp;
 
     @Inject
-    private TimerWidget timerDetails;
+    protected TimerWidget timerDetails;
 
     @Inject
-    private SignalWidget signalDetails;
+    protected SignalWidget signalDetails;
 
     @UiField
     VerticalPanel container;
@@ -85,9 +85,6 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
     public void initializeView() {
         container.add(timerDetails);
         container.add(signalDetails);
-        timerDetails.setVisible(false);
-        signalDetails.setVisible(false);
-        standardHelp.setVisible(true);
     }
 
     @Override
@@ -95,6 +92,10 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
         this.presenter = presenter;
         timerDetails.setPresenter(presenter);
         signalDetails.setPresenter(presenter);
+        standard.setValue(true);
+        timer.setValue(false);
+        signal.setValue(false);
+        standardClicked(null);
     }
 
     @Override

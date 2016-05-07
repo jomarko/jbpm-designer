@@ -4,7 +4,9 @@ import com.google.gwtmockito.GwtMockitoTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Captor;
 import org.mockito.Mock;
+import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
 import org.uberfire.mocks.EventSourceMock;
 
@@ -22,6 +24,9 @@ public class ProcessStartEventPageTest {
     @Mock
     ProcessStartEventPageView view;
 
+    @Mock
+    Callback<Boolean> callback;
+
     private ProcessStartEventPage startPage;
 
     @Before
@@ -32,122 +37,146 @@ public class ProcessStartEventPageTest {
     }
 
     @Test
+    public void testInitialise() throws Exception {
+        startPage.initialise();
+        verify(view).init(startPage);
+        verify(event).fire(any(WizardPageStatusChangeEvent.class));
+    }
+
+    @Test
     public void testDateFormat() {
         when(view.isSelectedDateStart()).thenReturn(true);
         when(view.getDefinedTimeValue()).thenReturn("2014-02-03T10:10");
-        assertTrue(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(true);
     }
 
     @Test
     public void testDateFormatText() {
         when(view.isSelectedDateStart()).thenReturn(true);
         when(view.getDefinedTimeValue()).thenReturn("lorem ipsum");
-        assertFalse(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(false);
     }
 
     @Test
     public void testDateFormatEmpty() {
         when(view.isSelectedDateStart()).thenReturn(true);
         when(view.getDefinedTimeValue()).thenReturn("    ");
-        assertFalse(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(false);
     }
 
     @Test
     public void testDateFormatMissingYear() {
         when(view.isSelectedDateStart()).thenReturn(true);
         when(view.getDefinedTimeValue()).thenReturn("02-03T10:10");
-        assertFalse(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(false);
     }
 
     @Test
     public void testCronRegExp() throws Exception {
         setMockFroCronTest();
         when(view.getDefinedTimeValue()).thenReturn("13d 1h 12m 2s 32ms");
-        assertTrue(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(true);
     }
 
     @Test
     public void testCronRegExpMissingDay() throws Exception {
         setMockFroCronTest();
         when(view.getDefinedTimeValue()).thenReturn("1h 12m 2s 32ms");
-        assertTrue(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(true);
     }
 
     @Test
     public void testCronRegExpMissingHour() throws Exception {
         setMockFroCronTest();
         when(view.getDefinedTimeValue()).thenReturn("1d 12m 2s 32ms");
-        assertTrue(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(true);
     }
 
     @Test
     public void testCronRegExpMissingMinute() throws Exception {
         setMockFroCronTest();
         when(view.getDefinedTimeValue()).thenReturn("1d 1h 2s 32ms");
-        assertTrue(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(true);
     }
 
     @Test
     public void testCronRegExpMissingSecond() throws Exception {
         setMockFroCronTest();
         when(view.getDefinedTimeValue()).thenReturn("2d 1h 12m 32ms");
-        assertTrue(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(true);
     }
 
     @Test
     public void testCronRegExpMissingMiliSecond() throws Exception {
         setMockFroCronTest();
         when(view.getDefinedTimeValue()).thenReturn("2d 1h 12m 2s");
-        assertTrue(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(true);
     }
 
     @Test
     public void testCronRegWrongOrder() throws Exception {
         setMockFroCronTest();
         when(view.getDefinedTimeValue()).thenReturn("1ms 1s 12m 2h 3d");
-        assertFalse(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(false);
     }
 
     @Test
     public void testCronRegEmpty() throws Exception {
         setMockFroCronTest();
         when(view.getDefinedTimeValue()).thenReturn("   ");
-        assertFalse(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(false);
     }
 
     @Test
     public void testCronRegText() throws Exception {
         setMockFroCronTest();
         when(view.getDefinedTimeValue()).thenReturn("lorem ipsum");
-        assertFalse(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(false);
     }
 
     @Test
     public void testCronRegNumber() throws Exception {
         setMockFroCronTest();
         when(view.getDefinedTimeValue()).thenReturn("1.0");
-        assertFalse(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(false);
     }
 
     @Test
     public void testCronRegSpecialChars() throws Exception {
         setMockFroCronTest();
         when(view.getDefinedTimeValue()).thenReturn("1d 2# 3s 4@ 5^");
-        assertFalse(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(false);
     }
 
     @Test
     public void testCronRegRepeatedChars() throws Exception {
         setMockFroCronTest();
         when(view.getDefinedTimeValue()).thenReturn("1d 1d");
-        assertFalse(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(false);
     }
 
     @Test
     public void testCronRegOnlyNumbers() throws Exception {
         setMockFroCronTest();
         when(view.getDefinedTimeValue()).thenReturn("1 2 3 1");
-        assertFalse(startPage.isStartValid());
+        startPage.isComplete(callback);
+        verify(callback).callback(false);
     }
 
     private void setMockFroCronTest() {

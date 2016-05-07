@@ -28,7 +28,6 @@
         <gwt:HTML>
             <hr/>
         </gwt:HTML>
-        <b:Button ui:field="addButton" text="Add"/>
         <b:HelpBlock ui:field="variablesHelp" text="{i18n.variablesHelp}" visible="false"/>
 
     </gwt:VerticalPanel>

@@ -23,13 +23,11 @@
 
 
     <b:Form type="HORIZONTAL">
-        <b:FieldSet>
-            <b:FormLabel text="Task inputs" for="variables"/>
-            <gwt:FlexTable ui:field="variables"/>
+        <b:FieldSet ui:field="inputsFieldSet">
+            <b:FormLabel text="Task inputs" for="inputs"/>
         </b:FieldSet>
         <b:FieldSet ui:field="outputsFieldSet">
-            <b:FormLabel text="Output" for="output"/>
-            <b:Button ui:field="addButton" text="Add"/>
+            <b:FormLabel text="Task output" for="output"/>
         </b:FieldSet>
     </b:Form>
 

@@ -12,6 +12,9 @@ import org.gwtbootstrap3.client.ui.*;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
+import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
+import org.jbpm.designer.client.util.DataIOEditorNameTextBox;
+import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.ServiceTask;
 import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.model.operation.Operation;
@@ -39,7 +42,7 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
     private List<Variable> acceptableVariables;
 
     @UiField
-    TextBox name;
+    DataIOEditorNameTextBox name;
 
     @UiField
     HelpBlock nameHelp;
@@ -75,6 +78,8 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
     @Inject
     private OperationDetail operationDetail;
 
+    private DefaultValues defaultValues = new DefaultValues();
+
     public ServiceTaskDetail() {
         initWidget(uiBinder.createAndBindUi(this));
         bindDataBinder();
@@ -94,10 +99,11 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
             }
         });
 
-        ServiceTask task = new ServiceTask("");
+        name.setRegExp("^[a-zA-Z0-9\\-\\.\\_]*$",
+                DesignerEditorConstants.INSTANCE.Removed_invalid_characters_from_name(),
+                DesignerEditorConstants.INSTANCE.Invalid_character_in_name());
 
-        task.setOutputs(new ArrayList<Variable>());
-        task.setInputs(new ArrayList<Variable>());
+        ServiceTask task = defaultValues.getDefaultServiceTask();
         setModel(task);
     }
 
