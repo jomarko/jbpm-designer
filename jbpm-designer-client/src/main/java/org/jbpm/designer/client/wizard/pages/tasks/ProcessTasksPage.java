@@ -135,7 +135,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     public void splitTasks() {
         List<Widget> selectedWidgets = view.getSelectedWidgets();
         if(selectedWidgets.size() == 2) {
-            if(!canBeMerged(selectedWidgets) && areFromSameRow(selectedWidgets)) {
+            if(areAllWidgetsMerged(selectedWidgets) && areFromSameRow(selectedWidgets)) {
                 ((ListTaskDetail)selectedWidgets.get(0)).setMerged(false);
                 ((ListTaskDetail)selectedWidgets.get(1)).setMerged(false);
                 ((ListTaskDetail) selectedWidgets.get(0)).setCondition(null);
@@ -205,7 +205,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         if(selectedWidgets.size() != 2) {
             view.setMergeButtonsVisibility(false);
             view.setSplitButtonVisibility(false);
-        } else if( canBeMerged(selectedWidgets)) {
+        } else if(canBeMerged(selectedWidgets)) {
             view.setMergeButtonsVisibility(true);
             view.setSplitButtonVisibility(false);
         } else {
@@ -255,19 +255,19 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     public List<Variable> getVariablesForTask(Task task) {
         List<Variable> possibleInputs = wizard.getInitialInputs();
         for(Map.Entry<Integer, List<Task>> tasksGroup : getTasks().entrySet()) {
-            for(Task previousTask : tasksGroup.getValue()) {
-                if(task != null && task != previousTask) {
+            if(task != null && !tasksGroup.getValue().contains(task)) {
+                for(Task previousTask : tasksGroup.getValue()) {
                     Variable taskOutput = null;
-                    if(previousTask.getOutputs() != null && previousTask.getOutputs().size() == 1) {
+                    if (previousTask.getOutputs() != null && previousTask.getOutputs().size() == 1) {
                         taskOutput = previousTask.getOutputs().get(0);
                         if (taskOutput != null && taskOutput.getName() != null &&
                                 !taskOutput.getName().isEmpty() && !possibleInputs.contains(taskOutput)) {
                             possibleInputs.add(taskOutput);
                         }
                     }
-                } else {
-                    return possibleInputs;
                 }
+            } else {
+                return possibleInputs;
             }
         }
         return possibleInputs;
@@ -325,26 +325,26 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     public boolean isConstraintValid(Constraint constraint) {
         boolean validResult = true;
         if(constraint == null) {
-            validResult = validResult && false;;
+            validResult = false;;
         }
 
         if(constraint.getVariable() == null) {
             view.setVariableHelpVisibility(true);
-            validResult = validResult && false;
+            validResult = false;
         } else {
             view.setVariableHelpVisibility(false);
         }
 
-        if(constraint.getConstraint() == null || constraint.getConstraint().isEmpty()) {
+        if(constraint.getConstraint() == null || constraint.getConstraint().trim().isEmpty()) {
             view.setConstraintHelpVisibility(true);
-            validResult = validResult && false;
+            validResult = false;
         } else {
             view.setConstraintHelpVisibility(false);
         }
 
-        if(constraint.getConstraintValue() == null || constraint.getConstraintValue().isEmpty()) {
+        if(constraint.getConstraintValue() == null || constraint.getConstraintValue().trim().isEmpty()) {
             view.setConstraintValueHelpVisibility(true);
-            validResult = validResult && false;
+            validResult = false;
         } else {
             view.setConstraintValueHelpVisibility(false);
         }
@@ -393,7 +393,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         }
 
         if (task != null) {
-            if (task.getName() == null || task.getName().isEmpty()) {
+            if (task.getName() == null || task.getName().trim().isEmpty()) {
                 view.setNameHelpVisibility(true);
             } else {
                 view.setNameHelpVisibility(false);
@@ -445,6 +445,15 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     private boolean canBeMerged(List<Widget> widgets) {
         for(Widget widget : widgets) {
             if (((ListTaskDetail)widget).isMerged()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean areAllWidgetsMerged(List<Widget> widgets) {
+        for(Widget widget : widgets) {
+            if (!((ListTaskDetail)widget).isMerged()) {
                 return false;
             }
         }
