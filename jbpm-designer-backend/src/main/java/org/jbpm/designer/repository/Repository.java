@@ -15,6 +15,7 @@
 
 package org.jbpm.designer.repository;
 
+import org.uberfire.backend.vfs.Path;
 import org.uberfire.java.nio.file.NoSuchFileException;
 
 import java.util.Collection;
@@ -125,6 +126,8 @@ public interface Repository {
      * @throws NoSuchFileException - throws in case of asset given by id does not exist
      */
     Asset loadAssetFromPath(String path) throws NoSuchFileException;
+
+    Asset loadAssetFromPath(Path path) throws NoSuchFileException;
 
     /**
      * Stores given asset in the repository. <code>asset</code> need to have all meta data and content available

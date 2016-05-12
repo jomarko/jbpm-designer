@@ -18,6 +18,8 @@ package org.jbpm.designer.client.wizard.pages.tasks;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
@@ -33,6 +35,7 @@ import org.jbpm.designer.client.wizard.pages.widget.*;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.operation.Operation;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -48,7 +51,7 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
 
     private static ProcessTasksPageViewImplBinder uiBinder = GWT.create(ProcessTasksPageViewImplBinder.class);
 
-    private List<Widget> lastSelectedWidgets;
+    protected List<Widget> lastSelectedWidgets;
 
     private Presenter presenter;
 
@@ -87,6 +90,14 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     @UiField
     TabPanel conditionPanel;
 
+    @PostConstruct
+    public void registerHandlers() {
+        tasksContainer.registerRowsHandler(this);
+        taskIO.setPropertyChangeChandler(getHandler());
+        taskDetail.setPropertyChangeHandler(getHandler());
+        conditionWidget.setPropertyChangeHandler(getHandler());
+    }
+
     @Override
     public void init(Presenter presenter) {
         this.presenter = presenter;
@@ -94,10 +105,6 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         taskDetailPane.add(taskDetail);
 
         taskDetail.init(presenter);
-        tasksContainer.registerRowsHandler(this);
-        taskIO.setPropertyChangeChandler(getHandler());
-        taskDetail.setPropertyChangeHandler(getHandler());
-        conditionWidget.setPropertyChangeHandler(getHandler());
 
         tasksContainer.clear();
         lastSelectedWidgets = new ArrayList<Widget>();
@@ -345,10 +352,26 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         taskDetail.addAvailableOperation(operation);
     }
 
+    @Override
+    public void setAvailableDataTypes(List<String> dataTypes) {
+        taskIO.setAvailableDataTypes(dataTypes);
+    }
+
     private PropertyChangeHandler getHandler() {
         return new PropertyChangeHandler() {
             @Override
             public void onPropertyChange(PropertyChangeEvent propertyChangeEvent) {
+                int row = tasksContainer.getRowOfWidget(lastSelectedWidgets.get(0));
+                List<Widget> rowWidgets = tasksContainer.getRowWidgets(row);
+                rowWidgets.remove(lastSelectedWidgets.get(0));
+                if(rowWidgets.size() == 2 && rowWidgets.get(1) instanceof ListTaskDetail && lastSelectedWidgets.get(0) instanceof ListTaskDetail) {
+                    Condition condition = ((ListTaskDetail) rowWidgets.get(1)).getCondition();
+                    ListTaskDetail lastSelected = (ListTaskDetail) lastSelectedWidgets.get(0);
+                    if(condition != null && lastSelected.getCondition() != null) {
+                        condition.setExecuteIfConstraintSatisfied(!lastSelected.getCondition().isExecuteIfConstraintSatisfied());
+                        ((ListTaskDetail) rowWidgets.get(1)).setCondition(condition);
+                    }
+                }
                 presenter.firePageChangedEvent();
             }
         };

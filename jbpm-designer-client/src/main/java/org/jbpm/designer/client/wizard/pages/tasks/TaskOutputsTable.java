@@ -17,6 +17,7 @@ import org.uberfire.workbench.events.NotificationEvent;
 import javax.annotation.PostConstruct;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 
 @Templated("TaskOutputsTable.html#widget")
@@ -36,12 +37,15 @@ public class TaskOutputsTable extends Composite {
 
     private DefaultValues defaultValues = new DefaultValues();
 
+    private List<String> dataTypes;
+
     @PostConstruct
     public void initialize() {
+        dataTypes = new ArrayList<String>();
         addButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent clickEvent) {
-                addVariable(defaultValues.getDefaultVariable(), defaultValues.getDefaultDataTypes());
+                addVariable(defaultValues.getDefaultVariable(), dataTypes);
             }
         });
     }
@@ -64,5 +68,12 @@ public class TaskOutputsTable extends Composite {
     public void deleteVariable(Variable variable) {
         outputs.getValue().remove(variable);
         ValueChangeEvent.fire(outputs, outputs.getValue());
+    }
+
+    public void setAvailableDataTypes(List<String> availableDataTypes) {
+        dataTypes.clear();
+        if(availableDataTypes != null) {
+            dataTypes.addAll(availableDataTypes);
+        }
     }
 }

@@ -25,4 +25,6 @@ public interface ProcessInputsPageView extends IsWidget {
     void showAsInvalid(Variable variable);
 
     void setVariablesHelpVisibility(boolean visibility);
+
+    void setAvailableDataTypes(List<String> dataTypes);
 }

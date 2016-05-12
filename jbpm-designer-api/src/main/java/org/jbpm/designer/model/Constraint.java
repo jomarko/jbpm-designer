@@ -6,6 +6,15 @@ import org.jboss.errai.databinding.client.api.Bindable;
 @Bindable
 @Portable
 public class Constraint {
+
+    public static String EQUAL_TO = "equal to";
+    public static String CONTAINS = "contains";
+    public static String STARTS_WITH = "starts with";
+    public static String GREATER_THAN = "greater than";
+    public static String LESS_THAN = "less than";
+    public static String EQUAL_OR_GREATER_THAN = "equal or greater than";
+    public static String EQUAL_OR_LESS_THAN = "equal or less than";
+
     private Variable variable;
 
     private String constraint;

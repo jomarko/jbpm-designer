@@ -17,6 +17,7 @@ package org.jbpm.designer.repository.guvnor;
 
 import org.jbpm.designer.repository.*;
 import org.jbpm.designer.web.profile.IDiagramProfile;
+import org.uberfire.backend.vfs.Path;
 import org.uberfire.java.nio.file.NoSuchFileException;
 
 import javax.enterprise.inject.Alternative;
@@ -79,6 +80,11 @@ public class GuvnorRepository implements Repository {
     }
 
     public Asset loadAssetFromPath(String path) throws NoSuchFileException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Asset loadAssetFromPath(Path path) throws NoSuchFileException {
         throw new UnsupportedOperationException();
     }
 

@@ -10,6 +10,7 @@ import org.jbpm.designer.model.*;
 import org.jbpm.designer.client.wizard.GuidedProcessWizard;
 import org.jbpm.designer.model.operation.Operation;
 import org.jbpm.designer.model.operation.ParameterMapping;
+import org.jbpm.designer.service.DiscoverService;
 import org.jbpm.designer.service.SwaggerService;
 import org.junit.Before;
 import org.junit.Test;
@@ -95,6 +96,7 @@ public class ProcessTasksPageTest {
     public void setUp() {
         Caller<SwaggerService> swaggerServiceCaller = new CallerMock<SwaggerService>(swaggerService);
         page.swaggerDefinitionService = swaggerServiceCaller;
+        page.discoverService = new CallerMock<DiscoverService>(mock(DiscoverService.class));
 
         varA = new Variable("a", Variable.VariableType.INPUT, "String", null);
         varB = new Variable("b", Variable.VariableType.OUTPUT, "Boolean", null);
@@ -138,7 +140,8 @@ public class ProcessTasksPageTest {
     public void testInitialise()  {
         page.initialise();
         verify(view).init(page);
-        verify(event).fire(any(WizardPageStatusChangeEvent.class));
+        verify(view).setAvailableDataTypes(any(List.class));
+        verify(event, times(2)).fire(any(WizardPageStatusChangeEvent.class));
     }
 
     @Test
@@ -507,36 +510,6 @@ public class ProcessTasksPageTest {
         Operation operation = new Operation();
         ParameterMapping parameterMapping = new ParameterMapping();
         operation.setParameterMappings(Arrays.asList(parameterMapping));
-        taskTwo.setOperation(operation);
-        assertTrue(page.isTaskValid(taskTwo));
-    }
-
-    @Test
-    public void testIsTaskValidMissingRequiredContentParameter() throws Exception {
-        Operation operation = new Operation();
-        ParameterMapping parameterMapping = new ParameterMapping();
-        parameterMapping.setRequired(true);
-        operation.setContentParameterMappings(Arrays.asList(parameterMapping));
-        taskTwo.setOperation(operation);
-        assertFalse(page.isTaskValid(taskTwo));
-    }
-
-    @Test
-    public void testIsTaskValidSetContentRequiredParameter() throws Exception {
-        Operation operation = new Operation();
-        ParameterMapping parameterMapping = new ParameterMapping();
-        parameterMapping.setRequired(true);
-        parameterMapping.setVariable(mock(Variable.class));
-        operation.setContentParameterMappings(Arrays.asList(parameterMapping));
-        taskTwo.setOperation(operation);
-        assertTrue(page.isTaskValid(taskTwo));
-    }
-
-    @Test
-    public void testIsTaskValidMissingContentParameter() throws Exception {
-        Operation operation = new Operation();
-        ParameterMapping parameterMapping = new ParameterMapping();
-        operation.setContentParameterMappings(Arrays.asList(parameterMapping));
         taskTwo.setOperation(operation);
         assertTrue(page.isTaskValid(taskTwo));
     }

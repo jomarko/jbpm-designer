@@ -15,21 +15,12 @@
 
 package org.jbpm.designer.server.service;
 
-
-
 import org.eclipse.bpmn2.*;
 import org.eclipse.bpmn2.Process;
-import org.eclipse.bpmn2.Task;
 import org.eclipse.bpmn2.di.*;
 import org.eclipse.dd.dc.Bounds;
 import org.eclipse.dd.dc.DcFactory;
 import org.eclipse.dd.di.DiagramElement;
-import org.eclipse.emf.ecore.EStructuralFeature;
-import org.eclipse.emf.ecore.impl.EStructuralFeatureImpl;
-import org.eclipse.emf.ecore.util.FeatureMap;
-import org.jboss.drools.DroolsFactory;
-import org.jboss.drools.DroolsPackage;
-import org.jboss.drools.OnEntryScriptType;
 import org.jboss.drools.impl.DroolsPackageImpl;
 import org.jbpm.designer.bpmn2.impl.Bpmn2JsonMarshaller;
 import org.jbpm.designer.model.*;
@@ -174,20 +165,32 @@ public class WizardModelToXmlConverter {
             bpmnTask.eSet(DroolsPackageImpl.init().getDocumentRoot_TaskName(), "Rest");
 
             if(((ServiceTask) task).getOperation() != null) {
+                Operation operation = ((ServiceTask) task).getOperation();
                 Variable method = new Variable();
                 method.setDataType("String");
                 method.setName("Method");
-                inputAssignments.put(method, ((ServiceTask) task).getOperation().getMethod());
+                inputAssignments.put(method, operation.getMethod());
 
                 Variable url = new Variable();
                 url.setDataType("String");
                 url.setName("Url");
-                inputAssignments.put(url, constructUrl(((ServiceTask) task).getOperation()));
+                inputAssignments.put(url, constructUrl(operation));
 
-                Variable content = new Variable();
-                content.setDataType("String");
-                content.setName("Content");
-                inputAssignments.put(content, constructContent(((ServiceTask) task).getOperation()));
+                if(operation.getParameterMappings() != null) {
+                    for(ParameterMapping mapping : operation.getParameterMappings()) {
+                        if(mapping.getParameter() != null && "body".compareTo(mapping.getParameter().getIn()) == 0 && mapping.getVariable() != null) {
+                            Variable contentType = new Variable();
+                            contentType.setDataType("String");
+                            contentType.setName("ContentType");
+                            inputAssignments.put(contentType, mapping.getVariable().getDataType());
+
+                            Variable content = new Variable();
+                            content.setDataType("Object");
+                            content.setName("Content");
+                            inputAssignments.put(content, mapping.getVariable());
+                        }
+                    }
+                }
             }
         }
 
@@ -232,32 +235,6 @@ public class WizardModelToXmlConverter {
         return "";
     }
 
-    private String constructContent(Operation operation) {
-        if(operation != null && operation.getContentParameterMappings() != null) {
-            String content = "";
-            for(ParameterMapping parameterMapping : operation.getContentParameterMappings()) {
-                SwaggerParameter parameter = parameterMapping.getParameter();
-                Variable variable = parameterMapping.getVariable();
-                if(parameter != null && variable != null && parameter.getName() != null && variable.getName() != null) {
-                    if(parameter.getIn() != null && parameter.getIn().compareTo("body") == 0) {
-                        content += "\"" + parameter.getName() + "\":";
-                        if(variable.getDataType().compareTo("String") == 0) {
-                            content += "\"#{" + variable.getName() + "}\",";
-                        } else {
-                            content += "#{" + variable.getName() + "},";
-                        }
-                    }
-                }
-            }
-            if(content.endsWith(",")) {
-                content = content.substring(0, content.length() - 1);
-            }
-            return "{"+content+"}";
-        }
-
-        return "{}";
-    }
-
     private void createInputOutputAssociations(org.eclipse.bpmn2.Task bpmnTask, org.jbpm.designer.model.Task wizardTask, Map<Variable, Object> inputAssignments) {
         InputOutputSpecification specification = Bpmn2Factory.eINSTANCE.createInputOutputSpecification();
         InputSet inputSet = Bpmn2Factory.eINSTANCE.createInputSet();
@@ -271,9 +248,7 @@ public class WizardModelToXmlConverter {
                 DataInputAssociation inputAssociation = Bpmn2Factory.eINSTANCE.createDataInputAssociation();
                 dataInput.setName(variable.getName());
                 for (Property property : process.getProperties()) {
-                    if (property.getName().compareTo(variable.getName()) == 0
-                            || property.getName().compareTo(wizardTask.getName() + "_url") == 0
-                            || property.getName().compareTo(wizardTask.getName() + "_content") == 0) {
+                    if (property.getName().compareTo(variable.getName()) == 0) {
                         inputAssociation.getSourceRef().add(property);
                     }
                 }
@@ -349,32 +324,21 @@ public class WizardModelToXmlConverter {
             throw new RuntimeException("Create process at first");
         }
 
-        ItemDefinition stringDefinition = Bpmn2Factory.eINSTANCE.createItemDefinition();
-        stringDefinition.setId(UUID.randomUUID().toString());
-        stringDefinition.setStructureRef("String");
-
-        ItemDefinition booleanDefinition = Bpmn2Factory.eINSTANCE.createItemDefinition();
-        booleanDefinition.setId(UUID.randomUUID().toString());
-        booleanDefinition.setStructureRef("Boolean");
-
-        ItemDefinition floatDefinition = Bpmn2Factory.eINSTANCE.createItemDefinition();
-        floatDefinition.setId(UUID.randomUUID().toString());
-        floatDefinition.setStructureRef("Float");
+        Map<String, ItemDefinition> definitions = new HashMap<String, ItemDefinition>();
 
         if(variables != null) {
             for (Variable variable : variables) {
+                if(!definitions.containsKey(variable.getDataType())) {
+                    ItemDefinition itemDefinition = Bpmn2Factory.eINSTANCE.createItemDefinition();
+                    itemDefinition.setId(UUID.randomUUID().toString());
+                    itemDefinition.setStructureRef(variable.getDataType());
+                    definitions.put(variable.getDataType(), itemDefinition);
+                }
+
                 Property property = Bpmn2Factory.eINSTANCE.createProperty();
                 property.setId(variable.getName());
                 property.setName(variable.getName());
-                if (variable.getDataType().compareTo("String") == 0) {
-                    property.setItemSubjectRef(stringDefinition);
-                }
-                if (variable.getDataType().compareTo("Boolean") == 0) {
-                    property.setItemSubjectRef(booleanDefinition);
-                }
-                if (variable.getDataType().compareTo("Float") == 0) {
-                    property.setItemSubjectRef(floatDefinition);
-                }
+                property.setItemSubjectRef(definitions.get(variable.getDataType()));
                 process.getProperties().add(property);
             }
         }
@@ -426,7 +390,28 @@ public class WizardModelToXmlConverter {
             if (constraint != null && constraint.getConstraint() != null && constraint.getVariable() != null && constraint.getConstraintValue() != null) {
                 FormalExpression expression = Bpmn2Factory.eINSTANCE.createFormalExpression();
                 expression.setId(UUID.randomUUID().toString());
-                String expressionBody = "return KieFunctions.equalsTo(";
+                String expressionBody = "";
+                if(condition.isExecuteIfConstraintSatisfied()){
+                    expressionBody += "return KieFunctions.";
+                } else {
+                    expressionBody += "return !KieFunctions.";
+                }
+                if (constraint.getConstraint().compareTo(Constraint.EQUAL_TO) == 0) {
+                    expressionBody += "equalsTo(";
+                } else if (constraint.getConstraint().compareTo(Constraint.STARTS_WITH) == 0) {
+                    expressionBody += "startsWith(";
+                } else if (constraint.getConstraint().compareTo(Constraint.CONTAINS) == 0) {
+                    expressionBody += "contains(";
+                }else if (constraint.getConstraint().compareTo(Constraint.GREATER_THAN) == 0) {
+                    expressionBody += "greaterThan(";
+                } else if (constraint.getConstraint().compareTo(Constraint.EQUAL_OR_GREATER_THAN) == 0) {
+                    expressionBody += "greaterOrEqualThan(";
+                } else if (constraint.getConstraint().compareTo(Constraint.LESS_THAN) == 0) {
+                    expressionBody += "lessThan(";
+                } else if (constraint.getConstraint().compareTo(Constraint.EQUAL_OR_LESS_THAN) == 0) {
+                    expressionBody += "lessOrEqualThan(";
+                }
+
                 expressionBody += constraint.getVariable().getName();
                 expressionBody += ",\"";
                 expressionBody += constraint.getConstraintValue();

@@ -32,6 +32,7 @@ import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
 import org.jbpm.designer.model.Condition;
+import org.jbpm.designer.model.Constraint;
 import org.jbpm.designer.model.Variable;
 
 import javax.enterprise.context.Dependent;
@@ -40,6 +41,11 @@ import java.util.List;
 
 @Dependent
 public class ConditionWidget extends Composite implements HasModel<Condition>, HasValue<Condition> {
+
+    private static final String CONSTRAINT_VARIABLE = "constraint.variable";
+    private static final String CONSTRAINT_CONSTRAINT = "constraint.constraint";
+    private static final String CONSTRAINT_CONSTRAINT_VALUE = "constraint.constraintValue";
+    private static final String EXECUTE_IF_CONSTRAINT_SATISFIED = "executeIfConstraintSatisfied";
 
     interface ConditionWidgetBinder
             extends
@@ -130,7 +136,11 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
     }
 
     public void setPropertyChangeHandler(PropertyChangeHandler handler) {
-        binder.addPropertyChangeHandler(handler);
+        binder.addPropertyChangeHandler(CONSTRAINT_VARIABLE, handler);
+        binder.addPropertyChangeHandler(CONSTRAINT_CONSTRAINT, handler);
+        binder.addPropertyChangeHandler(CONSTRAINT_CONSTRAINT_VALUE, handler);
+        binder.addPropertyChangeHandler(EXECUTE_IF_CONSTRAINT_SATISFIED, handler);
+
     }
 
     public void setVariableHelpVisibility(boolean value) {
@@ -147,20 +157,25 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
 
     private List<String> getConstraints(Variable var) {
         List<String> constraints = new ArrayList<String>();
-        constraints.add("equal");
-        constraints.add("not equal");
-        if(var.getDataType() == "number") {
-            constraints.add("greater");
-            constraints.add("lesser");
-        }a
+        constraints.add(Constraint.EQUAL_TO);
+        if(var.getDataType().compareTo("Float") == 0 || var.getDataType().compareTo("Integer") == 0) {
+            constraints.add(Constraint.LESS_THAN);
+            constraints.add(Constraint.EQUAL_OR_LESS_THAN);
+            constraints.add(Constraint.GREATER_THAN);
+            constraints.add(Constraint.EQUAL_OR_GREATER_THAN);
+        }
+        if(var.getDataType().compareTo("String") == 0) {
+            constraints.add(Constraint.CONTAINS);
+            constraints.add(Constraint.STARTS_WITH);
+        }
         return constraints;
     }
 
     private void bindDataBinder() {
-        binder.bind(variable, "constraint.variable")
-                .bind(constraint, "constraint.constraint")
-                .bind(constraintValue, "constraint.constraintValue")
-                .bind(constraintSatisfied, "executeIfConstraintSatisfied")
+        binder.bind(variable, CONSTRAINT_VARIABLE)
+                .bind(constraint, CONSTRAINT_CONSTRAINT)
+                .bind(constraintValue, CONSTRAINT_CONSTRAINT_VALUE)
+                .bind(constraintSatisfied, EXECUTE_IF_CONSTRAINT_SATISFIED)
                 .getModel();
     }
 }

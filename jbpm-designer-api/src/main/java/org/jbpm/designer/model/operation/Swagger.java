@@ -9,18 +9,38 @@ import java.util.Map;
 @Bindable
 public class Swagger {
 
-    private String urlBase;
+    private String host;
+
+    private String basePath;
+
+    private SwaggerInfo info;
 
     private Map<String, SwaggerPath> paths;
 
     private Map<String, SwaggerDefinition> definitions;
 
-    public String getUrlBase() {
-        return urlBase;
+    public String getHost() {
+        return host;
     }
 
-    public void setUrlBase(String urlBase) {
-        this.urlBase = urlBase;
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public String getBasePath() {
+        return basePath;
+    }
+
+    public void setBasePath(String basePath) {
+        this.basePath = basePath;
+    }
+
+    public SwaggerInfo getInfo() {
+        return info;
+    }
+
+    public void setInfo(SwaggerInfo info) {
+        this.info = info;
     }
 
     public Map<String, SwaggerPath> getPaths() {

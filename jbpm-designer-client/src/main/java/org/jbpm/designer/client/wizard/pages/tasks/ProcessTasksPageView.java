@@ -111,4 +111,6 @@ public interface ProcessTasksPageView extends IsWidget {
 
     void addAvailableOperation(Operation operation);
 
+    void setAvailableDataTypes(List<String> dataTypes);
+
 }

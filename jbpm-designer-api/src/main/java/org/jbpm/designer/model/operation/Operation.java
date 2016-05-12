@@ -14,8 +14,6 @@ public class Operation {
 
     private List<ParameterMapping> parameterMappings;
 
-    private List<ParameterMapping> contentParameterMappings;
-
     private String url;
 
     private String method;
@@ -42,14 +40,6 @@ public class Operation {
 
     public void setParameterMappings(List<ParameterMapping> parameterMappings) {
         this.parameterMappings = parameterMappings;
-    }
-
-    public List<ParameterMapping> getContentParameterMappings() {
-        return contentParameterMappings;
-    }
-
-    public void setContentParameterMappings(List<ParameterMapping> contentParameterMappings) {
-        this.contentParameterMappings = contentParameterMappings;
     }
 
     public String getUrl() {

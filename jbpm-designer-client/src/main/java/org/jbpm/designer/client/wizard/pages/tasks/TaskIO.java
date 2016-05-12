@@ -11,7 +11,6 @@ import org.gwtbootstrap3.client.ui.FieldSet;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
-import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.Task;
 import org.jbpm.designer.model.Variable;
 
@@ -41,7 +40,7 @@ public class TaskIO extends Composite implements HasModel<Task> {
     @Inject
     private TaskOutputsTable taskOutputsTable;
 
-    private DefaultValues defaultValues = new DefaultValues();
+    private List<String> dataTypes;
 
     public TaskIO() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -49,6 +48,7 @@ public class TaskIO extends Composite implements HasModel<Task> {
 
     @PostConstruct
     public void initializeView() {
+        dataTypes = new ArrayList<String>();
         outputsFieldSet.add(taskOutputsTable);
         inputsFieldSet.add(taskInputsTable);
         taskOutputsTable.getListWidget().addValueChangeHandler(new ValueChangeHandler<List<Variable>>() {
@@ -111,9 +111,17 @@ public class TaskIO extends Composite implements HasModel<Task> {
         if(task.getOutputs() != null) {
             taskOutputsTable.getListWidget().setValue(new ArrayList<Variable>());
             for(Variable variable : task.getOutputs()) {
-                taskOutputsTable.addVariable(variable, defaultValues.getDefaultDataTypes());
+                taskOutputsTable.addVariable(variable, dataTypes);
             }
         }
+    }
+
+    public void setAvailableDataTypes(List<String> availableDataTypes) {
+        dataTypes.clear();
+        if(availableDataTypes != null) {
+            dataTypes.addAll(availableDataTypes);
+        }
+        taskOutputsTable.setAvailableDataTypes(dataTypes);
     }
 }
 

@@ -14,8 +14,11 @@ import org.jboss.errai.ui.shared.api.annotations.DataField;
 import org.jboss.errai.ui.shared.api.annotations.Templated;
 import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.model.operation.ParameterMapping;
+import org.jbpm.designer.model.operation.SwaggerParameter;
+import org.jbpm.designer.model.operation.SwaggerSchema;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 
 @Templated("ParametersDetail.html#parameterMapping")
@@ -52,7 +55,21 @@ public class ParameterDetail extends Composite implements HasModel<ParameterMapp
     }
 
     public void setAcceptableVariables(List<Variable> variables) {
-        variable.setAcceptableValues(variables);
+        List<Variable> acceptable = new ArrayList<Variable>(variables);
+        if(parameterMapping.getModel() != null && parameterMapping.getModel().getParameter() != null) {
+            SwaggerParameter parameter = parameterMapping.getModel().getParameter();
+            if(parameter.getSchema() != null && parameter.getSchema().get$ref() != null) {
+                String ref = parameter.getSchema().get$ref();
+                for(Variable var : variables) {
+                    String variableDataType = var.getDataType();
+                    if(variableDataType != null) {
+                        String[] refParts = ref.split("/");
+                        String[] dataTypesParts = variableDataType.split(".");
+                    }
+                }
+            }
+        }
+        variable.setAcceptableValues(acceptable);
     }
 
     public void showNameAsRequired(boolean required) {

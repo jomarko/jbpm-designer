@@ -33,12 +33,15 @@ public class ProcessInputsTable extends Composite {
 
     private DefaultValues defaultValues = new DefaultValues();
 
+    private List<String> dataTypes;
+
     @PostConstruct
     public void initialize() {
+        dataTypes = new ArrayList<String>();
         addButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent clickEvent) {
-                addVariable(defaultValues.getDefaultVariable(), defaultValues.getDefaultDataTypes());
+                addVariable(defaultValues.getDefaultVariable(), dataTypes);
                 ValueChangeEvent.fire(inputs, inputs.getValue());
             }
         });
@@ -78,7 +81,7 @@ public class ProcessInputsTable extends Composite {
         inputs.getValue().remove(variable);
         for(int i = 0; i < inputs.getWidgetCount(); i++) {
             ProcessInputRow widget = inputs.getWidget(i);
-            widget.setAcceptableDataTypes(defaultValues.getDefaultDataTypes());
+            widget.setAcceptableDataTypes(dataTypes);
             widget.setParentWidget(this);
         }
         ValueChangeEvent.fire(inputs, inputs.getValue());
@@ -87,5 +90,12 @@ public class ProcessInputsTable extends Composite {
     public void clear() {
         inputs.setValue(new ArrayList<Variable>(), true);
         ValueChangeEvent.fire(inputs, inputs.getValue());
+    }
+
+    public void setAvailableDataTypes(List<String> availableDataTypes) {
+        dataTypes.clear();
+        if(availableDataTypes != null) {
+            dataTypes.addAll(availableDataTypes);
+        }
     }
 }

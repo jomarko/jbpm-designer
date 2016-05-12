@@ -37,14 +37,8 @@ public class OperationDetail extends Composite implements HasModel<Operation> {
     @UiField
     FieldSet parametersFieldSet;
 
-    @UiField
-    FieldSet contentParametersFieldSet;
-
     @Inject
     private ParametersDetail parameters;
-
-    @Inject
-    private ParametersDetail contentParameters;
 
     public OperationDetail() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -53,7 +47,6 @@ public class OperationDetail extends Composite implements HasModel<Operation> {
     @PostConstruct
     public void initialize() {
         parametersFieldSet.add(parameters);
-        contentParametersFieldSet.add(contentParameters);
     }
 
     @Override
@@ -68,20 +61,17 @@ public class OperationDetail extends Composite implements HasModel<Operation> {
 
     public void setVariablesForParameterMapping(List<Variable> variables) {
         parameters.setAcceptableVariables(variables);
-        contentParameters.setAcceptableVariables(variables);
     }
 
     public void rebindToModel(Operation operation) {
         dataBinder.unbind();
         dataBinder.setModel(operation);
         dataBinder.bind(description, "description")
-                  .bind(parameters.getListWidget(), "parameterMappings")
-                  .bind(contentParameters.getListWidget(), "contentParameterMappings").getModel();
+                  .bind(parameters.getListWidget(), "parameterMappings").getModel();
     }
 
     public void setRequiredParametersHelpVisibility(boolean value) {
         parameters.setRequiredParametersHelpVisibility(value);
-        contentParameters.setRequiredParametersHelpVisibility(value);
     }
 
     public void addPropertyChangeHandler(PropertyChangeHandler handler) {

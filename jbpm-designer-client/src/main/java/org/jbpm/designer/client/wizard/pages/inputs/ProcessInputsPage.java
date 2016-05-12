@@ -16,10 +16,14 @@ package org.jbpm.designer.client.wizard.pages.inputs;
 
 
 import com.google.gwt.user.client.ui.Widget;
+import org.jboss.errai.common.client.api.Caller;
+import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.Variable;
+import org.jbpm.designer.service.DiscoverService;
 import org.uberfire.client.callbacks.Callback;
+import org.uberfire.ext.widgets.common.client.callbacks.DefaultErrorCallback;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPage;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
 import org.uberfire.workbench.events.NotificationEvent;
@@ -43,7 +47,8 @@ public class ProcessInputsPage implements WizardPage, ProcessInputsPageView.Pres
     @Inject
     ProcessInputsPageView view;
 
-    private DefaultValues defaultValues = new DefaultValues();
+    @Inject
+    Caller<DiscoverService> discoverService;
 
     @Override
     public String getTitle() {
@@ -68,6 +73,13 @@ public class ProcessInputsPage implements WizardPage, ProcessInputsPageView.Pres
     @Override
     public void initialise() {
         view.init(this);
+        discoverService.call(new RemoteCallback<List<String>>() {
+            @Override
+            public void callback(List<String> dataTypes) {
+                view.setAvailableDataTypes(dataTypes);
+                event.fire(pageChanged);
+            }
+        }, new DefaultErrorCallback()).getExistingDataTypes();
         event.fire(pageChanged);
     }
 

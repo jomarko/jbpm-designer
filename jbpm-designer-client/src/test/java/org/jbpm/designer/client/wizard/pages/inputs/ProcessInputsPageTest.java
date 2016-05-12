@@ -3,6 +3,7 @@ package org.jbpm.designer.client.wizard.pages.inputs;
 import com.google.gwtmockito.GwtMockitoTestRunner;
 
 import org.jbpm.designer.model.Variable;
+import org.jbpm.designer.service.DiscoverService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
+import org.uberfire.mocks.CallerMock;
 import org.uberfire.mocks.EventSourceMock;
 import org.uberfire.workbench.events.NotificationEvent;
 
@@ -20,9 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(GwtMockitoTestRunner.class)
 public class ProcessInputsPageTest {
@@ -46,13 +46,15 @@ public class ProcessInputsPageTest {
     @Before
     public void setUp() throws Exception {
         inputs = new ArrayList<Variable>();
+        page.discoverService = new CallerMock<DiscoverService>(mock(DiscoverService.class));
     }
 
     @Test
     public void testInitialise() throws Exception {
         page.initialise();
         verify(view).init(page);
-        verify(event).fire(any(WizardPageStatusChangeEvent.class));
+        verify(view).setAvailableDataTypes(any(List.class));
+        verify(event, times(2)).fire(any(WizardPageStatusChangeEvent.class));
     }
 
     @Test

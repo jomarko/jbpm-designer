@@ -21,6 +21,7 @@ import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.wizard.pages.general.GeneralProcessInfoPage;
 import org.jbpm.designer.client.wizard.pages.inputs.ProcessInputsPage;
 import org.jbpm.designer.client.wizard.pages.preview.ProcessPreviewPage;
+import org.jbpm.designer.client.wizard.pages.service.ServicesPage;
 import org.jbpm.designer.client.wizard.pages.start.ProcessStartEventPage;
 import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPage;
 import org.jbpm.designer.model.BusinessProcess;
@@ -53,6 +54,9 @@ public class GuidedProcessWizard extends AbstractWizard {
     ProcessTasksPage tasksPage;
 
     @Inject
+    ServicesPage servicesPage;
+
+    @Inject
     ProcessPreviewPage previewPage;
 
     Callback<BusinessProcess> completeProcessCallback;
@@ -67,6 +71,7 @@ public class GuidedProcessWizard extends AbstractWizard {
         pages.add( generalInfoPage );
         pages.add( inputsPage );
         pages.add( startEventPage );
+        pages.add( servicesPage );
         pages.add( tasksPage );
         tasksPage.setWizard(this);
     }

@@ -71,6 +71,8 @@ public interface DesignerEditorConstants extends
 
     String Invalid_character_in_name();
 
+    String jsonSwaggerFile();
+
     String No_Data_Input();
 
     String No_Data_Output();
@@ -95,6 +97,8 @@ public interface DesignerEditorConstants extends
 
     String Save();
 
+    String services();
+
     String signalEventType();
 
     String signalHelp();
@@ -104,6 +108,8 @@ public interface DesignerEditorConstants extends
     String standardEventType();
 
     String signalFormat();
+
+    String swaggerUploadResults();
 
     String Target();
 

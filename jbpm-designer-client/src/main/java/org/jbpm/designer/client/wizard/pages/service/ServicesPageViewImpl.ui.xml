@@ -16,20 +16,28 @@
 
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
-             xmlns:b="urn:import:org.gwtbootstrap3.client.ui"
              xmlns:gwt="urn:import:com.google.gwt.user.client.ui"
-             xmlns:widget="urn:import:org.jbpm.designer.client.wizard.pages.widget">
+             xmlns:b="urn:import:org.gwtbootstrap3.client.ui">
+
+    <ui:with field="i18n" type="org.jbpm.designer.client.resources.i18n.DesignerEditorConstants"/>
 
 
-    <b:Form type="HORIZONTAL">
-        <b:FieldSet>
-            <b:FormLabel for="description" text="Description" />
-            <b:TextArea ui:field="description" readOnly="true"/>
-        </b:FieldSet>
-        <b:FieldSet ui:field="parametersFieldSet">
-            <b:FormLabel for="parameters" text="Parameters" />
+    <gwt:VerticalPanel width="100%">
+        <b:Label text="{i18n.services}"/>
+        <gwt:HTML>
+            <hr/>
+        </gwt:HTML>
 
-        </b:FieldSet>
-    </b:Form>
+        <b:Form type="HORIZONTAL" ui:field="definitionUploadForm">
+            <b:FieldSet ui:field="fileFieldSet">
+                <b:FormLabel text="{i18n.jsonSwaggerFile}"/>
+            </b:FieldSet>
+            <b:FieldSet>
+                <b:FormLabel text="{i18n.swaggerUploadResults}"/>
+                <gwt:VerticalPanel ui:field="results" />
+            </b:FieldSet>
+        </b:Form>
+
+    </gwt:VerticalPanel>
 
 </ui:UiBinder>

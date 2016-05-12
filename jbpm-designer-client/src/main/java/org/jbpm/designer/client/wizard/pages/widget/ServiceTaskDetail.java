@@ -146,11 +146,13 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
         operationDetail.setRequiredParametersHelpVisibility( value );
     }
 
-    public void addAvailableOperation(Operation availableOperation) {
+    public void addAvailableOperation(Operation available) {
         if(acceptableOperations == null) {
             acceptableOperations = new ArrayList<Operation>();
         }
-        acceptableOperations.add(availableOperation);
+        if(isNotSelected(available) && isNotAlreadyAcceptable(available)) {
+            acceptableOperations.add(available);
+        }
         operation.setAcceptableValues(acceptableOperations);
     }
 
@@ -161,5 +163,26 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
             acceptableVariables = new ArrayList<Variable>();
         }
         operationDetail.setVariablesForParameterMapping(acceptableVariables);
+    }
+
+    private boolean isNotAlreadyAcceptable(Operation oper) {
+        List<String> operationIds = new ArrayList<String>();
+        for(Operation acceptable : acceptableOperations) {
+            operationIds.add(acceptable.getOperationId());
+        }
+        return !operationIds.contains(oper.getOperationId());
+    }
+
+    private boolean isNotSelected(Operation oper) {
+        if(operation.getValue() == null) {
+            return true;
+        } else {
+            Operation selected = operation.getValue();
+            if(selected.getOperationId().compareTo(oper.getOperationId()) == 0) {
+                return false;
+            } else {
+                return true;
+            }
+        }
     }
 }

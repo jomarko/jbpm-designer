@@ -31,12 +31,4 @@ public class DefaultValues {
         task.setInputs(new ArrayList<Variable>());
         return task;
     }
-
-    public List<String> getDefaultDataTypes() {
-        List<String> dataTypes = new ArrayList<String>();
-        dataTypes.add("Boolean");
-        dataTypes.add("Float");
-        dataTypes.add("String");
-        return dataTypes;
-    }
 }

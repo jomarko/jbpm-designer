@@ -197,7 +197,6 @@ public class WizardModelToXmlConverterTest {
         operation.setMethod("GET");
         operation.setUrl("/{xyz}/{xyz}/{xyz}");
         operation.setParameterMappings(mappings);
-        operation.setContentParameterMappings(mappings);
 
         ServiceTask serviceTask = new ServiceTask();
         serviceTask.setName("abc");

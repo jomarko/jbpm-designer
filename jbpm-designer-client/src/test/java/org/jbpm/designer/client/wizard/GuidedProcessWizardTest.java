@@ -4,6 +4,7 @@ import com.google.gwtmockito.GwtMockitoTestRunner;
 import org.jbpm.designer.client.wizard.pages.general.GeneralProcessInfoPage;
 import org.jbpm.designer.client.wizard.pages.inputs.ProcessInputsPage;
 import org.jbpm.designer.client.wizard.pages.preview.ProcessPreviewPage;
+import org.jbpm.designer.client.wizard.pages.service.ServicesPage;
 import org.jbpm.designer.client.wizard.pages.start.ProcessStartEventPage;
 import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPage;
 import org.junit.Before;
@@ -41,6 +42,9 @@ public class GuidedProcessWizardTest {
     ProcessPreviewPage previewPage;
 
     @Mock
+    ServicesPage servicesPage;
+
+    @Mock
     Callback<Boolean> callback;
 
     @Spy
@@ -59,6 +63,7 @@ public class GuidedProcessWizardTest {
         verify(inputsPage).initialise();
         verify(startEventPage).initialise();
         verify(tasksPage).initialise();
+        verify(servicesPage).initialise();
     }
 
     @Test
@@ -69,11 +74,12 @@ public class GuidedProcessWizardTest {
         verify(inputsPage).isComplete(any(Callback.class));
         verify(startEventPage).isComplete(any(Callback.class));
         verify(tasksPage).isComplete(any(Callback.class));
+        verify(servicesPage).isComplete(any(Callback.class));
     }
 
     @Test
     public void testGetPageWidget() {
-        for(int i = 0; i < 4; i++) {
+        for(int i = 0; i < 5; i++) {
             wizard.getPageWidget(i);
         }
 
@@ -81,8 +87,9 @@ public class GuidedProcessWizardTest {
         verify(inputsPage).prepareView();
         verify(startEventPage).prepareView();
         verify(tasksPage).prepareView();
+        verify(servicesPage).prepareView();
 
-        for(int i = 0; i < 4; i++) {
+        for(int i = 0; i < 5; i++) {
             wizard.getPageWidget(i);
         }
 
@@ -90,5 +97,6 @@ public class GuidedProcessWizardTest {
         verify(inputsPage, times(2)).prepareView();
         verify(startEventPage, times(2)).prepareView();
         verify(tasksPage, times(2)).prepareView();
+        verify(servicesPage, times(2)).prepareView();
     }
 }

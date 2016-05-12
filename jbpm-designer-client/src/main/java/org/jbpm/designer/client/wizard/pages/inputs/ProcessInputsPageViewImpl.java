@@ -78,4 +78,9 @@ public class ProcessInputsPageViewImpl extends Composite implements ProcessInput
     public void deleteVariable(Variable variable) {
         inputs.deleteVariable(variable);
     }
+
+    @Override
+    public void setAvailableDataTypes(List<String> dataTypes) {
+        inputs.setAvailableDataTypes(dataTypes);
+    }
 }

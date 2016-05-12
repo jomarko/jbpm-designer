@@ -14,6 +14,7 @@
 */
 package org.jbpm.designer.client.wizard.pages.tasks;
 
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Widget;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.ErrorCallback;
@@ -24,9 +25,14 @@ import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
 import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.operation.*;
+import org.jbpm.designer.service.DiscoverService;
 import org.jbpm.designer.service.SwaggerService;
+import org.kie.workbench.common.screens.search.model.SearchPageRow;
+import org.kie.workbench.common.screens.search.model.SearchTermPageRequest;
+import org.kie.workbench.common.screens.search.service.SearchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.uberfire.backend.vfs.Path;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.security.management.api.AbstractEntityManager;
 import org.uberfire.ext.security.management.client.ClientUserSystemManager;
@@ -34,6 +40,8 @@ import org.uberfire.ext.security.management.impl.SearchRequestImpl;
 import org.uberfire.ext.widgets.common.client.callbacks.DefaultErrorCallback;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPage;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
+import org.uberfire.paging.PageResponse;
+
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
@@ -73,6 +81,12 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
 
     private DefaultValues defaultValues = new DefaultValues();
 
+    @Inject
+    Caller<DiscoverService> discoverService;
+
+    @Inject
+    Caller<SearchService> searchService;
+
     @Override
     public String getTitle() {
         return DesignerEditorConstants.INSTANCE.processTasks();
@@ -98,7 +112,13 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     @Override
     public void initialise() {
         view.init(this);
-        sendRequestForExistingOperations();
+        discoverService.call(new RemoteCallback<List<String>>() {
+            @Override
+            public void callback(List<String> dataTypes) {
+                view.setAvailableDataTypes(dataTypes);
+                event.fire(pageChanged);
+            }
+        }, new DefaultErrorCallback()).getExistingDataTypes();
         event.fire(pageChanged);
     }
 
@@ -106,6 +126,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     public void prepareView() {
         sendRequestForExistingUsers(1);
         sendRequestForExistingGroups(1);
+        findExistingSwaggers(0);
     }
 
     @Override
@@ -306,9 +327,6 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         if(operation.getParameterMappings() != null) {
             valid = valid && checkRequiredMappings(operation.getParameterMappings());
         }
-        if(operation.getContentParameterMappings() != null) {
-            valid = valid && checkRequiredMappings(operation.getContentParameterMappings());
-        }
         return valid;
     }
 
@@ -504,96 +522,72 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         }).search(new SearchRequestImpl("", getResultFromPage, RESULT_MAX_COUNT));
     }
 
-    private void sendRequestForExistingOperations() {
+    private void findExistingSwaggers(final int fromPage) {
+        searchService.call(new RemoteCallback<PageResponse<SearchPageRow>>() {
+            @Override
+            public void callback(PageResponse<SearchPageRow> searchPageRowPageResponse) {
+                for(SearchPageRow row : searchPageRowPageResponse.getPageRowList()) {
+                    sendRequestForExistingOperations(row.getPath());
+                }
+                if(searchPageRowPageResponse.getPageRowList().size() == 100) {
+                    findExistingSwaggers(fromPage+1);
+                }
+            }
+        }, new DefaultErrorCallback()).fullTextSearch(new SearchTermPageRequest("*.swagger", fromPage, 100));
+    }
+
+    private void sendRequestForExistingOperations(Path path) {
         try {
-            swaggerDefinitionService
-                    .call(new RemoteCallback<Swagger>() {
-                        @Override
-                        public void callback(Swagger swagger) {
-                            if(swagger != null && swagger.getPaths() != null && swagger.getPaths().entrySet() != null) {
-                                for (Map.Entry<String, SwaggerPath> path : swagger.getPaths().entrySet()) {
-                                    if(path != null && path.getValue() != null) {
-                                        if (path.getValue().getGet() != null) {
-                                            Operation operation = new Operation();
-                                            operation.setUrl(swagger.getUrlBase() + path.getKey());
-                                            operation.setMethod(METHOD_GET);
-                                            SwaggerOperation swaggerOperation = path.getValue().getGet();
-                                            addOperation(swagger, swaggerOperation, operation);
-                                        }
-                                        if (path.getValue().getPost() != null) {
-                                            Operation operation = new Operation();
-                                            operation.setUrl(swagger.getUrlBase() + path.getKey());
-                                            operation.setMethod(METHOD_POST);
-                                            SwaggerOperation swaggerOperation = path.getValue().getPost();
-                                            addOperation(swagger, swaggerOperation, operation);
-                                        }
-                                        if (path.getValue().getDelete() != null) {
-                                            Operation operation = new Operation();
-                                            operation.setUrl(swagger.getUrlBase() + path.getKey());
-                                            operation.setMethod(METHOD_DELETE);
-                                            SwaggerOperation swaggerOperation = path.getValue().getDelete();
-                                            addOperation(swagger, swaggerOperation, operation);
-                                        }
-                                    }
+            swaggerDefinitionService .call(new RemoteCallback<Swagger>() {
+                @Override
+                public void callback(Swagger swagger) {
+                    if (swagger != null && swagger.getPaths() != null && swagger.getPaths().entrySet() != null) {
+                        for (Map.Entry<String, SwaggerPath> path : swagger.getPaths().entrySet()) {
+                            if (path != null && path.getValue() != null) {
+                                if (path.getValue().getGet() != null) {
+                                    Operation operation = new Operation();
+                                    operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
+                                    operation.setMethod(METHOD_GET);
+                                    SwaggerOperation swaggerOperation = path.getValue().getGet();
+                                    addOperation(swaggerOperation, operation);
+                                }
+                                if (path.getValue().getPost() != null) {
+                                    Operation operation = new Operation();
+                                    operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
+                                    operation.setMethod(METHOD_POST);
+                                    SwaggerOperation swaggerOperation = path.getValue().getPost();
+                                    addOperation(swaggerOperation, operation);
+                                }
+                                if (path.getValue().getDelete() != null) {
+                                    Operation operation = new Operation();
+                                    operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
+                                    operation.setMethod(METHOD_DELETE);
+                                    SwaggerOperation swaggerOperation = path.getValue().getDelete();
+                                    addOperation(swaggerOperation, operation);
                                 }
                             }
                         }
-                    }, new DefaultErrorCallback())
-                    .getSwagger();
+                    }
+                }
+            }, new DefaultErrorCallback()).getSwagger(path);
         } catch (IOException e) {
             logger.error("Request for existing operations failed: " + e.getMessage());
         }
     }
 
-    private void addOperation(Swagger swagger, SwaggerOperation swaggerOperation, Operation operation) {
+    private void addOperation(SwaggerOperation swaggerOperation, Operation operation) {
         if(swaggerOperation != null) {
             operation.setOperationId(swaggerOperation.getOperationId());
             operation.setDescription(swaggerOperation.getDescription());
             List<ParameterMapping> parameterMappings = new ArrayList<ParameterMapping>();
-            List<ParameterMapping> contentParameterMappings = new ArrayList<ParameterMapping>();
             for (SwaggerParameter swaggerParameter : swaggerOperation.getParameters()) {
-                if(swaggerParameter.getIn().compareTo("body") != 0) {
-                    ParameterMapping parameterMapping = new ParameterMapping();
-                    parameterMapping.setParameter(swaggerParameter);
-                    parameterMapping.setRequired(swaggerParameter.isRequired());
-                    parameterMappings.add(parameterMapping);
-                } else {
-                    SwaggerDefinition swaggerDefinition = findDefinitionBySchema(swagger.getDefinitions(), swaggerParameter.getSchema());
-                    if(swaggerDefinition != null) {
-                        for(Map.Entry<String, SwaggerProperty> property : swaggerDefinition.getProperties().entrySet()) {
-                            SwaggerParameter parameter = new SwaggerParameter();
-                            parameter.setIn("body");
-                            parameter.setName(property.getKey());
-                            if(swaggerDefinition.getRequired() != null && swaggerDefinition.getRequired().contains(property.getKey())) {
-                                parameter.setRequired(true);
-                            } else {
-                                parameter.setRequired(false);
-                            }
-                            parameter.setDescription(property.getKey() + " of: " +swaggerParameter.getDescription());
-                            ParameterMapping parameterMapping = new ParameterMapping();
-                            parameterMapping.setParameter(parameter);
-                            parameterMapping.setRequired(parameter.isRequired());
-                            contentParameterMappings.add(parameterMapping);
-                        }
-                    }
-                }
+                ParameterMapping parameterMapping = new ParameterMapping();
+                parameterMapping.setParameter(swaggerParameter);
+                parameterMapping.setRequired(swaggerParameter.isRequired());
+                parameterMappings.add(parameterMapping);
             }
             operation.setParameterMappings(parameterMappings);
-            operation.setContentParameterMappings(contentParameterMappings);
             view.addAvailableOperation(operation);
         }
-    }
-
-    private SwaggerDefinition findDefinitionBySchema(Map<String, SwaggerDefinition> definitions, SwaggerSchema schema) {
-        if(definitions != null && schema != null && schema.get$ref() != null) {
-            String[] refParts = schema.get$ref().split("/");
-            for(String definitionName : definitions.keySet()) {
-                if(definitionName.equals(refParts[refParts.length - 1])) {
-                    return definitions.get(definitionName);
-                }
-            }
-        }
-
-        return null;
     }
 }

@@ -44,10 +44,16 @@ import org.jbpm.designer.repository.impl.AbstractAsset;
 import org.jbpm.designer.repository.impl.AssetBuilder;
 import org.jbpm.designer.server.service.PathEvent;
 import org.jbpm.designer.util.Base64Backport;
+import org.uberfire.backend.server.util.*;
+import org.uberfire.backend.server.util.Paths;
+import org.uberfire.backend.vfs.*;
 import org.uberfire.io.IOService;
 import org.uberfire.java.nio.IOException;
 import org.uberfire.java.nio.base.options.CommentedOption;
 import org.uberfire.java.nio.file.*;
+import org.uberfire.java.nio.file.DirectoryStream;
+import org.uberfire.java.nio.file.FileSystem;
+import org.uberfire.java.nio.file.Path;
 import org.uberfire.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.workbench.common.services.shared.project.KieProject;
 
@@ -339,7 +345,17 @@ public class VFSRepository implements Repository {
         } else {
             throw new NoSuchFileException();
         }
+    }
 
+    public Asset loadAssetFromPath(org.uberfire.backend.vfs.Path vfsPath) throws NoSuchFileException {
+
+        Path nioPath = Paths.convert(vfsPath);
+
+        if (ioService.exists(nioPath)) {
+            return loadAsset(nioPath.toUri().toString());
+        } else {
+            throw new NoSuchFileException();
+        }
     }
 
     public String createAsset(Asset asset) {
