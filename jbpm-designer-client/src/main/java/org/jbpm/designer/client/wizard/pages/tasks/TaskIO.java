@@ -9,15 +9,18 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.FieldSet;
 import org.jboss.errai.databinding.client.api.DataBinder;
+import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
+import org.jbpm.designer.client.wizard.util.CompareUtils;
+import org.jbpm.designer.model.ServiceTask;
 import org.jbpm.designer.model.Task;
 import org.jbpm.designer.model.Variable;
+import org.jbpm.designer.model.operation.Operation;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class TaskIO extends Composite implements HasModel<Task> {
 
@@ -26,7 +29,7 @@ public class TaskIO extends Composite implements HasModel<Task> {
 
     private static TaskIOBinder uiBinder = GWT.create(TaskIOBinder.class);
 
-    private DataBinder<Task> dataBinder = DataBinder.forType(Task.class);
+    DataBinder<Task> dataBinder;
 
     @UiField
     FieldSet inputsFieldSet;
@@ -35,15 +38,20 @@ public class TaskIO extends Composite implements HasModel<Task> {
     FieldSet outputsFieldSet;
 
     @Inject
-    private TaskInputsTable taskInputsTable;
+    protected TaskInputsTable taskInputsTable;
 
     @Inject
-    private TaskOutputsTable taskOutputsTable;
+    protected TaskOutputsTable taskOutputsTable;
 
-    private List<String> dataTypes;
+    protected List<String> dataTypes;
 
     public TaskIO() {
         initWidget(uiBinder.createAndBindUi(this));
+    }
+
+    @PostConstruct
+    public void initDataBinder() {
+        dataBinder = DataBinder.forType(Task.class);
     }
 
     @PostConstruct
@@ -70,7 +78,11 @@ public class TaskIO extends Composite implements HasModel<Task> {
                     }
                 }
                 Task model = getModel();
-                model.setInputs(taskInputs);
+                Map<String, Variable> inputs = new HashMap<String, Variable>();
+                for(Variable variable : taskInputs) {
+                    inputs.put(variable.getName(), variable);
+                }
+                model.setInputs(inputs);
                 setModel(model);
             }
         });
@@ -78,6 +90,12 @@ public class TaskIO extends Composite implements HasModel<Task> {
 
     public void setPropertyChangeChandler(PropertyChangeHandler handler) {
         dataBinder.addPropertyChangeHandler(handler);
+        dataBinder.addPropertyChangeHandler(new PropertyChangeHandler() {
+            @Override
+            public void onPropertyChange(PropertyChangeEvent propertyChangeEvent) {
+                restrictOutputDataTypes();
+            }
+        });
     }
 
     public void setAcceptableValues(List<Variable> vars) {
@@ -100,7 +118,7 @@ public class TaskIO extends Composite implements HasModel<Task> {
     public void setModel(Task task) {
         dataBinder.setModel(task);
         if (task.getInputs() != null) {
-            List<Variable> taskInputs = task.getInputs();
+            Collection<Variable> taskInputs = task.getInputs().values();
             for(int i = 0; i < taskInputsTable.getListWidget().getWidgetCount(); i++) {
                 TaskInputRow widget = taskInputsTable.getListWidget().getWidget(i);
                 if(taskInputs.contains(widget.getModel().getVariable())) {
@@ -108,9 +126,10 @@ public class TaskIO extends Composite implements HasModel<Task> {
                 }
             }
         }
-        if(task.getOutputs() != null) {
+
+        if (task.getOutputs() != null) {
             taskOutputsTable.getListWidget().setValue(new ArrayList<Variable>());
-            for(Variable variable : task.getOutputs()) {
+            for (Variable variable : task.getOutputs()) {
                 taskOutputsTable.addVariable(variable, dataTypes);
             }
         }
@@ -122,6 +141,26 @@ public class TaskIO extends Composite implements HasModel<Task> {
             dataTypes.addAll(availableDataTypes);
         }
         taskOutputsTable.setAvailableDataTypes(dataTypes);
+    }
+
+    public void restrictOutputDataTypes() {
+        Task model = getModel();
+        if(model != null && model instanceof ServiceTask) {
+            Operation operation = ((ServiceTask) model).getOperation();
+            if(operation != null && operation.getResponseScheme()!= null) {
+                List<String> restrictedDataTypes = new ArrayList<String>();
+                for(String dataType : dataTypes) {
+                    if(CompareUtils.areSchemeAndDataTypeSame(operation.getResponseScheme(), dataType)) {
+                        restrictedDataTypes.add(dataType);
+                    }
+                }
+                taskOutputsTable.setAvailableDataTypes(restrictedDataTypes);
+            } else {
+                taskOutputsTable.setAvailableDataTypes(dataTypes);
+            }
+        } else {
+            taskOutputsTable.setAvailableDataTypes(dataTypes);
+        }
     }
 }
 

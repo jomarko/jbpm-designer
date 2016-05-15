@@ -3,6 +3,7 @@ package org.jbpm.designer.client.wizard.pages.widget;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.ValueListBox;
@@ -12,6 +13,7 @@ import org.jboss.errai.ui.shared.api.annotations.AutoBound;
 import org.jboss.errai.ui.shared.api.annotations.Bound;
 import org.jboss.errai.ui.shared.api.annotations.DataField;
 import org.jboss.errai.ui.shared.api.annotations.Templated;
+import org.jbpm.designer.client.wizard.util.CompareUtils;
 import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.model.operation.ParameterMapping;
 import org.jbpm.designer.model.operation.SwaggerParameter;
@@ -58,13 +60,18 @@ public class ParameterDetail extends Composite implements HasModel<ParameterMapp
         List<Variable> acceptable = new ArrayList<Variable>(variables);
         if(parameterMapping.getModel() != null && parameterMapping.getModel().getParameter() != null) {
             SwaggerParameter parameter = parameterMapping.getModel().getParameter();
-            if(parameter.getSchema() != null && parameter.getSchema().get$ref() != null) {
-                String ref = parameter.getSchema().get$ref();
-                for(Variable var : variables) {
-                    String variableDataType = var.getDataType();
-                    if(variableDataType != null) {
-                        String[] refParts = ref.split("/");
-                        String[] dataTypesParts = variableDataType.split(".");
+            if(parameter.getSchema() != null) {
+
+                for(Variable variable : variables) {
+                    String variableDataType = variable.getDataType();
+                    if(!CompareUtils.areSchemeAndDataTypeSame(parameter.getSchema(), variableDataType)) {
+                        acceptable.remove(variable);
+                    }
+                }
+            } else if(parameter.getType() != null) {
+                for(Variable variable : variables) {
+                    if(variable.getDataType().compareToIgnoreCase(parameter.getType()) != 0) {
+                        acceptable.remove(variable);
                     }
                 }
             }

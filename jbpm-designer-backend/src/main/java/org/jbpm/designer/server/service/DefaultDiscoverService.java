@@ -36,6 +36,7 @@ public class DefaultDiscoverService implements DiscoverService {
         dataTypeNames.add(0, "Object");
         dataTypeNames.add(0, "Integer");
         dataTypeNames.add(0, "Float");
+        dataTypeNames.add(0, "Double");
         dataTypeNames.add(0, "Boolean");
         return dataTypeNames;
     }

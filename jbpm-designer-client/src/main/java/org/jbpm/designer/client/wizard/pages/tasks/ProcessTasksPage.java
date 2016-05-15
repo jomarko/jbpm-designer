@@ -87,6 +87,8 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     @Inject
     Caller<SearchService> searchService;
 
+    private Map<String, SwaggerDefinition> definitions = new HashMap<String, SwaggerDefinition>();
+
     @Override
     public String getTitle() {
         return DesignerEditorConstants.INSTANCE.processTasks();
@@ -119,6 +121,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
                 event.fire(pageChanged);
             }
         }, new DefaultErrorCallback()).getExistingDataTypes();
+        findExistingSwaggers(0);
         event.fire(pageChanged);
     }
 
@@ -127,6 +130,8 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         sendRequestForExistingUsers(1);
         sendRequestForExistingGroups(1);
         findExistingSwaggers(0);
+        view.setTaskPanelVisibility(false);
+        view.setConditionPanelVisibility(false);
     }
 
     @Override
@@ -165,6 +170,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
                 view.deselectAll();
                 view.setSplitButtonVisibility(false);
                 view.setConditionPanelVisibility(false);
+                view.setTaskPanelVisibility(false);
                 firePageChangedEvent();
             }
         } else {
@@ -196,6 +202,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
                 view.mergeSelectedWidgets();
                 view.deselectAll();
                 view.setMergeButtonsVisibility(false);
+                view.setTaskPanelVisibility(false);
                 firePageChangedEvent();
             } else {
                 view.showAlreadyContainsMerged();
@@ -211,15 +218,18 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         view.setSplitButtonVisibility(false);
         view.setMergeButtonsVisibility(false);
         view.setConditionPanelVisibility(false);
+        view.setTaskPanelVisibility(false);
         firePageChangedEvent();
     }
 
     @Override
     public void taskDetailSelected(ListTaskDetail detail) {
         view.setConditionPanelVisibility(detail.getCondition() != null);
+        view.setTaskPanelVisibility(view.getSelectedWidgets().size() == 1);
 
         Task model = detail.getModel();
         rebindSelectedWidget(detail, model);
+        view.restrictOutputDataTypes();
 
         List<Widget> selectedWidgets = view.getSelectedWidgets();
 
@@ -541,31 +551,37 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
             swaggerDefinitionService .call(new RemoteCallback<Swagger>() {
                 @Override
                 public void callback(Swagger swagger) {
-                    if (swagger != null && swagger.getPaths() != null && swagger.getPaths().entrySet() != null) {
-                        for (Map.Entry<String, SwaggerPath> path : swagger.getPaths().entrySet()) {
-                            if (path != null && path.getValue() != null) {
-                                if (path.getValue().getGet() != null) {
-                                    Operation operation = new Operation();
-                                    operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
-                                    operation.setMethod(METHOD_GET);
-                                    SwaggerOperation swaggerOperation = path.getValue().getGet();
-                                    addOperation(swaggerOperation, operation);
-                                }
-                                if (path.getValue().getPost() != null) {
-                                    Operation operation = new Operation();
-                                    operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
-                                    operation.setMethod(METHOD_POST);
-                                    SwaggerOperation swaggerOperation = path.getValue().getPost();
-                                    addOperation(swaggerOperation, operation);
-                                }
-                                if (path.getValue().getDelete() != null) {
-                                    Operation operation = new Operation();
-                                    operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
-                                    operation.setMethod(METHOD_DELETE);
-                                    SwaggerOperation swaggerOperation = path.getValue().getDelete();
-                                    addOperation(swaggerOperation, operation);
+                    if (swagger != null) {
+                        if(swagger.getPaths() != null && swagger.getPaths().entrySet() != null) {
+                            for (Map.Entry<String, SwaggerPath> path : swagger.getPaths().entrySet()) {
+                                if (path != null && path.getValue() != null) {
+                                    if (path.getValue().getGet() != null) {
+                                        Operation operation = new Operation();
+                                        operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
+                                        operation.setMethod(METHOD_GET);
+                                        SwaggerOperation swaggerOperation = path.getValue().getGet();
+                                        addOperation(swaggerOperation, operation);
+                                    }
+                                    if (path.getValue().getPost() != null) {
+                                        Operation operation = new Operation();
+                                        operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
+                                        operation.setMethod(METHOD_POST);
+                                        SwaggerOperation swaggerOperation = path.getValue().getPost();
+                                        addOperation(swaggerOperation, operation);
+                                    }
+                                    if (path.getValue().getDelete() != null) {
+                                        Operation operation = new Operation();
+                                        operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
+                                        operation.setMethod(METHOD_DELETE);
+                                        SwaggerOperation swaggerOperation = path.getValue().getDelete();
+                                        addOperation(swaggerOperation, operation);
+                                    }
                                 }
                             }
+                        }
+
+                        if(swagger.getDefinitions() != null) {
+                            definitions.putAll(swagger.getDefinitions());
                         }
                     }
                 }
@@ -587,7 +603,16 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
                 parameterMappings.add(parameterMapping);
             }
             operation.setParameterMappings(parameterMappings);
+            if(swaggerOperation.getResponses() != null
+                    && swaggerOperation.getResponses().get("200") != null
+                    && swaggerOperation.getResponses().get("200").getSchema() != null) {
+                operation.setResponseScheme(swaggerOperation.getResponses().get("200").getSchema());
+            }
             view.addAvailableOperation(operation);
         }
+    }
+
+    public Map<String, SwaggerDefinition> getDefinitions() {
+        return definitions;
     }
 }

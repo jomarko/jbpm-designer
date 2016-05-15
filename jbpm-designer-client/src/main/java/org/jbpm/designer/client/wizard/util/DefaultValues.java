@@ -6,6 +6,7 @@ import org.jbpm.designer.model.Variable;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @ApplicationScoped
@@ -21,14 +22,14 @@ public class DefaultValues {
     public ServiceTask getDefaultServiceTask() {
         ServiceTask serviceTask = new ServiceTask("");
         serviceTask.setOutputs(new ArrayList<Variable>());
-        serviceTask.setInputs(new ArrayList<Variable>());
+        serviceTask.setInputs(new HashMap<String, Variable>());
         return serviceTask;
     }
 
     public HumanTask getDefaultHumanTask() {
         HumanTask task = new HumanTask("");
         task.setOutputs(new ArrayList<Variable>());
-        task.setInputs(new ArrayList<Variable>());
+        task.setInputs(new HashMap<String, Variable>());
         return task;
     }
 }

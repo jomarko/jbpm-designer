@@ -15,6 +15,7 @@
 
 package org.jbpm.designer.client.wizard;
 
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Widget;
 import org.jbpm.designer.client.handlers.NewProcessHandler;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
@@ -145,10 +146,12 @@ public class GuidedProcessWizard extends AbstractWizard {
         List<Variable> inputs = inputsPage.getInputs();
         List<Variable> copiedUnboundValues = new ArrayList<Variable>();
         for(Variable variable : inputs) {
-            Variable copy = new Variable();
-            copy.setName(variable.getName());
-            copy.setDataType(variable.getDataType());
-            copiedUnboundValues.add(copy);
+            if(variable.getName() != null && !variable.getName().trim().isEmpty()) {
+                Variable copy = new Variable();
+                copy.setName(variable.getName());
+                copy.setDataType(variable.getDataType());
+                copiedUnboundValues.add(copy);
+            }
         }
 
         return copiedUnboundValues;
@@ -164,6 +167,7 @@ public class GuidedProcessWizard extends AbstractWizard {
         businessProcess.setProcessDocumentation(generalInfoPage.getProcessDocumentation());
         businessProcess.setStartEvent(startEventPage.getStartEvent());
         List<Variable> variables = inputsPage.getInputs();
+        List<Variable> additionalVariables = new ArrayList<Variable>();
         for(Map.Entry<Integer, List<Task>> tasksGroup: tasksPage.getTasks().entrySet()) {
             for(Task task : tasksGroup.getValue()) {
                 Variable taskOutput = null;
@@ -171,14 +175,16 @@ public class GuidedProcessWizard extends AbstractWizard {
                     taskOutput = task.getOutputs().get(0);
                     if (taskOutput != null && taskOutput.getName() != null &&
                             !taskOutput.getName().isEmpty() && !variables.contains(taskOutput)) {
-                        variables.add(taskOutput);
+                        additionalVariables.add(taskOutput);
                     }
                 }
             }
         }
         businessProcess.setConditions(tasksPage.getMergedRowsWithConditions());
         businessProcess.setVariables(variables);
+        businessProcess.setAdditionalVariables(additionalVariables);
         businessProcess.setTasks(tasksPage.getTasks());
+        businessProcess.setDefinitions(tasksPage.getDefinitions());
         return businessProcess;
     }
 

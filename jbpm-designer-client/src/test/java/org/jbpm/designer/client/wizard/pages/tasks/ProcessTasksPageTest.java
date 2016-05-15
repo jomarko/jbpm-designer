@@ -15,6 +15,8 @@ import org.jbpm.designer.service.SwaggerService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.kie.workbench.common.screens.search.model.SearchTermPageRequest;
+import org.kie.workbench.common.screens.search.service.SearchService;
 import org.mockito.*;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.security.management.api.AbstractEntityManager;
@@ -24,6 +26,7 @@ import org.uberfire.ext.security.management.client.ClientUserSystemManager;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
 import org.uberfire.mocks.CallerMock;
 import org.uberfire.mocks.EventSourceMock;
+import org.uberfire.paging.PageResponse;
 
 import javax.enterprise.event.Event;
 import java.util.ArrayList;
@@ -97,6 +100,9 @@ public class ProcessTasksPageTest {
         Caller<SwaggerService> swaggerServiceCaller = new CallerMock<SwaggerService>(swaggerService);
         page.swaggerDefinitionService = swaggerServiceCaller;
         page.discoverService = new CallerMock<DiscoverService>(mock(DiscoverService.class));
+        SearchService searchService = mock(SearchService.class);
+        when(searchService.fullTextSearch(any(SearchTermPageRequest.class))).thenReturn(mock(PageResponse.class));
+        page.searchService = new CallerMock<SearchService>(searchService);
 
         varA = new Variable("a", Variable.VariableType.INPUT, "String", null);
         varB = new Variable("b", Variable.VariableType.OUTPUT, "Boolean", null);
@@ -241,6 +247,7 @@ public class ProcessTasksPageTest {
         verify(widgetOne).setCondition(null);
         verify(widgetTwo).setCondition(null);
         verify(view).splitSelectedWidgets();
+        verify(view).setTaskPanelVisibility(false);
         verify(view).deselectAll();
         verify(view).setSplitButtonVisibility(false);
         verify(view).setConditionPanelVisibility(false);
@@ -346,6 +353,7 @@ public class ProcessTasksPageTest {
 
         when(widgetOne.getCondition()).thenReturn(mock(Condition.class));
         page.taskDetailSelected(widgetOne);
+        verify(view, times(2)).restrictOutputDataTypes();
         verify(view).setConditionPanelVisibility(false);
         verify(view).setConditionPanelVisibility(true);
         verify(event, times(2)).fire(any(WizardPageStatusChangeEvent.class));
@@ -356,6 +364,7 @@ public class ProcessTasksPageTest {
         List<Widget> selected = new ArrayList<Widget>();
         when(view.getSelectedWidgets()).thenReturn(selected);
         page.taskDetailSelected(widgetOne);
+        verify(view).setTaskPanelVisibility(false);
         verify(view).setMergeButtonsVisibility(false);
         verify(view).setSplitButtonVisibility(false);
         verify(event).fire(any(WizardPageStatusChangeEvent.class));
@@ -368,6 +377,7 @@ public class ProcessTasksPageTest {
         selected.add(widgetTwo);
         when(view.getSelectedWidgets()).thenReturn(selected);
         page.taskDetailSelected(widgetOne);
+        verify(view).setTaskPanelVisibility(false);
         verify(view).setMergeButtonsVisibility(true);
         verify(view).setSplitButtonVisibility(false);
         verify(event).fire(any(WizardPageStatusChangeEvent.class));
@@ -384,6 +394,7 @@ public class ProcessTasksPageTest {
         when(widgetTwo.getIsMergedWith()).thenReturn(1);
         when(view.getSelectedWidgets()).thenReturn(selected);
         page.taskDetailSelected(widgetOne);
+        verify(view).setTaskPanelVisibility(false);
         verify(view).setMergeButtonsVisibility(false);
         verify(view).setSplitButtonVisibility(true);
         verify(event).fire(any(WizardPageStatusChangeEvent.class));
@@ -400,6 +411,7 @@ public class ProcessTasksPageTest {
         when(widgetTwo.getIsMergedWith()).thenReturn(3);
         when(view.getSelectedWidgets()).thenReturn(selected);
         page.taskDetailSelected(widgetOne);
+        verify(view).setTaskPanelVisibility(false);
         verify(view).setMergeButtonsVisibility(false);
         verify(view).setSplitButtonVisibility(false);
         verify(event).fire(any(WizardPageStatusChangeEvent.class));
@@ -436,6 +448,7 @@ public class ProcessTasksPageTest {
         verify(widgetOne).rebind();
         verify(view).rebindTaskDetailWidgets();
         verify(view).highlightSelected();
+        verify(view).restrictOutputDataTypes();
     }
 
     @Test

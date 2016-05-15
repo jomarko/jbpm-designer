@@ -18,6 +18,8 @@ public class Operation {
 
     private String method;
 
+    private SwaggerSchema responseScheme;
+
     public String getOperationId() {
         return operationId;
     }
@@ -56,5 +58,13 @@ public class Operation {
 
     public void setMethod(String method) {
         this.method = method;
+    }
+
+    public SwaggerSchema getResponseScheme() {
+        return responseScheme;
+    }
+
+    public void setResponseScheme(SwaggerSchema responseScheme) {
+        this.responseScheme = responseScheme;
     }
 }

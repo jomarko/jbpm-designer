@@ -3,6 +3,7 @@ package org.jbpm.designer.client.wizard.pages.tasks;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import org.gwtbootstrap3.client.ui.Button;
 import org.jboss.errai.ui.client.widget.ListWidget;
@@ -29,7 +30,7 @@ public class TaskOutputsTable extends Composite {
     @Inject
     @DataField
     @Table(root="tbody")
-    private ListWidget<Variable, TaskOutputRow> outputs;
+    protected ListWidget<Variable, TaskOutputRow> outputs;
 
     @Inject
     @DataField
@@ -37,7 +38,7 @@ public class TaskOutputsTable extends Composite {
 
     private DefaultValues defaultValues = new DefaultValues();
 
-    private List<String> dataTypes;
+    protected List<String> dataTypes;
 
     @PostConstruct
     public void initialize() {
@@ -45,7 +46,11 @@ public class TaskOutputsTable extends Composite {
         addButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent clickEvent) {
-                addVariable(defaultValues.getDefaultVariable(), dataTypes);
+                Variable model = defaultValues.getDefaultVariable();
+                if(dataTypes.size() > 0 && !dataTypes.contains(model.getDataType())) {
+                    model.setDataType(dataTypes.get(0));
+                }
+                addVariable(model, dataTypes);
             }
         });
     }
@@ -74,6 +79,17 @@ public class TaskOutputsTable extends Composite {
         dataTypes.clear();
         if(availableDataTypes != null) {
             dataTypes.addAll(availableDataTypes);
+        }
+        if(outputs.getWidgetCount() > 0) {
+            for(int row = 0; row < outputs.getWidgetCount(); row++) {
+                TaskOutputRow rowWidget = outputs.getWidget(row);
+                if(dataTypes.size() == 1) {
+                    Variable model = rowWidget.getModel();
+                    model.setDataType(dataTypes.get(0));
+                    rowWidget.setModel(model);
+                }
+                rowWidget.setAcceptableDataTypes(dataTypes);
+            }
         }
     }
 }

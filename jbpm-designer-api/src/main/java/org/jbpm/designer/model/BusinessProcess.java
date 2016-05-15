@@ -1,6 +1,7 @@
 package org.jbpm.designer.model;
 
 import org.jboss.errai.common.client.api.annotations.Portable;
+import org.jbpm.designer.model.operation.SwaggerDefinition;
 
 import java.util.List;
 import java.util.Map;
@@ -16,9 +17,13 @@ public class BusinessProcess {
 
     private List<Variable> variables;
 
+    private List<Variable> additionalVariables;
+
     private Map<Integer, List<Task>> tasks;
 
     private Map<Integer, List<Condition>> conditions;
+
+    private Map<String, SwaggerDefinition> definitions;
 
     public BusinessProcess() {
     }
@@ -55,6 +60,14 @@ public class BusinessProcess {
         this.variables = variables;
     }
 
+    public List<Variable> getAdditionalVariables() {
+        return additionalVariables;
+    }
+
+    public void setAdditionalVariables(List<Variable> additionalVariables) {
+        this.additionalVariables = additionalVariables;
+    }
+
     public Map<Integer, List<Task>> getTasks() {
         return tasks;
     }
@@ -69,5 +82,13 @@ public class BusinessProcess {
 
     public void setConditions(Map<Integer, List<Condition>> conditions) {
         this.conditions = conditions;
+    }
+
+    public Map<String, SwaggerDefinition> getDefinitions() {
+        return definitions;
+    }
+
+    public void setDefinitions(Map<String, SwaggerDefinition> definitions) {
+        this.definitions = definitions;
     }
 }

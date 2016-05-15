@@ -109,8 +109,12 @@ public interface ProcessTasksPageView extends IsWidget {
 
     void setConditionPanelVisibility(boolean value);
 
+    void setTaskPanelVisibility(boolean value);
+
     void addAvailableOperation(Operation operation);
 
     void setAvailableDataTypes(List<String> dataTypes);
+
+    void restrictOutputDataTypes();
 
 }

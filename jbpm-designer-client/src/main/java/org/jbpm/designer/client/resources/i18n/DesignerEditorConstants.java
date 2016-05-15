@@ -33,6 +33,8 @@ public interface DesignerEditorConstants extends
 
     String Constant();
 
+    String containsAlreadyMerged();
+
     String Custom();
 
     String Data_Input();
@@ -73,6 +75,8 @@ public interface DesignerEditorConstants extends
 
     String jsonSwaggerFile();
 
+    String mergeInvalidTaskCount();
+
     String No_Data_Input();
 
     String No_Data_Output();
@@ -108,6 +112,8 @@ public interface DesignerEditorConstants extends
     String standardEventType();
 
     String signalFormat();
+
+    String splitInvalidRowCount();
 
     String swaggerUploadResults();
 

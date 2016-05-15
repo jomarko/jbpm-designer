@@ -31,12 +31,15 @@ import org.gwtbootstrap3.client.ui.TabPane;
 import org.gwtbootstrap3.client.ui.TabPanel;
 import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
+import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.wizard.pages.widget.*;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.operation.Operation;
+import org.uberfire.workbench.events.NotificationEvent;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
@@ -89,6 +92,12 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
 
     @UiField
     TabPanel conditionPanel;
+
+    @UiField
+    TabPanel taskDetailPanel;
+
+    @Inject
+    Event<NotificationEvent> notification;
 
     @PostConstruct
     public void registerHandlers() {
@@ -276,17 +285,17 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
 
     @Override
     public void showSplitInvalidCount() {
-        Window.alert("You can split only one row");
+        notification.fire(new NotificationEvent(DesignerEditorConstants.INSTANCE.splitInvalidRowCount(), NotificationEvent.NotificationType.ERROR));
     }
 
     @Override
     public void showMergeInvalidCount() {
-        Window.alert("Merge supported only for 2 tasks");
+        notification.fire(new NotificationEvent(DesignerEditorConstants.INSTANCE.mergeInvalidTaskCount(), NotificationEvent.NotificationType.ERROR));
     }
 
     @Override
     public void showAlreadyContainsMerged() {
-        Window.alert("Can't merge already merged tasks");
+        notification.fire(new NotificationEvent(DesignerEditorConstants.INSTANCE.containsAlreadyMerged(), NotificationEvent.NotificationType.ERROR));
     }
 
     @Override
@@ -348,6 +357,11 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
+    public void setTaskPanelVisibility(boolean value) {
+        taskDetailPanel.setVisible(value);
+    }
+
+    @Override
     public void addAvailableOperation(Operation operation) {
         taskDetail.addAvailableOperation(operation);
     }
@@ -355,6 +369,11 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     @Override
     public void setAvailableDataTypes(List<String> dataTypes) {
         taskIO.setAvailableDataTypes(dataTypes);
+    }
+
+    @Override
+    public void restrictOutputDataTypes() {
+        taskIO.restrictOutputDataTypes();
     }
 
     private PropertyChangeHandler getHandler() {

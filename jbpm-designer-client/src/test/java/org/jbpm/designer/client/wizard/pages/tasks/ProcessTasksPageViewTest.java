@@ -5,21 +5,23 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwtmockito.GwtMockitoTestRunner;
+import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.TabPane;
-import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
-import org.jbpm.designer.client.wizard.pages.widget.MergedTasksIndicator;
-import org.jbpm.designer.client.wizard.pages.widget.TaskDetail;
-import org.jbpm.designer.client.wizard.pages.widget.TasksTable;
-import org.jbpm.designer.model.Group;
-import org.jbpm.designer.model.Task;
-import org.jbpm.designer.model.User;
+import org.gwtbootstrap3.client.ui.TabPanel;
+import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
+import org.jbpm.designer.client.wizard.pages.widget.*;
+import org.jbpm.designer.model.*;
+import org.jbpm.designer.model.operation.Operation;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.uberfire.mocks.EventSourceMock;
+import org.uberfire.workbench.events.NotificationEvent;
 
+import javax.enterprise.event.Event;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,10 +48,33 @@ public class ProcessTasksPageViewTest {
     TasksTable tasksContainer;
 
     @Mock
+    ConditionWidget conditionWidget;
+
+    @Mock
+    Button conditionButton;
+
+    @Mock
+    Button parallelButton;
+
+    @Mock
+    Button splitButton;
+
+    @Mock
+    TabPanel conditionPanel;
+
+    @Mock
+    TabPanel taskDetailPanel;
+
+    @Mock
     private ProcessTasksPageView.Presenter presenter;
+
+    Event<NotificationEvent> notification = mock(EventSourceMock.class);
 
     @Captor
     ArgumentCaptor<ClickHandler> clickCaptor;
+
+    @Captor
+    ArgumentCaptor<NotificationEvent> notificationEvent;
 
     private ProcessTasksPageViewImpl view;
 
@@ -61,6 +86,13 @@ public class ProcessTasksPageViewTest {
         view.taskIoPane = taskIoPane;
         view.taskDetailPane = taskDetailPane;
         view.tasksContainer = tasksContainer;
+        view.notification = notification;
+        view.conditionWidget = conditionWidget;
+        view.parallelButton = parallelButton;
+        view.conditionButton = conditionButton;
+        view.splitButton = splitButton;
+        view.conditionPanel = conditionPanel;
+        view.taskDetailPanel = taskDetailPanel;
         view.init(presenter);
     }
 
@@ -278,4 +310,251 @@ public class ProcessTasksPageViewTest {
         verify(tasksContainer).highlightWidgets(new ArrayList<Widget>());
     }
 
+    @Test
+    public void testHighlightSelectedEmpty() {
+        List<Widget> widgets = new ArrayList<Widget>();
+        view.lastSelectedWidgets = widgets;
+
+        view.highlightSelected();
+        verify(tasksContainer).highlightWidgets(widgets);
+    }
+
+    @Test
+    public void testHighlightSelected() {
+        List<Widget> widgets = new ArrayList<Widget>();
+        widgets.add(mock(Widget.class));
+        widgets.add(mock(Widget.class));
+        view.lastSelectedWidgets = widgets;
+        view.highlightSelected();
+        verify(tasksContainer).highlightWidgets(widgets);
+    }
+
+    @Test
+    public void testShowHumanSpecificDetails() {
+        view.showHumanSpecificDetails();
+        verify(taskDetail).showHumanDetails();
+    }
+
+    @Test
+    public void testShowServiceSpecificDetails() {
+        view.showServiceSpecificDetails();
+        verify(taskDetail).showServiceDetails();
+    }
+
+    @Test
+    public void testUnbindAllTaskWidgets() {
+        List<Widget> firstRow = new ArrayList<Widget>();
+        ListTaskDetail one = mock(ListTaskDetail.class);
+        firstRow.add(one);
+        List<Widget> secondRow = new ArrayList<Widget>();
+        ListTaskDetail two = mock(ListTaskDetail.class);
+        secondRow.add(two);
+        when(tasksContainer.getRowCount()).thenReturn(2);
+        when(tasksContainer.getRowWidgets(0)).thenReturn(firstRow);
+        when(tasksContainer.getRowWidgets(1)).thenReturn(secondRow);
+        view.unbindAllTaskWidgets();
+        verify(one).unbind();
+        verify(two).unbind();
+        verify(taskDetail).unbind();
+    }
+
+    @Test
+    public void rebindTaskDetailWidgets() {
+        view.rebindTaskDetailWidgets();
+        verify(taskDetail).rebind();
+    }
+
+    @Test
+    public void testSetModelTaskDetailWidgets() {
+        Task model = mock(Task.class);
+        view.setModelTaskDetailWidgets(model);
+        verify(taskDetail).setModel(model);
+        verify(taskIO).setModel(model);
+    }
+
+    @Test
+    public void testSetAvailableVarsForSelectedTask() {
+        List<Variable> variables = new ArrayList<Variable>();
+        variables.add(mock(Variable.class));
+        view.setAvailableVarsForSelectedTask(variables);
+        conditionWidget.setVariables(variables);
+        taskIO.setAcceptableValues(variables);
+        taskDetail.setVariablesForParameterMapping(variables);
+    }
+
+    @Test
+    public void testRebindConditionWidgetToModel() {
+        Condition model = mock(Condition.class);
+        view.rebindConditionWidgetToModel(model);
+        verify(conditionWidget).unbind();
+        verify(conditionWidget).setModel(model);
+        verify(conditionWidget).rebind();
+    }
+
+    @Test
+    public void testShowSplitInvalidCount() {
+        view.showSplitInvalidCount();
+        verify(notification).fire(notificationEvent.capture());
+        assertEquals(notificationEvent.getValue().getNotification(), DesignerEditorConstants.INSTANCE.splitInvalidRowCount());
+    }
+
+    @Test
+    public void testShowMergeInvalidCount() {
+        view.showMergeInvalidCount();
+        verify(notification).fire(notificationEvent.capture());
+        assertEquals(notificationEvent.getValue().getNotification(), DesignerEditorConstants.INSTANCE.mergeInvalidTaskCount());
+    }
+
+    @Test
+    public void showAlreadyContainsMerged() {
+        view.showAlreadyContainsMerged();
+        verify(notification).fire(notificationEvent.capture());
+        assertEquals(notificationEvent.getValue().getNotification(), DesignerEditorConstants.INSTANCE.containsAlreadyMerged());
+    }
+
+//    @Test
+//    public void testShowAsValid(int taskId) {
+//        int row = rowOfTask(taskId);
+//        tasksContainer.setNormalColor(row, columnOfTask(row, taskId));
+//    }
+//
+//    @Test
+//    public void testShowAsInvalid(int taskId) {
+//        int row = rowOfTask(taskId);
+//        tasksContainer.setRedColor(row, columnOfTask(row, taskId));
+//    }
+
+    @Test
+    public void testSetNameHelpVisibility() {
+        view.setNameHelpVisibility(false);
+        verify(taskDetail, never()).setNameHelpVisibility(true);
+        verify(taskDetail).setNameHelpVisibility(false);
+
+        view.setNameHelpVisibility(true);
+        verify(taskDetail).setNameHelpVisibility(true);
+        verify(taskDetail).setNameHelpVisibility(false);
+    }
+
+    @Test
+    public void testSetParticipantHelpVisibility() {
+        view.setParticipantHelpVisibility(false);
+        verify(taskDetail, never()).setParticipantHelpVisibility(true);
+        verify(taskDetail).setParticipantHelpVisibility(false);
+
+        view.setParticipantHelpVisibility(true);
+        verify(taskDetail).setParticipantHelpVisibility(true);
+        verify(taskDetail).setParticipantHelpVisibility(false);
+    }
+
+    @Test
+    public void testSetOperationHelpVisibility() {
+        view.setOperationHelpVisibility(false);
+        verify(taskDetail, never()).setOperationHelpVisibility(true);
+        verify(taskDetail).setOperationHelpVisibility(false);
+
+        view.setOperationHelpVisibility(true);
+        verify(taskDetail).setOperationHelpVisibility(true);
+        verify(taskDetail).setOperationHelpVisibility(false);
+    }
+
+    @Test
+    public void testSetVariableHelpVisibility() {
+        view.setVariableHelpVisibility(false);
+        verify(conditionWidget, never()).setVariableHelpVisibility(true);
+        verify(conditionWidget).setVariableHelpVisibility(false);
+
+        view.setVariableHelpVisibility(true);
+        verify(conditionWidget).setVariableHelpVisibility(true);
+        verify(conditionWidget).setVariableHelpVisibility(false);
+    }
+
+    @Test
+    public void testSetConstraintValueHelpVisibility() {
+        view.setConstraintValueHelpVisibility(false);
+        verify(conditionWidget, never()).setConstraintValueHelpVisibility(true);
+        verify(conditionWidget).setConstraintValueHelpVisibility(false);
+
+        view.setConstraintValueHelpVisibility(true);
+        verify(conditionWidget).setConstraintValueHelpVisibility(true);
+        verify(conditionWidget).setConstraintValueHelpVisibility(false);
+    }
+
+    @Test
+    public void testSetConstraintHelpVisibility() {
+        view.setConstraintHelpVisibility(false);
+        verify(conditionWidget, never()).setConstraintHelpVisibility(true);
+        verify(conditionWidget).setConstraintHelpVisibility(false);
+
+        view.setConstraintHelpVisibility(true);
+        verify(conditionWidget).setConstraintHelpVisibility(true);
+        verify(conditionWidget).setConstraintHelpVisibility(false);
+    }
+
+    @Test
+    public void testSetMergeButtonsVisibility() {
+        view.setMergeButtonsVisibility(true);
+        verify(parallelButton).setVisible(true);
+        verify(conditionButton).setVisible(true);
+        verify(parallelButton, never()).setVisible(false);
+        verify(conditionButton, never()).setVisible(false);
+
+        view.setMergeButtonsVisibility(false);
+        verify(parallelButton).setVisible(true);
+        verify(conditionButton).setVisible(true);
+        verify(parallelButton).setVisible(false);
+        verify(conditionButton).setVisible(false);
+    }
+
+    @Test
+    public void testSetSplitButtonVisibility() {
+        view.setSplitButtonVisibility(true);
+        verify(splitButton).setVisible(true);
+        verify(splitButton, never()).setVisible(false);
+
+        view.setSplitButtonVisibility(false);
+        verify(splitButton).setVisible(true);
+        verify(splitButton).setVisible(false);
+    }
+
+    @Test
+    public void testSetConditionPanelVisibility() {
+        view.setConditionPanelVisibility(true);
+        verify(conditionPanel).setVisible(true);
+        verify(conditionPanel, never()).setVisible(false);
+        view.setConditionPanelVisibility(false);
+        verify(conditionPanel).setVisible(true);
+        verify(conditionPanel).setVisible(false);
+
+    }
+
+    @Test
+    public void testAddAvailableOperation() {
+        Operation operation = mock(Operation.class);
+        view.addAvailableOperation(operation);
+        verify(taskDetail).addAvailableOperation(operation);
+    }
+
+    @Test
+    public void testSetAvailableDataTypes() {
+        List<String> dataTypes = new ArrayList<String>();
+        dataTypes.add("dataType");
+        view.setAvailableDataTypes(dataTypes);
+        verify(taskIO).setAvailableDataTypes(dataTypes);
+    }
+
+    @Test
+    public void testSetTaskPanelVisibility() {
+        view.setTaskPanelVisibility(true);
+        verify(taskDetailPanel).setVisible(true);
+        verify(taskDetailPanel, never()).setVisible(false);
+        view.setTaskPanelVisibility(false);
+        verify(taskDetailPanel).setVisible(true);
+        verify(taskDetailPanel).setVisible(false);
+    }
+
+    @Test
+    public void testRestrictOutputDataTypes() throws Exception {
+        view.restrictOutputDataTypes();
+        verify(taskIO).restrictOutputDataTypes();
+    }
 }

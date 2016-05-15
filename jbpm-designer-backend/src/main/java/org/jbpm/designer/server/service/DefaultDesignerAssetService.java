@@ -45,6 +45,10 @@ import org.guvnor.common.services.shared.metadata.model.Metadata;
 import org.guvnor.common.services.shared.metadata.model.Overview;
 import org.jboss.errai.bus.server.annotations.Service;
 import org.jbpm.designer.model.*;
+import org.jbpm.designer.model.operation.Swagger;
+import org.jbpm.designer.model.operation.SwaggerDefinition;
+import org.jbpm.designer.model.operation.SwaggerParameter;
+import org.jbpm.designer.model.operation.SwaggerProperty;
 import org.jbpm.designer.repository.Asset;
 import org.jbpm.designer.repository.AssetBuilderFactory;
 import org.jbpm.designer.repository.Repository;
@@ -207,19 +211,19 @@ public class DefaultDesignerAssetService
         return UUID.randomUUID().toString().replaceAll( "-", "" );
     }
 
-    private Path createProcess( final Path context,
+    private Path createAsset( final Path context,
                                final String fileName,
-                               final String processContent ) {
+                               final String assetContent ) {
 
         final Path path = Paths.convert( Paths.convert( context ).resolve( fileName ) );
         String location = Paths.convert( path ).getParent().toString();
         String name = path.getFileName();
 
         AssetBuilder builder = AssetBuilderFactory.getAssetBuilder( name );
-        builder.location( location ).content( processContent ).uniqueId( path.toURI() );
-        Asset<String> processAsset = builder.getAsset();
+        builder.location( location ).content( assetContent ).uniqueId( path.toURI() );
+        Asset<String> asset = builder.getAsset();
 
-        repository.createAsset( processAsset );
+        repository.createAsset( asset );
         return path;
     }
 
@@ -232,12 +236,118 @@ public class DefaultDesignerAssetService
         String name = path.getFileName();
         String processId = buildProcessId( location, name );
         String processContent = PROCESS_STUB.replaceAll( "\\$\\{processid\\}", processId.replaceAll("\\s", "") );
-        return createProcess(context, fileName, processContent);
+        return createAsset(context, fileName, processContent);
     }
 
     @Override
     public Path createProcess(Path context, String fileName, BusinessProcess businessProcess) {
-        return createProcess(context, fileName, wizardModelToXmlConverter.convertProcessToXml(businessProcess));
+        String processContent = wizardModelToXmlConverter.convertProcessToXml(businessProcess);
+        String processId = wizardModelToXmlConverter.getProcessId();
+
+        String formName = processId + "-taskform.form";
+        String formContent= createFormContent(businessProcess, formName);
+        createAsset(context, formName, formContent);
+        return createAsset(context, fileName, processContent);
+    }
+
+    private String createFormContent(BusinessProcess process, String formName) {
+        String formContent = "<form id=\""+ new Random(formName.hashCode()).nextLong() +"\">\n" +
+                "<property name=\"name\" value=\"" + formName +"\"/>\n" +
+                "<property name=\"displayMode\" value=\"default\"/>\n" +
+                "<property name=\"status\" value=\"0\"/>\n" +
+                "${fields}\n" +
+                "${dataHolders}\n" +
+                "</form>";
+
+        formContent = formContent.replaceAll( "\\$\\{fields\\}", constructFields(process.getVariables(), process.getDefinitions()));
+        formContent = formContent.replaceAll( "\\$\\{dataHolders\\}", constructDataHolders(process.getVariables()));
+
+        return formContent;
+    }
+
+    private String constructFields(List<Variable> variables, Map<String, SwaggerDefinition> definitions) {
+        String fields = "";
+        int count = 0;
+        for(Variable variable : variables) {
+            if(isBasicDataType(variable)) {
+                fields += "<field position=\"" + count + "\" name=\"" + variable.getName() + "\" type=\""+getFieldType(variable.getDataType())+"\" id=\"" + new Random(variable.getName().hashCode()).nextLong() + "\">\n" +
+                        "<property name=\"fieldRequired\" value=\"true\"/>\n" +
+                        "<property name=\"label\" value=\"quot;enquot;,quot;" +variable.getName()+ "quot;\"/>\n" +
+                        "<property name=\"readonly\" value=\"false\"/>\n" +
+                        "<property name=\"outputBinding\" value=\"" + variable.getName() + "\"/>\n" +
+                        "<property name=\"fieldClass\" value=\"java.lang." + variable.getDataType() + "\"/>\n" +
+                        "</field>";
+            } else {
+                String[] dataTypeParts = variable.getDataType().split("\\.");
+                if(dataTypeParts.length > 0 && definitions.keySet().contains(dataTypeParts[dataTypeParts.length - 1])) {
+                    SwaggerDefinition definition = definitions.get(dataTypeParts[dataTypeParts.length - 1]);
+                    if(definition != null) {
+                        for (Map.Entry<String, SwaggerProperty> property : definition.getProperties().entrySet()) {
+                            fields += "<field position=\"" + count + "\" name=\"" + variable.getName() + "_" + property.getKey() + "\" type=\""+getFieldType(property.getValue().getType()) + "\" id=\"" + new Random(variable.getName().hashCode()).nextLong() + "\">\n" +
+                                    "<property name=\"fieldRequired\" value=\"" + (definition.getRequired().contains(property.getKey()) ? "true" : "false") + "\"/>\n" +
+                                    "<property name=\"label\" value=\"quot;enquot;,quot;" + variable.getName() + "/" + property.getKey() +"quot;\"/>\n" +
+                                    "<property name=\"readonly\" value=\"false\"/>\n" +
+                                    "<property name=\"outputBinding\" value=\"" + variable.getName() + "/" + property.getKey() + "\"/>\n" +
+                                    "<property name=\"fieldClass\" value=\"java.lang." + makeUpperCase(property.getValue().getType()) + "\"/>\n" +
+                                    "</field>";
+                            count = count + 1;
+                        }
+                    }
+                }
+            }
+
+            count = count + 1;
+        }
+        return fields;
+    }
+
+    private String constructDataHolders(List<Variable> variables) {
+        String dataHolders = "";
+        for(Variable variable : variables) {
+            if(isBasicDataType(variable)) {
+                dataHolders += "<dataHolder inputId=\"\" name=\"" + new Random(variable.getName().hashCode()).nextLong() + "\" type=\"basicType\" outId=\"" + variable.getName() + "\" value=\"java.lang." + variable.getDataType() + "\" id=\"" + variable.getName() + "\"/>\n";
+            } else {
+                dataHolders += "<dataHolder inputId=\"\" name=\"" + new Random(variable.getName().hashCode()).nextLong() + "\" type=\"dataModelerEntry\" outId=\"" + variable.getName() + "\" value=\"" + variable.getDataType() + "\" id=\"" + variable.getName() + "\"/>\n";
+            }
+
+        }
+        return dataHolders;
+    }
+
+    private String getFieldType(String dataType) {
+        if(dataType.compareToIgnoreCase("boolean") == 0) {
+            return  "CheckBox";
+        }
+        if(dataType.compareToIgnoreCase("float") == 0) {
+            return  "InputTextFloat";
+        }
+        if(dataType.compareToIgnoreCase("double") == 0) {
+            return  "InputTextDouble";
+        }
+        if(dataType.compareToIgnoreCase("integer") == 0) {
+            return  "InputTextBigInteger";
+        }
+        return "InputText";
+    }
+
+    private String makeUpperCase(String type) {
+        if(type.length() < 2) {
+            return type.toUpperCase();
+        }
+        return type.substring(0,1).toUpperCase() + type.substring(1, type.length());
+    }
+
+    private boolean isBasicDataType(Variable variable) {
+        String dataType = variable.getDataType();
+        if(dataType.compareTo("Object") == 0 ||
+                dataType.compareTo("Boolean") == 0 ||
+                dataType.compareTo("Integer") == 0 ||
+                dataType.compareTo("Float") == 0 ||
+                dataType.compareTo("Double") == 0 ||
+                dataType.compareTo("String") == 0 ) {
+            return true;
+        }
+        return false;
     }
 
     private String getEditorResponse(String urlpath,

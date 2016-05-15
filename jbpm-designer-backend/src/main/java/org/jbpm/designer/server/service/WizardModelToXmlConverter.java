@@ -41,10 +41,18 @@ public class WizardModelToXmlConverter {
     protected Definitions definitions = null;
     private JbpmProfileImpl profile = new JbpmProfileImpl();
 
+    public String getProcessId() {
+        if(process != null) {
+            return process.getId();
+        } else {
+            return "";
+        }
+    }
 
     public String convertProcessToXml(BusinessProcess businessProcess) {
         createProcess(businessProcess.getProcessName(), businessProcess.getProcessDocumentation());
         createProcessVariables(businessProcess.getVariables());
+        createProcessVariables(businessProcess.getAdditionalVariables());
         int horizontalOffset = 100;
         FlowElement from = createStartEvent(horizontalOffset, businessProcess.getStartEvent());
         FlowElement to;
@@ -104,7 +112,7 @@ public class WizardModelToXmlConverter {
         Bpmn2JsonMarshaller marshaller = new Bpmn2JsonMarshaller();
         marshaller.setProfile(profile);
 
-        String processId = UUID.randomUUID().toString();
+        String processId = getIdString();
         process = Bpmn2Factory.eINSTANCE.createProcess();
         process.setId(processId);
         process.setName(processName);
@@ -129,7 +137,7 @@ public class WizardModelToXmlConverter {
             throw new RuntimeException("Create process at first");
         }
 
-        String taskId = UUID.randomUUID().toString();
+        String taskId = getIdString();
         org.eclipse.bpmn2.Task bpmnTask = null;
         Map<Variable, Object> inputAssignments = new HashMap<Variable, Object>();
         if (task instanceof HumanTask) {
@@ -176,18 +184,22 @@ public class WizardModelToXmlConverter {
                 url.setName("Url");
                 inputAssignments.put(url, constructUrl(operation));
 
+                Variable contentType = new Variable();
+                contentType.setDataType("String");
+                contentType.setName("ContentType");
+                inputAssignments.put(contentType, "application/json");
+
+                if (task.getOutputs() != null && task.getOutputs().size() == 1) {
+                    Variable resultClass = new Variable();
+                    resultClass.setDataType("String");
+                    resultClass.setName("ResultClass");
+                    inputAssignments.put(resultClass, task.getOutputs().get(0).getDataType());
+                }
+
                 if(operation.getParameterMappings() != null) {
                     for(ParameterMapping mapping : operation.getParameterMappings()) {
                         if(mapping.getParameter() != null && "body".compareTo(mapping.getParameter().getIn()) == 0 && mapping.getVariable() != null) {
-                            Variable contentType = new Variable();
-                            contentType.setDataType("String");
-                            contentType.setName("ContentType");
-                            inputAssignments.put(contentType, mapping.getVariable().getDataType());
-
-                            Variable content = new Variable();
-                            content.setDataType("Object");
-                            content.setName("Content");
-                            inputAssignments.put(content, mapping.getVariable());
+                            task.getInputs().put("Content", mapping.getVariable());
                         }
                     }
                 }
@@ -241,14 +253,14 @@ public class WizardModelToXmlConverter {
         OutputSet outputSet = Bpmn2Factory.eINSTANCE.createOutputSet();
 
         if(wizardTask.getInputs() != null) {
-            for (Variable variable : wizardTask.getInputs()) {
+            for (Map.Entry<String,Variable> variable : wizardTask.getInputs().entrySet()) {
                 DataInput dataInput = Bpmn2Factory.eINSTANCE.createDataInput();
-                setItemSubjectRef(dataInput, variable);
+                setItemSubjectRef(dataInput, variable.getValue());
 
                 DataInputAssociation inputAssociation = Bpmn2Factory.eINSTANCE.createDataInputAssociation();
-                dataInput.setName(variable.getName());
+                dataInput.setName(variable.getKey());
                 for (Property property : process.getProperties()) {
-                    if (property.getName().compareTo(variable.getName()) == 0) {
+                    if (property.getName().compareTo(variable.getValue().getName()) == 0) {
                         inputAssociation.getSourceRef().add(property);
                     }
                 }
@@ -309,7 +321,7 @@ public class WizardModelToXmlConverter {
     }
 
     private void setItemSubjectRef(ItemAwareElement element, Variable variable) {
-        String id = UUID.randomUUID().toString() + "_" + variable.getName();
+        String id = getIdString() + "_" + variable.getName();
 
         ItemDefinition itemDefinition = Bpmn2Factory.eINSTANCE.createItemDefinition();
         itemDefinition.setStructureRef(variable.getDataType());
@@ -330,7 +342,7 @@ public class WizardModelToXmlConverter {
             for (Variable variable : variables) {
                 if(!definitions.containsKey(variable.getDataType())) {
                     ItemDefinition itemDefinition = Bpmn2Factory.eINSTANCE.createItemDefinition();
-                    itemDefinition.setId(UUID.randomUUID().toString());
+                    itemDefinition.setId(getIdString());
                     itemDefinition.setStructureRef(variable.getDataType());
                     definitions.put(variable.getDataType(), itemDefinition);
                 }
@@ -349,7 +361,7 @@ public class WizardModelToXmlConverter {
             throw new RuntimeException("Create process at first");
         }
 
-        String id = UUID.randomUUID().toString();
+        String id = getIdString();
         Gateway gateway = null;
         if (exclusive) {
             gateway = Bpmn2Factory.eINSTANCE.createExclusiveGateway();
@@ -379,7 +391,7 @@ public class WizardModelToXmlConverter {
         BPMNShape fromShape = getShapeByElement(from);
         BPMNShape toShape = getShapeByElement(to);
 
-        String id = UUID.randomUUID().toString();
+        String id = getIdString();
         SequenceFlow flow = Bpmn2Factory.eINSTANCE.createSequenceFlow();
         flow.setSourceRef((FlowNode) from);
         flow.setTargetRef((FlowNode) to);
@@ -389,7 +401,7 @@ public class WizardModelToXmlConverter {
             Constraint constraint = condition.getConstraint();
             if (constraint != null && constraint.getConstraint() != null && constraint.getVariable() != null && constraint.getConstraintValue() != null) {
                 FormalExpression expression = Bpmn2Factory.eINSTANCE.createFormalExpression();
-                expression.setId(UUID.randomUUID().toString());
+                expression.setId(getIdString());
                 String expressionBody = "";
                 if(condition.isExecuteIfConstraintSatisfied()){
                     expressionBody += "return KieFunctions.";
@@ -447,18 +459,18 @@ public class WizardModelToXmlConverter {
             throw new RuntimeException("Create process at first");
         }
 
-        String id = UUID.randomUUID().toString();
+        String id = getIdString();
 
         StartEvent start = Bpmn2Factory.eINSTANCE.createStartEvent();
         start.setId(id);
         if(startEvent instanceof SignalEvent) {
             Signal signal = Bpmn2Factory.eINSTANCE.createSignal();
             signal.setName(((SignalEvent)startEvent).getSignalName());
-            signal.setId(UUID.randomUUID().toString());
+            signal.setId(getIdString());
             definitions.getRootElements().add(signal);
             SignalEventDefinition signalED = Bpmn2Factory.eINSTANCE.createSignalEventDefinition();
             signalED.setSignalRef(signal.getId());
-            signalED.setId(UUID.randomUUID().toString());
+            signalED.setId(getIdString());
             start.getEventDefinitions().add(signalED);
         }
         if(startEvent instanceof TimerEvent) {
@@ -466,7 +478,7 @@ public class WizardModelToXmlConverter {
             String type = ((TimerEvent)startEvent).getTimerType();
             FormalExpression expression = Bpmn2Factory.eINSTANCE.createFormalExpression();
             expression.setBody(((TimerEvent)startEvent).getTimerExpression());
-            expression.setId(UUID.randomUUID().toString());
+            expression.setId(getIdString());
             if(TimerEvent.DURATION.compareTo(type) == 0) {
                 timer.setTimeDuration(expression);
             }
@@ -476,7 +488,7 @@ public class WizardModelToXmlConverter {
             if(TimerEvent.DATE.compareTo(type) == 0) {
                 timer.setTimeDate(expression);
             }
-            timer.setId(UUID.randomUUID().toString());
+            timer.setId(getIdString());
             start.getEventDefinitions().add(timer);
         }
 
@@ -493,7 +505,7 @@ public class WizardModelToXmlConverter {
             throw new RuntimeException("Create process at first");
         }
 
-        String id = UUID.randomUUID().toString();
+        String id = getIdString();
         EndEvent end = Bpmn2Factory.eINSTANCE.createEndEvent();
         end.setId(id);
 
@@ -515,6 +527,10 @@ public class WizardModelToXmlConverter {
 
         shape.setBounds(bounds);
         return shape;
+    }
+
+    private String getIdString() {
+        return "_" + UUID.randomUUID().toString().toUpperCase();
     }
 
 }

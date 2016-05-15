@@ -4,6 +4,7 @@ import org.jboss.errai.common.client.api.annotations.Portable;
 import org.jboss.errai.databinding.client.api.Bindable;
 
 import java.util.List;
+import java.util.Map;
 
 @Bindable
 @Portable
@@ -15,7 +16,7 @@ public class Task {
 
     private String name;
 
-    private List<Variable> inputs;
+    private Map<String, Variable> inputs;
 
     private List<Variable> outputs;
 
@@ -44,11 +45,11 @@ public class Task {
         this.name = name;
     }
 
-    public List<Variable> getInputs() {
+    public Map<String, Variable> getInputs() {
         return inputs;
     }
 
-    public void setInputs(List<Variable> inputs) {
+    public void setInputs(Map<String, Variable> inputs) {
         this.inputs = inputs;
     }
 

@@ -42,7 +42,7 @@
                 </bHtml:Div>
                 <bHtml:Div styleName="col-md-6">
                     <bHtml:Div styleName="row">
-                        <b:TabPanel>
+                        <b:TabPanel ui:field="taskDetailPanel" visible="false">
                             <b:NavTabs>
                                 <b:TabListItem active="true" dataTarget="#tab1" text="General"/>
                                 <b:TabListItem dataTarget="#tab2" text="I/O"/>

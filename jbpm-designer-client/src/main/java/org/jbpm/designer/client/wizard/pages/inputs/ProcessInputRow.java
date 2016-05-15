@@ -56,7 +56,7 @@ public class ProcessInputRow extends Composite implements HasModel<Variable> {
 
     @PostConstruct
     public void initialize() {
-        name.setRegExp("^[a-zA-Z0-9\\-\\.\\_]*$",
+        name.setRegExp("^[a-zA-Z]([a-zA-Z0-9\\-\\.\\_])*$",
                 DesignerEditorConstants.INSTANCE.Removed_invalid_characters_from_name(),
                 DesignerEditorConstants.INSTANCE.Invalid_character_in_name());
         deleteButton.setIcon( IconType.TRASH );
