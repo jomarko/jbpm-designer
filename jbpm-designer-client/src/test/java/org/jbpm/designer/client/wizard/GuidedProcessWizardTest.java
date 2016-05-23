@@ -3,7 +3,6 @@ package org.jbpm.designer.client.wizard;
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import org.jbpm.designer.client.wizard.pages.general.GeneralProcessInfoPage;
 import org.jbpm.designer.client.wizard.pages.inputs.ProcessInputsPage;
-import org.jbpm.designer.client.wizard.pages.preview.ProcessPreviewPage;
 import org.jbpm.designer.client.wizard.pages.service.ServicesPage;
 import org.jbpm.designer.client.wizard.pages.start.ProcessStartEventPage;
 import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPage;
@@ -16,8 +15,6 @@ import org.mockito.Spy;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.core.client.wizards.WizardView;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 @RunWith(GwtMockitoTestRunner.class)
@@ -37,9 +34,6 @@ public class GuidedProcessWizardTest {
 
     @Mock
     ProcessTasksPage tasksPage;
-
-    @Mock
-    ProcessPreviewPage previewPage;
 
     @Mock
     ServicesPage servicesPage;

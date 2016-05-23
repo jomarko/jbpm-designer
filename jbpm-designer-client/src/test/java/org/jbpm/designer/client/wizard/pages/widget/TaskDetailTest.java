@@ -3,6 +3,7 @@ package org.jbpm.designer.client.wizard.pages.widget;
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import com.google.gwtmockito.WithClassesToStub;
 import org.gwtbootstrap3.client.ui.ValueListBox;
+import org.gwtbootstrap3.client.ui.html.Text;
 import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPageView;
 import org.jbpm.designer.model.HumanTask;
 import org.jbpm.designer.model.ServiceTask;
@@ -33,7 +34,7 @@ public class TaskDetailTest {
     ServiceTaskDetail serviceTaskDetail;
 
     @Mock
-    ValueListBox<String> taskType;
+    Text taskType;
 
     @Captor
     ArgumentCaptor<ServiceTask> serviceTaskCaptor;
@@ -71,8 +72,8 @@ public class TaskDetailTest {
 
     @Test
     public void testGetModelHuman() {
-        when(taskType.getValue()).thenReturn(taskDetail.HUMAN_TYPE);
         HumanTask task = mock(HumanTask.class);
+        taskDetail.setModel(task);
         when(humanTaskDetail.getModel()).thenReturn(task);
         assertEquals(task, taskDetail.getModel());
         verify(humanTaskDetail).getModel();
@@ -81,8 +82,8 @@ public class TaskDetailTest {
 
     @Test
     public void testGetModelService() {
-        when(taskType.getValue()).thenReturn(taskDetail.SERVICE_TYPE);
         ServiceTask task = mock(ServiceTask.class);
+        taskDetail.setModel(task);
         when(serviceTaskDetail.getModel()).thenReturn(task);
         assertEquals(task, taskDetail.getModel());
         verify(humanTaskDetail, never()).getModel();
@@ -117,13 +118,13 @@ public class TaskDetailTest {
         taskDetail.showHumanDetails();
         verify(humanTaskDetail).setVisible(true);
         verify(serviceTaskDetail).setVisible(false);
-        verify(taskType).setValue(taskDetail.HUMAN_TYPE, false);
+        verify(taskType).setText("Human");
     }
 
     public void showServiceDetails() {
         taskDetail.showServiceDetails();
         verify(humanTaskDetail).setVisible(false);
         verify(serviceTaskDetail).setVisible(true);
-        verify(taskType).setValue(taskDetail.SERVICE_TYPE, false);
+        verify(taskType).setText("Service");
     }
 }

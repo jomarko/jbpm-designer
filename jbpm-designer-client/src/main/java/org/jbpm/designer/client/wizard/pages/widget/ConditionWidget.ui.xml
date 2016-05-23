@@ -29,7 +29,7 @@
             <b:FormLabel for="constraint" text="Constraint" showRequiredIndicator="true"/>
             <b:ValueListBox ui:field="constraint" />
             <b:HelpBlock ui:field="constraintHelp" text="Select constraint for variable" visible="false"/>
-            <b:FormLabel for="constraintValue" text="Constraint Value" showRequiredIndicator="true"/>
+            <b:FormLabel ui:field="constraintValueLabel" for="constraintValue" text="Constraint Value" showRequiredIndicator="true"/>
             <b:TextBox ui:field="constraintValue" />
             <b:HelpBlock ui:field="constraintValueHelp" text="Set constraint value" visible="false"/>
             <b:FormLabel for="constraintSatisfied" text="Execute if condition is satisfied" />

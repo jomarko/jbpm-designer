@@ -100,7 +100,7 @@ public class NewProcessHandler extends DefaultNewResourceHandler {
             }, new DefaultErrorCallback()).createProcess(pkg.getPackageMainResourcesPath(), buildFileName(baseFileName,
                     resourceType));
         } else {
-            wizard.setProcessName(baseFileName);
+            wizard.setProcessName(baseFileName.replaceAll(" ", ""));
             wizard.setHandler(NewProcessHandler.this);
             wizard.setCompleteProcessCallback(completeProcessCallback(pkg.getPackageMainResourcesPath(),
                                                                       buildFileName(baseFileName, resourceType),

@@ -2,7 +2,6 @@ package org.jbpm.designer.client.wizard.pages.tasks;
 
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwtmockito.GwtMockitoTestRunner;
-import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.ErrorCallback;
 import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
@@ -15,8 +14,6 @@ import org.jbpm.designer.service.SwaggerService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.kie.workbench.common.screens.search.model.SearchTermPageRequest;
-import org.kie.workbench.common.screens.search.service.SearchService;
 import org.mockito.*;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.security.management.api.AbstractEntityManager;
@@ -26,7 +23,6 @@ import org.uberfire.ext.security.management.client.ClientUserSystemManager;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
 import org.uberfire.mocks.CallerMock;
 import org.uberfire.mocks.EventSourceMock;
-import org.uberfire.paging.PageResponse;
 
 import javax.enterprise.event.Event;
 import java.util.ArrayList;
@@ -97,12 +93,7 @@ public class ProcessTasksPageTest {
 
     @Before
     public void setUp() {
-        Caller<SwaggerService> swaggerServiceCaller = new CallerMock<SwaggerService>(swaggerService);
-        page.swaggerDefinitionService = swaggerServiceCaller;
         page.discoverService = new CallerMock<DiscoverService>(mock(DiscoverService.class));
-        SearchService searchService = mock(SearchService.class);
-        when(searchService.fullTextSearch(any(SearchTermPageRequest.class))).thenReturn(mock(PageResponse.class));
-        page.searchService = new CallerMock<SearchService>(searchService);
 
         varA = new Variable("a", Variable.VariableType.INPUT, "String", null);
         varB = new Variable("b", Variable.VariableType.OUTPUT, "Boolean", null);
@@ -284,7 +275,7 @@ public class ProcessTasksPageTest {
         selected.add(widgetTwo);
         when(view.getSelectedWidgets()).thenReturn(selected);
         page.mergeTasks(false);
-        verify(view, never()).mergeSelectedWidgets();
+        verify(view, never()).mergeSelectedWidgets(false);
         verify(view).showAlreadyContainsMerged();
     }
 
@@ -303,7 +294,7 @@ public class ProcessTasksPageTest {
         verify(widgetTwo).setIsMergedWith(1);
         verify(widgetOne, never()).setCondition(any(Condition.class));
         verify(widgetTwo, never()).setCondition(any(Condition.class));
-        verify(view).mergeSelectedWidgets();
+        verify(view).mergeSelectedWidgets(false);
         verify(view).deselectAll();
         verify(view).setMergeButtonsVisibility(false);
         verify(event).fire(any(WizardPageStatusChangeEvent.class));
@@ -327,7 +318,7 @@ public class ProcessTasksPageTest {
         assertEquals(true,conditionCaptor.getValue().isExecuteIfConstraintSatisfied());
         verify(widgetTwo).setCondition(conditionCaptor.capture());
         assertEquals(false,conditionCaptor.getValue().isExecuteIfConstraintSatisfied());
-        verify(view).mergeSelectedWidgets();
+        verify(view).mergeSelectedWidgets(true);
         verify(view).deselectAll();
         verify(view).setMergeButtonsVisibility(false);
         verify(event).fire(any(WizardPageStatusChangeEvent.class));
@@ -346,6 +337,9 @@ public class ProcessTasksPageTest {
 
     @Test
     public void testTaskDetailSelectedConditionPanel() throws Exception {
+        List<Widget> selected = new ArrayList<Widget>();
+        selected.add(widgetOne);
+        when(view.getSelectedWidgets()).thenReturn(selected);
         when(widgetOne.getCondition()).thenReturn(null);
         page.taskDetailSelected(widgetOne);
         verify(view).setConditionPanelVisibility(false);
@@ -442,7 +436,7 @@ public class ProcessTasksPageTest {
             verify(view, never()).showHumanSpecificDetails();
             verify(view).showServiceSpecificDetails();
         }
-        verify(view).setAvailableVarsForSelectedTask(any(List.class));
+        verify(view).setAvailableVarsForSelectedTask(any(List.class), any(List.class));
         verify(widgetOne).setModel(model);
         verify(view).setModelTaskDetailWidgets(model);
         verify(widgetOne).rebind();

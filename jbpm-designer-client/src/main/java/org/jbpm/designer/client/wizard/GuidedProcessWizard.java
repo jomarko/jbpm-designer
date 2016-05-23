@@ -15,19 +15,18 @@
 
 package org.jbpm.designer.client.wizard;
 
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Widget;
 import org.jbpm.designer.client.handlers.NewProcessHandler;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.wizard.pages.general.GeneralProcessInfoPage;
 import org.jbpm.designer.client.wizard.pages.inputs.ProcessInputsPage;
-import org.jbpm.designer.client.wizard.pages.preview.ProcessPreviewPage;
 import org.jbpm.designer.client.wizard.pages.service.ServicesPage;
 import org.jbpm.designer.client.wizard.pages.start.ProcessStartEventPage;
 import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPage;
 import org.jbpm.designer.model.BusinessProcess;
 import org.jbpm.designer.model.Task;
 import org.jbpm.designer.model.Variable;
+import org.jbpm.designer.model.operation.Swagger;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.core.client.wizards.AbstractWizard;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPage;
@@ -56,9 +55,6 @@ public class GuidedProcessWizard extends AbstractWizard {
 
     @Inject
     ServicesPage servicesPage;
-
-    @Inject
-    ProcessPreviewPage previewPage;
 
     Callback<BusinessProcess> completeProcessCallback;
 
@@ -161,13 +157,16 @@ public class GuidedProcessWizard extends AbstractWizard {
         this.completeProcessCallback = completeProcessCallback;
     }
 
+    public List<Swagger> getSwaggers() {
+        return servicesPage.getSwaggers();
+    }
+
     private BusinessProcess constructBusinessProcess() {
         BusinessProcess businessProcess = new BusinessProcess();
         businessProcess.setProcessName(generalInfoPage.getProcessName());
         businessProcess.setProcessDocumentation(generalInfoPage.getProcessDocumentation());
         businessProcess.setStartEvent(startEventPage.getStartEvent());
         List<Variable> variables = inputsPage.getInputs();
-        List<Variable> additionalVariables = new ArrayList<Variable>();
         for(Map.Entry<Integer, List<Task>> tasksGroup: tasksPage.getTasks().entrySet()) {
             for(Task task : tasksGroup.getValue()) {
                 Variable taskOutput = null;
@@ -175,14 +174,13 @@ public class GuidedProcessWizard extends AbstractWizard {
                     taskOutput = task.getOutputs().get(0);
                     if (taskOutput != null && taskOutput.getName() != null &&
                             !taskOutput.getName().isEmpty() && !variables.contains(taskOutput)) {
-                        additionalVariables.add(taskOutput);
+                        variables.add(taskOutput);
                     }
                 }
             }
         }
         businessProcess.setConditions(tasksPage.getMergedRowsWithConditions());
         businessProcess.setVariables(variables);
-        businessProcess.setAdditionalVariables(additionalVariables);
         businessProcess.setTasks(tasksPage.getTasks());
         businessProcess.setDefinitions(tasksPage.getDefinitions());
         return businessProcess;

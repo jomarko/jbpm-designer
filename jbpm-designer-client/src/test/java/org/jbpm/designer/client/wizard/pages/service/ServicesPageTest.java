@@ -1,17 +1,21 @@
 package org.jbpm.designer.client.wizard.pages.service;
 
 import com.google.gwt.user.client.ui.FormPanel;
-import com.google.gwtmockito.GwtMockitoTestRunner;
 import org.gwtbootstrap3.client.ui.base.form.AbstractForm;
+import org.jbpm.designer.model.operation.ServiceUploadResultEntry;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
+import org.kie.workbench.common.screens.search.model.SearchTermPageRequest;
+import org.kie.workbench.common.screens.search.service.SearchService;
+import org.mockito.*;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.uberfire.mocks.CallerMock;
+import org.uberfire.paging.PageResponse;
 
 import static org.mockito.Mockito.*;
 
-@RunWith(GwtMockitoTestRunner.class)
+@RunWith(MockitoJUnitRunner.class)
 public class ServicesPageTest {
 
     @Mock
@@ -23,9 +27,21 @@ public class ServicesPageTest {
     @Mock
     AbstractForm.SubmitCompleteEvent submitCompleteEvent;
 
+    @Mock
+    SearchService searchService;
+
     @Spy
     @InjectMocks
     ServicesPage page = new ServicesPage();
+
+    @Captor
+    ArgumentCaptor<ServiceUploadResultEntry> resultCaptor;
+
+    @Before
+    public void setUp() throws Exception {
+        when(searchService.fullTextSearch(any(SearchTermPageRequest.class))).thenReturn(mock(PageResponse.class));
+        page.searchService = new CallerMock<SearchService>(searchService);
+    }
 
     @Test
     public void testInitialise() throws Exception {
@@ -81,29 +97,5 @@ public class ServicesPageTest {
         verify(view, never()).showUnsupportedFileTypeWarning();
         verify(submitEvent, never()).cancel();
         verify(view, never()).showSelectFileUploadWarning();
-    }
-
-    @Test
-    public void testSubmitCompleteOk() throws Exception {
-        String okResult = "Ok: anything";
-        when(submitCompleteEvent.getResults()).thenReturn(okResult);
-        page.handleSubmitComplete(submitCompleteEvent);
-        verify(view).showUploadingResult(okResult);
-    }
-
-    @Test
-    public void testSubmitCompleteError() throws Exception {
-        String errorResult = "Error: anything";
-        when(submitCompleteEvent.getResults()).thenReturn(errorResult);
-        page.handleSubmitComplete(submitCompleteEvent);
-        verify(view).showUploadingResult(errorResult);
-    }
-
-    @Test
-    public void testSubmitCompleteUnknown() throws Exception {
-        when(view.getFileName()).thenReturn("file");
-        when(submitCompleteEvent.getResults()).thenReturn("unknown");
-        page.handleSubmitComplete(submitCompleteEvent);
-        verify(view).showUploadingResult("Error: file");
     }
 }

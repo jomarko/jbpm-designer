@@ -7,6 +7,8 @@ import org.jboss.errai.databinding.client.api.Bindable;
 @Portable
 public class Constraint {
 
+    public static String IS_TRUE = "is true";
+    public static String IS_FALSE = "is false";
     public static String EQUAL_TO = "equal to";
     public static String CONTAINS = "contains";
     public static String STARTS_WITH = "starts with";

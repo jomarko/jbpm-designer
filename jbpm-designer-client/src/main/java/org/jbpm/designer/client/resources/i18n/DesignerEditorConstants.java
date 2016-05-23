@@ -77,6 +77,8 @@ public interface DesignerEditorConstants extends
 
     String mergeInvalidTaskCount();
 
+    String noCompatibleVariableForParameter();
+
     String No_Data_Input();
 
     String No_Data_Output();

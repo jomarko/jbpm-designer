@@ -17,8 +17,6 @@ public class BusinessProcess {
 
     private List<Variable> variables;
 
-    private List<Variable> additionalVariables;
-
     private Map<Integer, List<Task>> tasks;
 
     private Map<Integer, List<Condition>> conditions;
@@ -58,14 +56,6 @@ public class BusinessProcess {
 
     public void setVariables(List<Variable> variables) {
         this.variables = variables;
-    }
-
-    public List<Variable> getAdditionalVariables() {
-        return additionalVariables;
-    }
-
-    public void setAdditionalVariables(List<Variable> additionalVariables) {
-        this.additionalVariables = additionalVariables;
     }
 
     public Map<Integer, List<Task>> getTasks() {

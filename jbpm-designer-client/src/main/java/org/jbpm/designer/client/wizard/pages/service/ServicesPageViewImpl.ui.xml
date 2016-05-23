@@ -32,9 +32,8 @@
             <b:FieldSet ui:field="fileFieldSet">
                 <b:FormLabel text="{i18n.jsonSwaggerFile}"/>
             </b:FieldSet>
-            <b:FieldSet>
+            <b:FieldSet ui:field="resultsFieldSet">
                 <b:FormLabel text="{i18n.swaggerUploadResults}"/>
-                <gwt:VerticalPanel ui:field="results" />
             </b:FieldSet>
         </b:Form>
 

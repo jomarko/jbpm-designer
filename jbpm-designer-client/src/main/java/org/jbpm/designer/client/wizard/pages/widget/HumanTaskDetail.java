@@ -6,10 +6,7 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
-import org.gwtbootstrap3.client.ui.FieldSet;
-import org.gwtbootstrap3.client.ui.HelpBlock;
-import org.gwtbootstrap3.client.ui.TextBox;
-import org.gwtbootstrap3.client.ui.ValueListBox;
+import org.gwtbootstrap3.client.ui.*;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
@@ -57,6 +54,9 @@ public class HumanTaskDetail extends Composite implements HasModel<HumanTask> {
     @UiField
     HelpBlock participantHelp;
 
+    @UiField
+    CheckBox terminate;
+
     public HumanTaskDetail() {
         initWidget(uiBinder.createAndBindUi(this));
         bindDataBinder();
@@ -64,7 +64,7 @@ public class HumanTaskDetail extends Composite implements HasModel<HumanTask> {
         acceptableUsers = new ArrayList<User>();
         acceptableGroups = new ArrayList<Group>();
 
-        name.setRegExp("^[a-zA-Z0-9\\-\\.\\_]*$",
+        name.setRegExp("^[a-zA-Z0-9\\-\\.\\_\\ ]*$",
                 DesignerEditorConstants.INSTANCE.Removed_invalid_characters_from_name(),
                 DesignerEditorConstants.INSTANCE.Invalid_character_in_name());
     }
@@ -81,6 +81,7 @@ public class HumanTaskDetail extends Composite implements HasModel<HumanTask> {
 
     public void bindDataBinder() {
         dataBinder.bind(name, "name")
+                .bind(terminate, "terminateHere")
                 .bind(responsibleHuman, "responsibleHuman")
                 .bind(responsibleGroup, "responsibleGroup")
                 .getModel();

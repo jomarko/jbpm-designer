@@ -26,7 +26,7 @@ import java.util.List;
 
 public interface ProcessTasksPageView extends IsWidget {
     interface Presenter {
-        Task getDefaultModel();
+        Task getDefaultModel(String taskType);
 
         void rowDeleted();
 
@@ -40,8 +40,6 @@ public interface ProcessTasksPageView extends IsWidget {
 
         boolean isConstraintValid(Constraint constraint);
 
-        void selectedWidgetModelChanged(Task model);
-
         void firePageChangedEvent();
     }
 
@@ -53,7 +51,7 @@ public interface ProcessTasksPageView extends IsWidget {
 
     int getRowsCount();
 
-    void mergeSelectedWidgets();
+    void mergeSelectedWidgets(boolean conditionBased);
 
     void splitSelectedWidgets();
 
@@ -79,7 +77,7 @@ public interface ProcessTasksPageView extends IsWidget {
 
     void rebindConditionWidgetToModel(Condition model);
 
-    void setAvailableVarsForSelectedTask(List<Variable> variables);
+    void setAvailableVarsForSelectedTask(List<Variable> variables, List<Variable> innerVariables);
 
     void showMergeInvalidCount();
 
@@ -116,5 +114,7 @@ public interface ProcessTasksPageView extends IsWidget {
     void setAvailableDataTypes(List<String> dataTypes);
 
     void restrictOutputDataTypes();
+
+    void setUniqueNameHelpVisibility(boolean value);
 
 }

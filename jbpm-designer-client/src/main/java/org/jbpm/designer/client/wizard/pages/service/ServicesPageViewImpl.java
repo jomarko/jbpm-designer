@@ -5,15 +5,13 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Hidden;
-import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import org.guvnor.common.services.project.context.ProjectContext;
 import org.gwtbootstrap3.client.ui.FieldSet;
 import org.gwtbootstrap3.client.ui.Form;
-import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.constants.FormType;
 import org.gwtbootstrap3.client.ui.gwt.FormPanel;
-import org.gwtbootstrap3.client.ui.html.Text;
+import org.jbpm.designer.model.operation.ServiceUploadResultEntry;
 import org.uberfire.ext.widgets.common.client.common.BusyPopup;
 import org.uberfire.ext.widgets.common.client.common.FileUpload;
 import org.uberfire.mvp.Command;
@@ -51,7 +49,10 @@ public class ServicesPageViewImpl extends Composite implements ServicesPageView 
     FieldSet fileFieldSet;
 
     @UiField
-    VerticalPanel results;
+    FieldSet resultsFieldSet;
+
+    @Inject
+    ServiceUploadResultsTable resultsTable;
 
     private FileUpload uploader;
 
@@ -67,6 +68,7 @@ public class ServicesPageViewImpl extends Composite implements ServicesPageView 
         } );
         uploader.setName( "definitionUploadForm" );
         fileFieldSet.add(uploader);
+        resultsFieldSet.add(resultsTable);
 
         /*
          * After upgrade of GWT-BOOTSTRAP3 version, will be needed to register
@@ -113,8 +115,8 @@ public class ServicesPageViewImpl extends Composite implements ServicesPageView 
     }
 
     @Override
-    public void showUploadingResult(String message) {
-        results.add(new Text(message));
+    public void showUploadingResult(ServiceUploadResultEntry entry) {
+        resultsTable.addEntry(entry);
     }
 
     @Override
@@ -125,6 +127,21 @@ public class ServicesPageViewImpl extends Composite implements ServicesPageView 
     @Override
     public void hideUploadingBusy() {
         BusyPopup.close();
+    }
+
+    @Override
+    public void clearUploadResults() {
+        resultsTable.clear();
+    }
+
+    @Override
+    public void showErrorReadingPath(String message) {
+        notification.fire(new NotificationEvent(message, NotificationEvent.NotificationType.ERROR));
+    }
+
+    @Override
+    public void showWhiteSpaceDisallowedWarning() {
+        notification.fire(new NotificationEvent("White spaces are not allowed for file name.", NotificationEvent.NotificationType.WARNING));
     }
 
     private String getWebContext() {

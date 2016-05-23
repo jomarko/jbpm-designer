@@ -24,6 +24,7 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.Form;
 import org.gwtbootstrap3.client.ui.ValueListBox;
+import org.gwtbootstrap3.client.ui.html.Text;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
 import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPageView;
@@ -39,9 +40,6 @@ import java.util.List;
 @Dependent
 public class TaskDetail extends Composite implements HasModel<Task> {
 
-    protected String SERVICE_TYPE = "Service";
-    protected String HUMAN_TYPE = "Human";
-
     interface TaskDetailBinder
             extends
             UiBinder<Widget, TaskDetail> {
@@ -49,11 +47,11 @@ public class TaskDetail extends Composite implements HasModel<Task> {
 
     private static TaskDetailBinder uiBinder = GWT.create(TaskDetailBinder.class);
 
-    @UiField(provided = true)
-    ValueListBox<String> taskType = new ValueListBox<String>(new ToStringRenderer());
-
     @UiField
     Form taskDetailForm;
+
+    @UiField
+    Text taskType;
 
     @Inject
     protected HumanTaskDetail humanTaskDetail;
@@ -61,22 +59,12 @@ public class TaskDetail extends Composite implements HasModel<Task> {
     @Inject
     protected ServiceTaskDetail serviceTaskDetail;
 
+    private Task model;
+
     private ProcessTasksPageView.Presenter presenter;
 
     public TaskDetail() {
         initWidget(uiBinder.createAndBindUi(this));
-
-        taskType.setValue(SERVICE_TYPE, true);
-        taskType.setValue(HUMAN_TYPE, true);
-
-        taskType.addValueChangeHandler(new ValueChangeHandler<String>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<String> valueChangeEvent) {
-                if(presenter != null) {
-                    presenter.selectedWidgetModelChanged(getModel());
-                }
-            }
-        });
     }
 
 
@@ -94,7 +82,10 @@ public class TaskDetail extends Composite implements HasModel<Task> {
 
     @Override
     public Task getModel() {
-        if(taskType.getValue().equals(HUMAN_TYPE)) {
+        if(model == null ) {
+            return humanTaskDetail.getModel();
+        }
+        if(model instanceof HumanTask) {
             return humanTaskDetail.getModel();
         } else {
             return serviceTaskDetail.getModel();
@@ -103,6 +94,7 @@ public class TaskDetail extends Composite implements HasModel<Task> {
 
     @Override
     public void setModel(Task task) {
+        model = task;
         if(task instanceof HumanTask) {
             humanTaskDetail.setModel((HumanTask) task);
         } else {
@@ -116,7 +108,10 @@ public class TaskDetail extends Composite implements HasModel<Task> {
     }
 
     public void rebind() {
-        if(taskType.getValue().equals(HUMAN_TYPE)) {
+        if(model == null) {
+            humanTaskDetail.bindDataBinder();
+        }
+        if(model instanceof HumanTask) {
             humanTaskDetail.bindDataBinder();
         } else {
             serviceTaskDetail.bindDataBinder();
@@ -139,13 +134,13 @@ public class TaskDetail extends Composite implements HasModel<Task> {
     public void showHumanDetails() {
         humanTaskDetail.setVisible(true);
         serviceTaskDetail.setVisible(false);
-        taskType.setValue(HUMAN_TYPE, false);
+        taskType.setText("Human");
     }
 
     public void showServiceDetails() {
         humanTaskDetail.setVisible(false);
         serviceTaskDetail.setVisible(true);
-        taskType.setValue(SERVICE_TYPE, false);
+        taskType.setText("Service");
     }
 
     public void setNameHelpVisibility(boolean value) {

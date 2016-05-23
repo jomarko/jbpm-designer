@@ -20,6 +20,8 @@ public class Task {
 
     private List<Variable> outputs;
 
+    private boolean terminateHere;
+
     public Task() {
         id = lastId++;
     }
@@ -61,6 +63,14 @@ public class Task {
         this.outputs = outputs;
     }
 
+    public boolean isTerminateHere() {
+        return terminateHere;
+    }
+
+    public void setTerminateHere(boolean terminateHere) {
+        this.terminateHere = terminateHere;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -71,6 +81,7 @@ public class Task {
         if (getId() != task.getId()) return false;
         if (getName() != null ? !getName().equals(task.getName()) : task.getName() != null) return false;
         if (getInputs() != null ? !getInputs().equals(task.getInputs()) : task.getInputs() != null) return false;
+        if (isTerminateHere() != task.isTerminateHere()) return false;
         return getOutputs() != null ? getOutputs().equals(task.getOutputs()) : task.getOutputs() == null;
 
     }
@@ -81,6 +92,9 @@ public class Task {
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getInputs() != null ? getInputs().hashCode() : 0);
         result = 31 * result + (getOutputs() != null ? getOutputs().hashCode() : 0);
+        if(isTerminateHere()) {
+            result += 31;
+        }
         return result;
     }
 

@@ -17,6 +17,7 @@ import org.jbpm.designer.model.operation.Operation;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 
 @Dependent

@@ -24,10 +24,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasValue;
 import com.google.gwt.user.client.ui.Widget;
-import org.gwtbootstrap3.client.ui.CheckBox;
-import org.gwtbootstrap3.client.ui.HelpBlock;
-import org.gwtbootstrap3.client.ui.TextBox;
-import org.gwtbootstrap3.client.ui.ValueListBox;
+import org.gwtbootstrap3.client.ui.*;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
@@ -75,6 +72,9 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
     HelpBlock constraintValueHelp;
 
     @UiField
+    FormLabel constraintValueLabel;
+
+    @UiField
     CheckBox constraintSatisfied;
 
     public ConditionWidget() {
@@ -86,6 +86,15 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
             public void onValueChange(ValueChangeEvent<Variable> valueChangeEvent) {
                 constraint.setValue("");
                 constraint.setAcceptableValues(getConstraints(valueChangeEvent.getValue()));
+                if(valueChangeEvent.getValue().getDataType().compareTo("Boolean") == 0) {
+                    constraintValueLabel.setVisible(false);
+                    constraintValue.setVisible(false);
+                    constraintValueHelp.setVisible(false);
+                } else {
+                    constraintValueLabel.setVisible(true);
+                    constraintValue.setVisible(true);
+                    constraintValueHelp.setVisible(true);
+                }
             }
         });
     }
@@ -157,16 +166,23 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
 
     private List<String> getConstraints(Variable var) {
         List<String> constraints = new ArrayList<String>();
-        constraints.add(Constraint.EQUAL_TO);
-        if(var.getDataType().compareTo("Float") == 0 || var.getDataType().compareTo("Integer") == 0) {
+        if(var.getDataType().compareTo("Float") == 0
+            || var.getDataType().compareTo("Integer") == 0
+            || var.getDataType().compareTo("Double") == 0) {
             constraints.add(Constraint.LESS_THAN);
             constraints.add(Constraint.EQUAL_OR_LESS_THAN);
             constraints.add(Constraint.GREATER_THAN);
             constraints.add(Constraint.EQUAL_OR_GREATER_THAN);
+            constraints.add(Constraint.EQUAL_TO);
         }
         if(var.getDataType().compareTo("String") == 0) {
             constraints.add(Constraint.CONTAINS);
             constraints.add(Constraint.STARTS_WITH);
+            constraints.add(Constraint.EQUAL_TO);
+        }
+        if(var.getDataType().compareTo("Boolean") == 0) {
+            constraints.add(Constraint.IS_TRUE);
+            constraints.add(Constraint.IS_FALSE);
         }
         return constraints;
     }

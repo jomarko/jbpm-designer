@@ -46,10 +46,11 @@ public class WizardModelToXmlConverterTest {
         converter = new WizardModelToXmlConverter();
 
         process = new BusinessProcess();
+        process.setProcessName("someNameOfProcess");
         process.setStartEvent(new StandardEvent());
 
         humanTask = new HumanTask();
-        humanTask.setName("a");
+        humanTask.setName("humanTaskName");
         humanTask.setResponsibleHuman(new User("user_nick"));
         humanTask.setResponsibleGroup(new User("group_nick"));
         humanTask.setInputs(new HashMap<String, Variable>());
@@ -66,6 +67,40 @@ public class WizardModelToXmlConverterTest {
 
         variables = new ArrayList<Variable>();
         variables.add(stringVariable);
+    }
+
+    @Test
+    public void testTerminateOne() {
+        humanTask.setTerminateHere(true);
+
+        HumanTask humanTask2 = new HumanTask();
+        humanTask2.setName("b");
+        humanTask2.setResponsibleHuman(new User("user_nick"));
+        humanTask2.setResponsibleGroup(new User("group_nick"));
+        humanTask2.setInputs(new HashMap<String, Variable>());
+        humanTask2.setOutputs(new ArrayList<Variable>());
+
+        taskGroups.get(0).add(humanTask2);
+        process.setTasks(taskGroups);
+
+        converter.convertProcessToXml(process);
+        assertEquals(0, converter.process.getProperties().size());
+        assertEquals(11, converter.process.getFlowElements().size());
+        assertEquals(1, extractBpmnGateways(converter.process.getFlowElements(), false).size());
+        assertEquals(2, extractEndEvents(converter.process.getFlowElements()).size());
+    }
+
+    @Test
+    public void testTerminateBoth() {
+        humanTask.setTerminateHere(true);
+        taskGroups.get(0).add(humanTask);
+        process.setTasks(taskGroups);
+
+        converter.convertProcessToXml(process);
+        assertEquals(0, converter.process.getProperties().size());
+        assertEquals(11, converter.process.getFlowElements().size());
+        assertEquals(1, extractBpmnGateways(converter.process.getFlowElements(), false).size());
+        assertEquals(2, extractEndEvents(converter.process.getFlowElements()).size());
     }
 
     @Test
@@ -93,8 +128,9 @@ public class WizardModelToXmlConverterTest {
         assertEquals(1, tasks.get(0).getResources().size());
         assertEquals("user_nick",
                 ((FormalExpression)tasks.get(0).getResources().get(0).getResourceAssignmentExpression().getExpression()).getBody());
-        assertEquals(1, tasks.get(0).getDataInputAssociations().size());
-        assertEquals("group_nick", ((FormalExpression)tasks.get(0).getDataInputAssociations().get(0).getAssignment().get(0).getFrom()).getBody());
+        assertEquals(2, tasks.get(0).getDataInputAssociations().size());
+        assertEquals("humanTaskName", ((FormalExpression)tasks.get(0).getDataInputAssociations().get(0).getAssignment().get(0).getFrom()).getBody());
+        assertEquals("group_nick", ((FormalExpression)tasks.get(0).getDataInputAssociations().get(1).getAssignment().get(0).getFrom()).getBody());
     }
 
     @Test
@@ -110,8 +146,8 @@ public class WizardModelToXmlConverterTest {
         assertEquals(1, extractBpmnTasks(converter.process.getFlowElements()).size());
 
         org.eclipse.bpmn2.Task bpmnTask = extractBpmnTasks(converter.process.getFlowElements()).get(0);
-        assertEquals(2, bpmnTask.getIoSpecification().getDataInputs().size());
-        assertEquals(2, bpmnTask.getDataInputAssociations().size());
+        assertEquals(3, bpmnTask.getIoSpecification().getDataInputs().size());
+        assertEquals(3, bpmnTask.getDataInputAssociations().size());
     }
 
     @Test
@@ -150,15 +186,27 @@ public class WizardModelToXmlConverterTest {
         taskGroups.get(0).add(humanTask);
         Map<Integer, List<Condition>> conditionGroups = new HashMap<Integer, List<Condition>>();
         List<Condition> conditions = new ArrayList<Condition>();
-        conditions.add(Mockito.mock(Condition.class));
-        conditions.add(Mockito.mock(Condition.class));
+        Constraint constraint = new Constraint();
+        constraint.setVariable(stringVariable);
+        constraint.setConstraint(Constraint.EQUAL_TO);
+        constraint.setConstraintValue("abc");
+        Condition positive = new Condition();
+        positive.setConstraint(constraint);
+        positive.setExecuteIfConstraintSatisfied(true);
+        Condition negative = new Condition();
+        negative.setConstraint(constraint);
+        negative.setExecuteIfConstraintSatisfied(false);
+
+        conditions.add(positive);
+        conditions.add(negative);
         conditionGroups.put(0, conditions);
         process.setConditions(conditionGroups);
         process.setTasks(taskGroups);
+        process.setVariables(variables);
 
         converter.convertProcessToXml(process);
 
-        assertEquals(0, converter.process.getProperties().size());
+        assertEquals(1, converter.process.getProperties().size());
         assertEquals(12, converter.process.getFlowElements().size());
         assertEquals(2, extractBpmnGateways(converter.process.getFlowElements(), true).size());
     }
@@ -206,14 +254,14 @@ public class WizardModelToXmlConverterTest {
         taskGroups.get(0).add(serviceTask);
 
         process.setTasks(taskGroups);
-        String s = converter.convertProcessToXml(process);
+        converter.convertProcessToXml(process);
 
         assertEquals(5, converter.process.getFlowElements().size());
         assertEquals(1, extractBpmnTasks(converter.process.getFlowElements()).size());
 
         org.eclipse.bpmn2.Task bpmnTask = extractBpmnTasks(converter.process.getFlowElements()).get(0);
-        assertEquals(2, bpmnTask.getIoSpecification().getDataInputs().size());
-        assertEquals(2, bpmnTask.getDataInputAssociations().size());
+        assertEquals(4, bpmnTask.getIoSpecification().getDataInputs().size());
+        assertEquals(4, bpmnTask.getDataInputAssociations().size());
     }
 
     private List<org.eclipse.bpmn2.Task> extractBpmnTasks(List<FlowElement> flowElements) {
@@ -242,5 +290,18 @@ public class WizardModelToXmlConverterTest {
         }
 
         return tasks;
+    }
+
+    private List<EndEvent> extractEndEvents(List<FlowElement> flowElements) {
+        List<EndEvent> events = new ArrayList<EndEvent>();
+        for(FlowElement element : flowElements) {
+
+            if (element instanceof EndEvent) {
+                events.add((EndEvent) element);
+            }
+
+        }
+
+        return events;
     }
 }

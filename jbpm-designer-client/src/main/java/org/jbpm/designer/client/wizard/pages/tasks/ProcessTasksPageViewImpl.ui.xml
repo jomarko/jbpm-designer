@@ -33,7 +33,13 @@
             <bHtml:Div styleName="row">
                 <bHtml:Div styleName="col-md-6">
                     <gwt:HorizontalPanel>
+                        <b:HelpBlock ui:field="uniqueNameHelp" text="Provide a unique name for each Task" />
+                    </gwt:HorizontalPanel>
+                    <gwt:HorizontalPanel>
+                        <b:ValueListBox ui:field="taskType" />
                         <b:Button ui:field="addButton" text="Add task"/>
+                    </gwt:HorizontalPanel>
+                    <gwt:HorizontalPanel>
                         <b:Button ui:field="parallelButton" text="Parallel" visible="false" />
                         <b:Button ui:field="conditionButton" text="Condition" visible="false" />
                         <b:Button ui:field="splitButton" text="Split" visible="false" />

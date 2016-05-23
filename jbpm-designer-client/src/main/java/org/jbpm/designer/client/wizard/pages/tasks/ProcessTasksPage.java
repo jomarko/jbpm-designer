@@ -14,7 +14,6 @@
 */
 package org.jbpm.designer.client.wizard.pages.tasks;
 
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Widget;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.ErrorCallback;
@@ -22,17 +21,13 @@ import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.wizard.GuidedProcessWizard;
 import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
+import org.jbpm.designer.client.wizard.util.CompareUtils;
 import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.operation.*;
 import org.jbpm.designer.service.DiscoverService;
-import org.jbpm.designer.service.SwaggerService;
-import org.kie.workbench.common.screens.search.model.SearchPageRow;
-import org.kie.workbench.common.screens.search.model.SearchTermPageRequest;
-import org.kie.workbench.common.screens.search.service.SearchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.uberfire.backend.vfs.Path;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.security.management.api.AbstractEntityManager;
 import org.uberfire.ext.security.management.client.ClientUserSystemManager;
@@ -40,14 +35,12 @@ import org.uberfire.ext.security.management.impl.SearchRequestImpl;
 import org.uberfire.ext.widgets.common.client.callbacks.DefaultErrorCallback;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPage;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
-import org.uberfire.paging.PageResponse;
 
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -76,18 +69,14 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     @Inject
     private Event<WizardPageStatusChangeEvent> event;
 
-    @Inject
-    Caller<SwaggerService> swaggerDefinitionService;
-
     private DefaultValues defaultValues = new DefaultValues();
 
     @Inject
     Caller<DiscoverService> discoverService;
 
-    @Inject
-    Caller<SearchService> searchService;
-
     private Map<String, SwaggerDefinition> definitions = new HashMap<String, SwaggerDefinition>();
+
+    private List<String> discoveredDataTypes = new ArrayList<String>();
 
     @Override
     public String getTitle() {
@@ -98,15 +87,38 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     public void isComplete(Callback<Boolean> callback) {
         boolean allTasksValid = true;
         int rowsCount = view.getRowsCount();
+        List<Task> previousRow = null;
+        List<String> taskNames = new ArrayList<String>();
+        view.setUniqueNameHelpVisibility(false);
         for(int row = 0; row < rowsCount; row++) {
-            for(Task task : view.getTasks(row)) {
+            List<Task> currentRow = view.getTasks(row);
+            for(Task task : currentRow) {
+                if(taskNames.contains(task.getName())) {
+                    allTasksValid = false;
+                    view.setUniqueNameHelpVisibility(true);
+                    view.showAsInvalid(task.getId());
+                }
+                taskNames.add(task.getName());
                 if(!isTaskValid(task)) {
                     allTasksValid = false;
                     view.showAsInvalid(task.getId());
                 } else {
                     view.showAsValid(task.getId());
                 }
+                if(previousRow != null) {
+                    boolean canContinue = false;
+                    for(Task taskOfPreviousRow : previousRow) {
+                        if(!taskOfPreviousRow.isTerminateHere()) {
+                            canContinue = true;
+                        }
+                    }
+                    if(!canContinue) {
+                        allTasksValid = false;
+                        view.showAsInvalid(task.getId());
+                    }
+                }
             }
+            previousRow = currentRow;
         }
         callback.callback(allTasksValid);
     }
@@ -117,19 +129,20 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         discoverService.call(new RemoteCallback<List<String>>() {
             @Override
             public void callback(List<String> dataTypes) {
+                discoveredDataTypes.clear();
+                discoveredDataTypes.addAll(dataTypes);
                 view.setAvailableDataTypes(dataTypes);
                 event.fire(pageChanged);
             }
         }, new DefaultErrorCallback()).getExistingDataTypes();
-        findExistingSwaggers(0);
+        sendRequestForExistingUsers(1);
+        sendRequestForExistingGroups(1);
         event.fire(pageChanged);
     }
 
     @Override
     public void prepareView() {
-        sendRequestForExistingUsers(1);
-        sendRequestForExistingGroups(1);
-        findExistingSwaggers(0);
+        extractOperations(wizard.getSwaggers());
         view.setTaskPanelVisibility(false);
         view.setConditionPanelVisibility(false);
     }
@@ -144,8 +157,14 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     }
 
     @Override
-    public Task getDefaultModel() {
-        HumanTask task = defaultValues.getDefaultHumanTask();
+    public Task getDefaultModel(String taskType) {
+        Task task = null;
+
+        if(taskType.compareTo(ProcessTasksPageViewImpl.HUMAN_TYPE) == 0) {
+            task = defaultValues.getDefaultHumanTask();
+        } else {
+            task = defaultValues.getDefaultServiceTask();
+        }
 
         firePageChangedEvent();
 
@@ -199,7 +218,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
                     ((ListTaskDetail) selectedWidgets.get(0)).setCondition(positive);
                     ((ListTaskDetail) selectedWidgets.get(1)).setCondition(negative);
                 }
-                view.mergeSelectedWidgets();
+                view.mergeSelectedWidgets(conditionBased);
                 view.deselectAll();
                 view.setMergeButtonsVisibility(false);
                 view.setTaskPanelVisibility(false);
@@ -224,7 +243,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
 
     @Override
     public void taskDetailSelected(ListTaskDetail detail) {
-        view.setConditionPanelVisibility(detail.getCondition() != null);
+        view.setConditionPanelVisibility(view.getSelectedWidgets().size() == 1 && detail.getCondition() != null);
         view.setTaskPanelVisibility(view.getSelectedWidgets().size() == 1);
 
         Task model = detail.getModel();
@@ -250,17 +269,6 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         firePageChangedEvent();
     }
 
-    @Override
-    public void selectedWidgetModelChanged(Task model) {
-        List<Widget> selectedWidgets = view.getSelectedWidgets();
-        if(selectedWidgets.size() == 1 && selectedWidgets.get(0) instanceof ListTaskDetail) {
-            if(selectedWidgets.get(0) instanceof ListTaskDetail) {
-                ListTaskDetail detail = (ListTaskDetail) selectedWidgets.get(0);
-                rebindSelectedWidget(detail, model);
-            }
-        }
-    }
-
     private void rebindSelectedWidget(ListTaskDetail detail, Task model) {
         view.unbindAllTaskWidgets();
 
@@ -271,7 +279,9 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
             view.showServiceSpecificDetails();
         }
 
-        view.setAvailableVarsForSelectedTask(getVariablesForTask(model));
+        List<Variable> basicAvailable = getVariablesForTask(model);
+        List<Variable> innerAvailable = getInnerVariables(basicAvailable);
+        view.setAvailableVarsForSelectedTask(basicAvailable, innerAvailable);
         detail.setModel(model);
         view.setModelTaskDetailWidgets(model);
         if (detail.getCondition() != null) {
@@ -302,6 +312,46 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
             }
         }
         return possibleInputs;
+    }
+
+    public List<Variable> getInnerVariables(List<Variable> variables) {
+        List<Variable> innerVariables = new ArrayList<Variable>();
+        for(Variable variable : variables) {
+            for(String definitionKey : definitions.keySet()) {
+                if(CompareUtils.areSchemeAndDataTypeSame(definitionKey, variable.getDataType())) {
+                    for(Map.Entry<String, SwaggerProperty> property : definitions.get(definitionKey).getProperties().entrySet()) {
+                        if(property.getValue().getType() != null) {
+                            Variable innerVariable = new Variable();
+                            innerVariable.setName(variable.getName() + "."  + property.getKey());
+                            innerVariable.setDataType(typeToUpper(property.getValue().getType()));
+                            innerVariables.add(innerVariable);
+                        }
+                        if(property.getValue().get$ref() != null) {
+                            for(String dataType : discoveredDataTypes) {
+                                if(CompareUtils.areSchemeAndDataTypeSame(property.getValue().get$ref(), dataType)) {
+                                    Variable innerVariable = new Variable();
+                                    innerVariable.setName(variable.getName() + "."  + property.getKey());
+                                    innerVariable.setDataType(dataType);
+                                    innerVariables.add(innerVariable);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return innerVariables;
+    }
+
+    private String typeToUpper(String type) {
+        if(type == null || type.isEmpty()) {
+            return "";
+        }
+        if(type.length() == 1) {
+            return type.toUpperCase();
+        }
+
+        return type.substring(0,1).toUpperCase() + type.substring(1, type.length());
     }
 
     @Override
@@ -532,62 +582,41 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         }).search(new SearchRequestImpl("", getResultFromPage, RESULT_MAX_COUNT));
     }
 
-    private void findExistingSwaggers(final int fromPage) {
-        searchService.call(new RemoteCallback<PageResponse<SearchPageRow>>() {
-            @Override
-            public void callback(PageResponse<SearchPageRow> searchPageRowPageResponse) {
-                for(SearchPageRow row : searchPageRowPageResponse.getPageRowList()) {
-                    sendRequestForExistingOperations(row.getPath());
-                }
-                if(searchPageRowPageResponse.getPageRowList().size() == 100) {
-                    findExistingSwaggers(fromPage+1);
-                }
-            }
-        }, new DefaultErrorCallback()).fullTextSearch(new SearchTermPageRequest("*.swagger", fromPage, 100));
-    }
-
-    private void sendRequestForExistingOperations(Path path) {
-        try {
-            swaggerDefinitionService .call(new RemoteCallback<Swagger>() {
-                @Override
-                public void callback(Swagger swagger) {
-                    if (swagger != null) {
-                        if(swagger.getPaths() != null && swagger.getPaths().entrySet() != null) {
-                            for (Map.Entry<String, SwaggerPath> path : swagger.getPaths().entrySet()) {
-                                if (path != null && path.getValue() != null) {
-                                    if (path.getValue().getGet() != null) {
-                                        Operation operation = new Operation();
-                                        operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
-                                        operation.setMethod(METHOD_GET);
-                                        SwaggerOperation swaggerOperation = path.getValue().getGet();
-                                        addOperation(swaggerOperation, operation);
-                                    }
-                                    if (path.getValue().getPost() != null) {
-                                        Operation operation = new Operation();
-                                        operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
-                                        operation.setMethod(METHOD_POST);
-                                        SwaggerOperation swaggerOperation = path.getValue().getPost();
-                                        addOperation(swaggerOperation, operation);
-                                    }
-                                    if (path.getValue().getDelete() != null) {
-                                        Operation operation = new Operation();
-                                        operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
-                                        operation.setMethod(METHOD_DELETE);
-                                        SwaggerOperation swaggerOperation = path.getValue().getDelete();
-                                        addOperation(swaggerOperation, operation);
-                                    }
-                                }
+    private void extractOperations(List<Swagger> swaggers) {
+        if (swaggers != null) {
+            for (Swagger swagger : swaggers) {
+                if (swagger!= null && swagger.getPaths() != null && swagger.getPaths().entrySet() != null) {
+                    for (Map.Entry<String, SwaggerPath> path : swagger.getPaths().entrySet()) {
+                        if (path != null && path.getValue() != null) {
+                            if (path.getValue().getGet() != null) {
+                                Operation operation = new Operation();
+                                operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
+                                operation.setMethod(METHOD_GET);
+                                SwaggerOperation swaggerOperation = path.getValue().getGet();
+                                addOperation(swaggerOperation, operation);
                             }
-                        }
-
-                        if(swagger.getDefinitions() != null) {
-                            definitions.putAll(swagger.getDefinitions());
+                            if (path.getValue().getPost() != null) {
+                                Operation operation = new Operation();
+                                operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
+                                operation.setMethod(METHOD_POST);
+                                SwaggerOperation swaggerOperation = path.getValue().getPost();
+                                addOperation(swaggerOperation, operation);
+                            }
+                            if (path.getValue().getDelete() != null) {
+                                Operation operation = new Operation();
+                                operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
+                                operation.setMethod(METHOD_DELETE);
+                                SwaggerOperation swaggerOperation = path.getValue().getDelete();
+                                addOperation(swaggerOperation, operation);
+                            }
                         }
                     }
                 }
-            }, new DefaultErrorCallback()).getSwagger(path);
-        } catch (IOException e) {
-            logger.error("Request for existing operations failed: " + e.getMessage());
+
+                if (swagger.getDefinitions() != null) {
+                    definitions.putAll(swagger.getDefinitions());
+                }
+            }
         }
     }
 

@@ -3,6 +3,7 @@ package org.jbpm.designer.client.wizard.pages.service;
 
 import com.google.gwt.user.client.ui.IsWidget;
 import org.gwtbootstrap3.client.ui.Form;
+import org.jbpm.designer.model.operation.ServiceUploadResultEntry;
 
 public interface ServicesPageView extends IsWidget {
 
@@ -23,5 +24,11 @@ public interface ServicesPageView extends IsWidget {
 
     void hideUploadingBusy();
 
-    void showUploadingResult(String message);
+    void showUploadingResult(ServiceUploadResultEntry entry);
+
+    void clearUploadResults();
+
+    void showErrorReadingPath(String messsage);
+
+    void showWhiteSpaceDisallowedWarning();
 }

@@ -3,6 +3,7 @@ package org.jbpm.designer.client.wizard.util;
 import org.jbpm.designer.model.HumanTask;
 import org.jbpm.designer.model.ServiceTask;
 import org.jbpm.designer.model.Variable;
+import org.jbpm.designer.model.operation.Operation;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.util.ArrayList;

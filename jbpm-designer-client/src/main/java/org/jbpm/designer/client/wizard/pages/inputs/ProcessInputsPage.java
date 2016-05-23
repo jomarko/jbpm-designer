@@ -42,9 +42,6 @@ public class ProcessInputsPage implements WizardPage, ProcessInputsPageView.Pres
     private Event<WizardPageStatusChangeEvent> event;
 
     @Inject
-    private Event<NotificationEvent> notification;
-
-    @Inject
     ProcessInputsPageView view;
 
     @Inject
@@ -118,7 +115,7 @@ public class ProcessInputsPage implements WizardPage, ProcessInputsPageView.Pres
         }
         if(occurrences > 1) {
             view.deleteVariable(variable);
-            notification.fire(new NotificationEvent(DesignerEditorConstants.INSTANCE.A_Data_Input_with_this_name_already_exists(), NotificationEvent.NotificationType.ERROR));
+            view.fireInputWithNameAlreadyExist();
             validationResult = false;
         }
 

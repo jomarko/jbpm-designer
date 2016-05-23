@@ -26,9 +26,7 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
-import org.gwtbootstrap3.client.ui.Button;
-import org.gwtbootstrap3.client.ui.TabPane;
-import org.gwtbootstrap3.client.ui.TabPanel;
+import org.gwtbootstrap3.client.ui.*;
 import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
@@ -58,10 +56,16 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
 
     private Presenter presenter;
 
+    public static String SERVICE_TYPE = "Service";
+    public static String HUMAN_TYPE = "Human";
+
     @Inject
     public ProcessTasksPageViewImpl() {
         initWidget(uiBinder.createAndBindUi(this));
     }
+
+    @UiField(provided = true)
+    ValueListBox<String> taskType = new ValueListBox<String>(new ToStringRenderer());
 
     @UiField
     TabPane taskDetailPane;
@@ -96,6 +100,9 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     @UiField
     TabPanel taskDetailPanel;
 
+    @UiField
+    HelpBlock uniqueNameHelp;
+
     @Inject
     Event<NotificationEvent> notification;
 
@@ -117,6 +124,9 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
 
         tasksContainer.clear();
         lastSelectedWidgets = new ArrayList<Widget>();
+
+        taskType.setValue(SERVICE_TYPE, true);
+        taskType.setValue(HUMAN_TYPE, true);
     }
 
     @Override
@@ -124,7 +134,7 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         if(widgets.get(1) instanceof ListTaskDetail) {
             final ListTaskDetail detail = (ListTaskDetail) widgets.get(1);
             if(!detail.isInitialized()) {
-                detail.setModel(presenter.getDefaultModel());
+                detail.setModel(presenter.getDefaultModel(taskType.getValue()));
                 detail.addDomHandler(new ClickHandler() {
                     @Override
                     public void onClick(ClickEvent clickEvent) {
@@ -196,13 +206,13 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
-    public void mergeSelectedWidgets() {
+    public void mergeSelectedWidgets(boolean conditionBased) {
         if(lastSelectedWidgets != null && lastSelectedWidgets.size() == 2) {
             int rowOfFirst = tasksContainer.getRowOfWidget(lastSelectedWidgets.get(0));
             int rowOfSecond = tasksContainer.getRowOfWidget(lastSelectedWidgets.get(1));
             if(rowOfFirst != rowOfSecond) {
                 tasksContainer.addWidgetToEnd(rowOfFirst, lastSelectedWidgets.get(1));
-                if(tasksContainer.getRowWidgets(rowOfFirst).get(0) instanceof MergedTasksIndicator) {
+                if(tasksContainer.getRowWidgets(rowOfFirst).get(0) instanceof MergedTasksIndicator && conditionBased) {
                     MergedTasksIndicator indicator = (MergedTasksIndicator) tasksContainer.getRowWidgets(rowOfFirst).get(0);
                     indicator.setVisible(true);
                 }
@@ -270,10 +280,11 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
-    public void setAvailableVarsForSelectedTask(List<Variable> variables) {
+    public void setAvailableVarsForSelectedTask(List<Variable> variables, List<Variable> innerVariables) {
         conditionWidget.setVariables(variables);
         taskIO.setAcceptableValues(variables);
-        taskDetail.setVariablesForParameterMapping(variables);
+        innerVariables.addAll(variables);
+        taskDetail.setVariablesForParameterMapping(innerVariables);
     }
 
     @Override
@@ -374,6 +385,11 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     @Override
     public void restrictOutputDataTypes() {
         taskIO.restrictOutputDataTypes();
+    }
+
+    @Override
+    public void setUniqueNameHelpVisibility(boolean value) {
+        uniqueNameHelp.setVisible(value);
     }
 
     private PropertyChangeHandler getHandler() {

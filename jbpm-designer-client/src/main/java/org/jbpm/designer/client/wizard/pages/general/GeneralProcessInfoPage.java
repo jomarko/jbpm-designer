@@ -43,7 +43,7 @@ public class GeneralProcessInfoPage implements WizardPage, GeneralProcessInfoPag
 
     @Override
     public void isComplete(Callback<Boolean> callback) {
-        boolean isNameValid = view.getName() != null && !view.getName().trim().isEmpty();
+        boolean isNameValid = view.getName() != null && !view.getName().trim().isEmpty() && !view.getName().contains(" ");
         if(!isNameValid) {
             view.showNameHelp();
         } else {

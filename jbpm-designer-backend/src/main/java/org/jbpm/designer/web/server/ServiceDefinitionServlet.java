@@ -4,7 +4,10 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.jbpm.designer.model.operation.Swagger;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.jbpm.designer.model.operation.ServiceUploadResultEntry;
 import org.jbpm.designer.service.SwaggerService;
 
 import javax.inject.Inject;
@@ -44,17 +47,13 @@ public class ServiceDefinitionServlet extends HttpServlet {
                 }
             }
 
-            Swagger swagger = swaggerService.createSwagger(packageName, fileName, content.toString());
-            if(swagger != null) {
-                response.getWriter().write("Ok: " +
-                    (swagger.getInfo() != null ? (fileName + " - " + swagger.getInfo().getTitle() + " - " + swagger.getInfo().getVersion()) : (fileName)));
-            } else {
-                response.getWriter().write("Error: " + fileName);
-            }
-
+            ServiceUploadResultEntry resultEntry = swaggerService.createSwagger(packageName, fileName, content.toString());
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
+            mapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_EMPTY);
+            response.getWriter().write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(resultEntry));
         } catch (FileUploadException e) {
-            response.getWriter().write("Error:");
-            throw new ServletException("Cannot parse multipart request.", e);
+            response.getWriter().write("{\"status\":\"error\",\"message\":\"" + e.getMessage() +"\"}");
         } finally {
             if(fileContent != null) {
                 fileContent.close();

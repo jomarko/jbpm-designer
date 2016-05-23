@@ -3,8 +3,10 @@ package org.jbpm.designer.client.wizard.pages.tasks;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.user.client.ui.ValueListBox;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwtmockito.GwtMockitoTestRunner;
+import com.google.gwtmockito.WithClassesToStub;
 import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.TabPane;
 import org.gwtbootstrap3.client.ui.TabPanel;
@@ -29,6 +31,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
+@WithClassesToStub(ValueListBox.class)
 @RunWith(GwtMockitoTestRunner.class)
 public class ProcessTasksPageViewTest {
 
@@ -76,6 +79,9 @@ public class ProcessTasksPageViewTest {
     @Captor
     ArgumentCaptor<NotificationEvent> notificationEvent;
 
+    @Mock
+    org.gwtbootstrap3.client.ui.ValueListBox<String> taskType;
+
     private ProcessTasksPageViewImpl view;
 
     @Before
@@ -93,6 +99,7 @@ public class ProcessTasksPageViewTest {
         view.splitButton = splitButton;
         view.conditionPanel = conditionPanel;
         view.taskDetailPanel = taskDetailPanel;
+        view.taskType = taskType;
         view.init(presenter);
     }
 
@@ -112,7 +119,7 @@ public class ProcessTasksPageViewTest {
         widgets.add(detail);
         when(detail.isInitialized()).thenReturn(false);
         Task defaultModel = new Task();
-        when(presenter.getDefaultModel()).thenReturn(defaultModel);
+        when(presenter.getDefaultModel(anyString())).thenReturn(defaultModel);
         view.addedRow(widgets);
         verify(detail).addDomHandler(clickCaptor.capture(), any(DomEvent.Type.class));
         verify(detail).setModel(defaultModel);
@@ -221,12 +228,12 @@ public class ProcessTasksPageViewTest {
 
     @Test
     public void testMergeSelectedWidgetsWrongCount() {
-        view.mergeSelectedWidgets();
+        view.mergeSelectedWidgets(false);
         view.lastSelectedWidgets.add(mock(Widget.class));
-        view.mergeSelectedWidgets();
+        view.mergeSelectedWidgets(false);
         view.lastSelectedWidgets.add(mock(Widget.class));
         view.lastSelectedWidgets.add(mock(Widget.class));
-        view.mergeSelectedWidgets();
+        view.mergeSelectedWidgets(false);
         verify(tasksContainer, never()).addWidgetToEnd(anyInt(), any(Widget.class));
         verify(tasksContainer, never()).removeRow(anyInt());
     }
@@ -239,7 +246,7 @@ public class ProcessTasksPageViewTest {
         view.lastSelectedWidgets.add(two);
         when(tasksContainer.getRowOfWidget(one)).thenReturn(1);
         when(tasksContainer.getRowOfWidget(two)).thenReturn(1);
-        view.mergeSelectedWidgets();
+        view.mergeSelectedWidgets(false);
         verify(tasksContainer, never()).addWidgetToEnd(anyInt(), any(Widget.class));
         verify(tasksContainer, never()).removeRow(anyInt());
     }
@@ -259,7 +266,7 @@ public class ProcessTasksPageViewTest {
         firstRow.add(one);
         when(tasksContainer.getRowWidgets(0)).thenReturn(firstRow);
 
-        view.mergeSelectedWidgets();
+        view.mergeSelectedWidgets(true);
         verify(tasksContainer).addWidgetToEnd(0, two);
         verify(tasksContainer).removeRow(1);
         verify(indicator).setVisible(true);
@@ -376,7 +383,7 @@ public class ProcessTasksPageViewTest {
     public void testSetAvailableVarsForSelectedTask() {
         List<Variable> variables = new ArrayList<Variable>();
         variables.add(mock(Variable.class));
-        view.setAvailableVarsForSelectedTask(variables);
+        view.setAvailableVarsForSelectedTask(variables, variables);
         conditionWidget.setVariables(variables);
         taskIO.setAcceptableValues(variables);
         taskDetail.setVariablesForParameterMapping(variables);

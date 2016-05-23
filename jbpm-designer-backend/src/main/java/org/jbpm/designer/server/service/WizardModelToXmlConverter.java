@@ -25,6 +25,7 @@ import org.jboss.drools.impl.DroolsPackageImpl;
 import org.jbpm.designer.bpmn2.impl.Bpmn2JsonMarshaller;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.ServiceTask;
+import org.jbpm.designer.model.Task;
 import org.jbpm.designer.model.operation.Operation;
 import org.jbpm.designer.model.operation.ParameterMapping;
 import org.jbpm.designer.model.operation.SwaggerParameter;
@@ -52,7 +53,6 @@ public class WizardModelToXmlConverter {
     public String convertProcessToXml(BusinessProcess businessProcess) {
         createProcess(businessProcess.getProcessName(), businessProcess.getProcessDocumentation());
         createProcessVariables(businessProcess.getVariables());
-        createProcessVariables(businessProcess.getAdditionalVariables());
         int horizontalOffset = 100;
         FlowElement from = createStartEvent(horizontalOffset, businessProcess.getStartEvent());
         FlowElement to;
@@ -60,29 +60,7 @@ public class WizardModelToXmlConverter {
             for (Integer row : businessProcess.getTasks().keySet()) {
                 if (businessProcess.getTasks().get(row).size() > 1) {
                     horizontalOffset += 150;
-                    boolean createAsExclusive = false;
-                    if(businessProcess.getConditions() != null && businessProcess.getConditions().containsKey(row)) {
-                        createAsExclusive = true;
-                    }
-                    FlowElement fromGateway = createGateway(horizontalOffset, createAsExclusive, false);
-                    FlowElement toGateway = createGateway(horizontalOffset + 300, createAsExclusive, true);
-                    createEdge(from, fromGateway, null);
-                    int verticalRelativeOffset = 0;
-                    int counter = 0;
-                    for (org.jbpm.designer.model.Task task : businessProcess.getTasks().get(row)) {
-                        FlowElement middle = createTask(task, horizontalOffset + 150, verticalRelativeOffset);
-                        Condition condition = null;
-                        if(businessProcess.getConditions() != null && businessProcess.getConditions().containsKey(row)) {
-                            condition = businessProcess.getConditions().get(row).get(counter);
-                        }
-                        SequenceFlow flow = createEdge(fromGateway, middle, condition);
-                        if(condition != null && condition.isExecuteIfConstraintSatisfied()) {
-                            ((ExclusiveGateway)fromGateway).setDefault(flow);
-                        }
-                        createEdge(middle, toGateway, null);
-                        verticalRelativeOffset += 150;
-                    }
-                    from = toGateway;
+                    from = createBranchedPart(businessProcess, from, row, horizontalOffset);
                     horizontalOffset = horizontalOffset + 300;
                 } else {
                     for (org.jbpm.designer.model.Task task : businessProcess.getTasks().get(row)) {
@@ -94,8 +72,10 @@ public class WizardModelToXmlConverter {
                 }
             }
         }
-        to = createEndEvent(horizontalOffset + 150);
-        createEdge(from, to, null);
+        if(from != null && !(from instanceof  EndEvent)) {
+            to = createEndEvent(horizontalOffset + 150, 100);
+            createEdge(from, to, null);
+        }
 
         Bpmn2JsonMarshaller marshaller = new Bpmn2JsonMarshaller();
         marshaller.setProfile(profile);
@@ -107,14 +87,70 @@ public class WizardModelToXmlConverter {
         }
     }
 
+    private FlowElement createBranchedPart(BusinessProcess businessProcess, FlowElement from, Integer row, int horizontalOffset) {
+        boolean createAsExclusive = false;
+        if(businessProcess.getConditions() != null && businessProcess.getConditions().containsKey(row)) {
+            createAsExclusive = true;
+        }
+
+        List<Task> rowTasks = businessProcess.getTasks().get(row);
+
+        FlowElement fromGateway = createGateway(horizontalOffset, createAsExclusive, false);
+        FlowElement toGateway = null;
+        if(continueTasksCount(rowTasks) == 2) {
+            toGateway = createGateway(horizontalOffset + 300, createAsExclusive, true);
+        }
+
+        createEdge(from, fromGateway, null);
+        int verticalRelativeOffset = 0;
+        int conditionsCounter = 0;
+        FlowElement lastElementOfSequence = null;
+        for (Task task : rowTasks) {
+            FlowElement middle = createTask(task, horizontalOffset + 150, verticalRelativeOffset);
+            Condition condition = null;
+            if(businessProcess.getConditions() != null && businessProcess.getConditions().containsKey(row)) {
+                condition = businessProcess.getConditions().get(row).get(conditionsCounter++);
+            }
+            SequenceFlow flow = createEdge(fromGateway, middle, condition);
+            if(condition != null && condition.isExecuteIfConstraintSatisfied()) {
+                ((ExclusiveGateway)fromGateway).setDefault(flow);
+            }
+            FlowElement end = null;
+            if(task.isTerminateHere()) {
+                end = createEndEvent(horizontalOffset + 300, 100 + verticalRelativeOffset);
+                createEdge(middle, end, null);
+            } else if(continueTasksCount(rowTasks) == 1) {
+                lastElementOfSequence = middle;
+            }
+            if(continueTasksCount(rowTasks) == 2) {
+                createEdge(middle, toGateway, null);
+            }
+            verticalRelativeOffset += 150;
+        }
+        if(lastElementOfSequence != null) {
+            return lastElementOfSequence;
+        } else {
+            return toGateway;
+        }
+    }
+
+    private int continueTasksCount(List<Task> tasks) {
+        int count= 0;
+        for(Task task : tasks) {
+            if(!task.isTerminateHere()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     private String createProcess(String processName, String documentationText) {
 
         Bpmn2JsonMarshaller marshaller = new Bpmn2JsonMarshaller();
         marshaller.setProfile(profile);
 
-        String processId = getIdString();
         process = Bpmn2Factory.eINSTANCE.createProcess();
-        process.setId(processId);
+        process.setId(processName);
         process.setName(processName);
         Documentation documentation = Bpmn2Factory.eINSTANCE.createDocumentation();
         documentation.setText(documentationText);
@@ -129,7 +165,7 @@ public class WizardModelToXmlConverter {
         definitions.getRootElements().add(process);
         definitions.getDiagrams().add(diagram);
 
-        return processId;
+        return processName;
     }
 
     private FlowElement createTask(org.jbpm.designer.model.Task task, int horizontalOffset, int verticalRelativeOffset) {
@@ -164,6 +200,10 @@ public class WizardModelToXmlConverter {
                 groupId.setName("GroupId");
                 inputAssignments.put(groupId, humanTask.getResponsibleGroup().getName());
             }
+            Variable taskName = new Variable();
+            taskName.setDataType("String");
+            taskName.setName("TaskName");
+            inputAssignments.put(taskName, task.getName().replaceAll(" ", ""));
         }
 
         if (task instanceof ServiceTask) {
@@ -199,6 +239,9 @@ public class WizardModelToXmlConverter {
                 if(operation.getParameterMappings() != null) {
                     for(ParameterMapping mapping : operation.getParameterMappings()) {
                         if(mapping.getParameter() != null && "body".compareTo(mapping.getParameter().getIn()) == 0 && mapping.getVariable() != null) {
+                            if(task.getInputs() == null) {
+                                task.setInputs(new HashMap<String, Variable>());
+                            }
                             task.getInputs().put("Content", mapping.getVariable());
                         }
                     }
@@ -249,8 +292,11 @@ public class WizardModelToXmlConverter {
 
     private void createInputOutputAssociations(org.eclipse.bpmn2.Task bpmnTask, org.jbpm.designer.model.Task wizardTask, Map<Variable, Object> inputAssignments) {
         InputOutputSpecification specification = Bpmn2Factory.eINSTANCE.createInputOutputSpecification();
+        specification.setId(getIdString());
         InputSet inputSet = Bpmn2Factory.eINSTANCE.createInputSet();
+        inputSet.setId(getIdString());
         OutputSet outputSet = Bpmn2Factory.eINSTANCE.createOutputSet();
+        outputSet.setId(getIdString());
 
         if(wizardTask.getInputs() != null) {
             for (Map.Entry<String,Variable> variable : wizardTask.getInputs().entrySet()) {
@@ -258,6 +304,7 @@ public class WizardModelToXmlConverter {
                 setItemSubjectRef(dataInput, variable.getValue());
 
                 DataInputAssociation inputAssociation = Bpmn2Factory.eINSTANCE.createDataInputAssociation();
+                inputAssociation.setId(getIdString());
                 dataInput.setName(variable.getKey());
                 for (Property property : process.getProperties()) {
                     if (property.getName().compareTo(variable.getValue().getName()) == 0) {
@@ -274,13 +321,17 @@ public class WizardModelToXmlConverter {
 
         for(Map.Entry<Variable, Object> inputAssignment : inputAssignments.entrySet()) {
             DataInput dataInput = Bpmn2Factory.eINSTANCE.createDataInput();
+            dataInput.setId(getIdString());
             DataInputAssociation inputAssociation = Bpmn2Factory.eINSTANCE.createDataInputAssociation();
             dataInput.setName(inputAssignment.getKey().getName());
             Assignment assignment = Bpmn2Factory.eINSTANCE.createAssignment();
+            assignment.setId(getIdString());
             FormalExpression fromExpression = Bpmn2Factory.eINSTANCE.createFormalExpression();
+            fromExpression.setId(getIdString());
             fromExpression.setBody(inputAssignment.getValue().toString());
             assignment.setFrom(fromExpression);
             FormalExpression toExpression = Bpmn2Factory.eINSTANCE.createFormalExpression();
+            toExpression.setId(getIdString());
             toExpression.setBody(dataInput.getId());
             assignment.setTo(toExpression);
             inputAssociation.getAssignment().add(assignment);
@@ -399,7 +450,8 @@ public class WizardModelToXmlConverter {
 
         if(condition != null) {
             Constraint constraint = condition.getConstraint();
-            if (constraint != null && constraint.getConstraint() != null && constraint.getVariable() != null && constraint.getConstraintValue() != null) {
+            if (constraint != null && constraint.getConstraint() != null && constraint.getVariable() != null
+                    && (constraint.getConstraintValue() != null || "Boolean".compareTo(constraint.getVariable().getDataType()) == 0)) {
                 FormalExpression expression = Bpmn2Factory.eINSTANCE.createFormalExpression();
                 expression.setId(getIdString());
                 String expressionBody = "";
@@ -422,13 +474,20 @@ public class WizardModelToXmlConverter {
                     expressionBody += "lessThan(";
                 } else if (constraint.getConstraint().compareTo(Constraint.EQUAL_OR_LESS_THAN) == 0) {
                     expressionBody += "lessOrEqualThan(";
+                } else if (constraint.getConstraint().compareTo(Constraint.IS_TRUE) == 0) {
+                    expressionBody += "isTrue(" + constraint.getVariable().getName() + ");";
+                } else if (constraint.getConstraint().compareTo(Constraint.IS_FALSE) == 0) {
+                    expressionBody += "isFalse(" + constraint.getVariable().getName() + ");";
                 }
 
-                expressionBody += constraint.getVariable().getName();
-                expressionBody += ",\"";
-                expressionBody += constraint.getConstraintValue();
-                expressionBody += "\");";
+                if(constraint.getConstraint().compareTo(Constraint.IS_TRUE) != 0 && constraint.getConstraint().compareTo(Constraint.IS_FALSE) != 0) {
+                    expressionBody += constraint.getVariable().getName();
+                    expressionBody += ",\"";
+                    expressionBody += constraint.getConstraintValue();
+                    expressionBody += "\");";
+                }
                 expression.setBody(expressionBody);
+                expression.setLanguage("http://www.java.com/java");
                 flow.setConditionExpression(expression);
             }
         }
@@ -462,8 +521,11 @@ public class WizardModelToXmlConverter {
         String id = getIdString();
 
         StartEvent start = Bpmn2Factory.eINSTANCE.createStartEvent();
+        IntermediateCatchEvent signalCatch = null;
         start.setId(id);
         if(startEvent instanceof SignalEvent) {
+            signalCatch = Bpmn2Factory.eINSTANCE.createIntermediateCatchEvent();
+            signalCatch.setId(getIdString());
             Signal signal = Bpmn2Factory.eINSTANCE.createSignal();
             signal.setName(((SignalEvent)startEvent).getSignalName());
             signal.setId(getIdString());
@@ -471,7 +533,11 @@ public class WizardModelToXmlConverter {
             SignalEventDefinition signalED = Bpmn2Factory.eINSTANCE.createSignalEventDefinition();
             signalED.setSignalRef(signal.getId());
             signalED.setId(getIdString());
-            start.getEventDefinitions().add(signalED);
+            signalCatch.getEventDefinitions().add(signalED);
+            BPMNShape shape = getShape(28, 28, horizontalOffset + 50, 100);
+            shape.setBpmnElement(signalCatch);
+            diagram.getPlane().getPlaneElement().add(shape);
+            process.getFlowElements().add(signalCatch);
         }
         if(startEvent instanceof TimerEvent) {
             TimerEventDefinition timer = Bpmn2Factory.eINSTANCE.createTimerEventDefinition();
@@ -497,10 +563,14 @@ public class WizardModelToXmlConverter {
 
         diagram.getPlane().getPlaneElement().add(shape);
         process.getFlowElements().add(start);
+        if(signalCatch != null) {
+            createEdge(start, signalCatch, null);
+            return signalCatch;
+        }
         return start;
     }
 
-    private FlowElement createEndEvent(int horizontalOffset) {
+    private FlowElement createEndEvent(int horizontalOffset, int verticalOffset) {
         if(process == null) {
             throw new RuntimeException("Create process at first");
         }
@@ -509,7 +579,7 @@ public class WizardModelToXmlConverter {
         EndEvent end = Bpmn2Factory.eINSTANCE.createEndEvent();
         end.setId(id);
 
-        BPMNShape shape = getShape(28, 28, horizontalOffset, 100);
+        BPMNShape shape = getShape(28, 28, horizontalOffset, verticalOffset);
         shape.setBpmnElement(end);
 
         diagram.getPlane().getPlaneElement().add(shape);

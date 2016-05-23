@@ -27,4 +27,6 @@ public interface ProcessInputsPageView extends IsWidget {
     void setVariablesHelpVisibility(boolean visibility);
 
     void setAvailableDataTypes(List<String> dataTypes);
+
+    void fireInputWithNameAlreadyExist();
 }

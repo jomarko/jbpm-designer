@@ -57,7 +57,7 @@ public class ListTaskDetail extends Composite implements HasModel<Task> {
         panel.add(name);
         initWidget(panel);
         dataBinder.bind(name, "name");
-        name.setRegExp("^[a-zA-Z0-9\\-\\.\\_]*$",
+        name.setRegExp("^[a-zA-Z0-9\\-\\.\\_\\ ]*$",
                 DesignerEditorConstants.INSTANCE.Removed_invalid_characters_from_name(),
                 DesignerEditorConstants.INSTANCE.Invalid_character_in_name());
         setStyleName("cellWithMargin");

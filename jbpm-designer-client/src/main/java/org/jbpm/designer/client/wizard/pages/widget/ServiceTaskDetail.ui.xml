@@ -26,6 +26,11 @@
             <util:DataIOEditorNameTextBox ui:field="name" />
             <b:HelpBlock ui:field="nameHelp" text="Please provide name of task" visible="false"/>
         </b:FieldSet>
+        <b:FieldSet>
+            <b:FormLabel for="terminate" text="Terminate Here"/>
+            <b:CheckBox ui:field="terminate" />
+            <b:HelpBlock text="Checking to true will cause explicit termination of flow in this place."/>
+        </b:FieldSet>
         <b:FieldSet ui:field="operationWrapper">
             <b:FormLabel for="operation" text="Operation" showRequiredIndicator="true"/>
             <b:ValueListBox ui:field="operation" />

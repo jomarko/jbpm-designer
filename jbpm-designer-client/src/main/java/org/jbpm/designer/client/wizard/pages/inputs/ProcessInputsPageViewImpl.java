@@ -9,9 +9,12 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.HelpBlock;
+import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.model.Variable;
+import org.uberfire.workbench.events.NotificationEvent;
 
 import javax.enterprise.context.Dependent;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import java.util.List;
 
@@ -39,6 +42,9 @@ public class ProcessInputsPageViewImpl extends Composite implements ProcessInput
 
     @UiField
     HelpBlock variablesHelp;
+
+    @Inject
+    private Event<NotificationEvent> notification;
 
     @Override
     public void init(final Presenter presenter) {
@@ -82,5 +88,10 @@ public class ProcessInputsPageViewImpl extends Composite implements ProcessInput
     @Override
     public void setAvailableDataTypes(List<String> dataTypes) {
         inputs.setAvailableDataTypes(dataTypes);
+    }
+
+    @Override
+    public void fireInputWithNameAlreadyExist() {
+        notification.fire(new NotificationEvent(DesignerEditorConstants.INSTANCE.A_Data_Input_with_this_name_already_exists(), NotificationEvent.NotificationType.ERROR));
     }
 }

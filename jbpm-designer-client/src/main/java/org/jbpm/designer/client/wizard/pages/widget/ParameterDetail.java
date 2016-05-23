@@ -3,7 +3,6 @@ package org.jbpm.designer.client.wizard.pages.widget;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.ValueListBox;
@@ -13,12 +12,14 @@ import org.jboss.errai.ui.shared.api.annotations.AutoBound;
 import org.jboss.errai.ui.shared.api.annotations.Bound;
 import org.jboss.errai.ui.shared.api.annotations.DataField;
 import org.jboss.errai.ui.shared.api.annotations.Templated;
+import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.wizard.util.CompareUtils;
 import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.model.operation.ParameterMapping;
 import org.jbpm.designer.model.operation.SwaggerParameter;
-import org.jbpm.designer.model.operation.SwaggerSchema;
+import org.uberfire.workbench.events.NotificationEvent;
 
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +46,9 @@ public class ParameterDetail extends Composite implements HasModel<ParameterMapp
 
     @DataField
     Element requiredIndicator = Document.get().createElement("sup");
+
+    @Inject
+    Event<NotificationEvent> notification;
 
     @Override
     public ParameterMapping getModel() {
@@ -75,6 +79,11 @@ public class ParameterDetail extends Composite implements HasModel<ParameterMapp
                     }
                 }
             }
+        }
+        if(acceptable.size() == 0) {
+            notification.fire(new NotificationEvent(
+                    DesignerEditorConstants.INSTANCE.noCompatibleVariableForParameter() + " " + name.getValue(),
+                    NotificationEvent.NotificationType.ERROR));
         }
         variable.setAcceptableValues(acceptable);
     }

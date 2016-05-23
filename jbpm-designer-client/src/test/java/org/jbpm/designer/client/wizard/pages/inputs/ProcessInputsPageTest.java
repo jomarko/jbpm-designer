@@ -1,7 +1,5 @@
 package org.jbpm.designer.client.wizard.pages.inputs;
 
-import com.google.gwtmockito.GwtMockitoTestRunner;
-
 import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.service.DiscoverService;
 import org.junit.Before;
@@ -10,6 +8,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
 import org.uberfire.mocks.CallerMock;
@@ -24,12 +23,10 @@ import java.util.List;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
-@RunWith(GwtMockitoTestRunner.class)
+@RunWith(MockitoJUnitRunner.class)
 public class ProcessInputsPageTest {
 
     Event<WizardPageStatusChangeEvent> event = mock(EventSourceMock.class);
-
-    Event<NotificationEvent> notification = mock(EventSourceMock.class);
 
     @Mock
     ProcessInputsPageView view;
@@ -125,7 +122,7 @@ public class ProcessInputsPageTest {
         when(view.getInputs()).thenReturn(inputs);
 
         page.isComplete(callback);
-
+        verify(view, times(2)).fireInputWithNameAlreadyExist();
         verify(view).deleteVariable(variable);
         verify(view).setVariablesHelpVisibility(true);
         verify(callback).callback(false);

@@ -75,6 +75,9 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
     @UiField
     Form serviceTaskDetailForm;
 
+    @UiField
+    CheckBox terminate;
+
     @Inject
     private OperationDetail operationDetail;
 
@@ -99,7 +102,7 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
             }
         });
 
-        name.setRegExp("^[a-zA-Z0-9\\-\\.\\_]*$",
+        name.setRegExp("^[a-zA-Z0-9\\-\\.\\_\\ ]*$",
                 DesignerEditorConstants.INSTANCE.Removed_invalid_characters_from_name(),
                 DesignerEditorConstants.INSTANCE.Invalid_character_in_name());
 
@@ -128,6 +131,7 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
 
     public void bindDataBinder() {
         dataBinder.bind(name, "name")
+                .bind(terminate, "terminateHere")
                 .bind(operation, "operation")
                 .getModel();
     }
