@@ -7,6 +7,7 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
+import org.gwtbootstrap3.client.ui.FormLabel;
 import org.gwtbootstrap3.client.ui.HelpBlock;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.jboss.errai.databinding.client.api.DataBinder;
@@ -42,6 +43,9 @@ public class SignalWidget extends Composite implements HasModel<SignalEvent> {
 
     @UiField
     HelpBlock signalHelp;
+
+    @UiField
+    FormLabel signalNameLabel;
 
     public SignalWidget() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -84,5 +88,9 @@ public class SignalWidget extends Composite implements HasModel<SignalEvent> {
     @Override
     public void setModel(SignalEvent signalEvent) {
         dataBinder.setModel(signalEvent);
+    }
+
+    public void setRequiredVisibility(boolean value) {
+        signalNameLabel.setShowRequiredIndicator(value);
     }
 }

@@ -4,11 +4,13 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import org.jboss.errai.common.client.api.ErrorCallback;
 import org.jboss.errai.common.client.api.RemoteCallback;
+import org.jbpm.designer.client.wizard.pages.inputs.InputsChangedEvent;
 import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.client.wizard.GuidedProcessWizard;
 import org.jbpm.designer.model.operation.Operation;
 import org.jbpm.designer.model.operation.ParameterMapping;
+import org.jbpm.designer.model.operation.SwaggerParameter;
 import org.jbpm.designer.service.DiscoverService;
 import org.jbpm.designer.service.SwaggerService;
 import org.junit.Before;
@@ -25,10 +27,7 @@ import org.uberfire.mocks.CallerMock;
 import org.uberfire.mocks.EventSourceMock;
 
 import javax.enterprise.event.Event;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -436,7 +435,8 @@ public class ProcessTasksPageTest {
             verify(view, never()).showHumanSpecificDetails();
             verify(view).showServiceSpecificDetails();
         }
-        verify(view).setAvailableVarsForSelectedTask(any(List.class), any(List.class));
+        verify(view).setAcceptableVariablesForInputs(anyList());
+        verify(view).setAcceptableVariablesForConditions(anyList());
         verify(widgetOne).setModel(model);
         verify(view).setModelTaskDetailWidgets(model);
         verify(widgetOne).rebind();
@@ -524,7 +524,14 @@ public class ProcessTasksPageTest {
     @Test
     public void testIsConstrainValidNullVariable() throws Exception {
         Constraint constraint = mock(Constraint.class);
-        assertFalse(page.isConstraintValid(constraint));
+        assertFalse(page.validateConstraint(constraint, false));
+        verify(view, never()).setVariableHelpVisibility(anyBoolean());
+    }
+
+    @Test
+    public void testIsConstrainValidNullVariableShwoHelp() throws Exception {
+        Constraint constraint = mock(Constraint.class);
+        assertFalse(page.validateConstraint(constraint, true));
         verify(view).setVariableHelpVisibility(true);
     }
 
@@ -532,7 +539,16 @@ public class ProcessTasksPageTest {
     public void testIsConstrainValidNullConstraint() throws Exception {
         Constraint constraint = mock(Constraint.class);
         when(constraint.getVariable()).thenReturn(mock(Variable.class));
-        assertFalse(page.isConstraintValid(constraint));
+        assertFalse(page.validateConstraint(constraint, false));
+        verify(view, never()).setVariableHelpVisibility(anyBoolean());
+        verify(view, never()).setConstraintHelpVisibility(anyBoolean());
+    }
+
+    @Test
+    public void testIsConstrainValidNullConstraintShowHelp() throws Exception {
+        Constraint constraint = mock(Constraint.class);
+        when(constraint.getVariable()).thenReturn(mock(Variable.class));
+        assertFalse(page.validateConstraint(constraint, true));
         verify(view).setVariableHelpVisibility(false);
         verify(view).setConstraintHelpVisibility(true);
     }
@@ -542,7 +558,17 @@ public class ProcessTasksPageTest {
         Constraint constraint = mock(Constraint.class);
         when(constraint.getVariable()).thenReturn(mock(Variable.class));
         when(constraint.getConstraint()).thenReturn("  ");
-        assertFalse(page.isConstraintValid(constraint));
+        assertFalse(page.validateConstraint(constraint, false));
+        verify(view, never()).setVariableHelpVisibility(anyBoolean());
+        verify(view, never()).setConstraintHelpVisibility(anyBoolean());
+    }
+
+    @Test
+    public void testIsConstrainValidEmptyConstraintShowHelp() throws Exception {
+        Constraint constraint = mock(Constraint.class);
+        when(constraint.getVariable()).thenReturn(mock(Variable.class));
+        when(constraint.getConstraint()).thenReturn("  ");
+        assertFalse(page.validateConstraint(constraint, true));
         verify(view).setVariableHelpVisibility(false);
         verify(view).setConstraintHelpVisibility(true);
     }
@@ -552,7 +578,18 @@ public class ProcessTasksPageTest {
         Constraint constraint = mock(Constraint.class);
         when(constraint.getVariable()).thenReturn(mock(Variable.class));
         when(constraint.getConstraint()).thenReturn("xxx");
-        assertFalse(page.isConstraintValid(constraint));
+        assertFalse(page.validateConstraint(constraint, false));
+        verify(view, never()).setVariableHelpVisibility(anyBoolean());
+        verify(view, never()).setConstraintHelpVisibility(anyBoolean());
+        verify(view, never()).setConstraintValueHelpVisibility(anyBoolean());
+    }
+
+    @Test
+    public void testIsConstrainValidNullValueShowHelp() throws Exception {
+        Constraint constraint = mock(Constraint.class);
+        when(constraint.getVariable()).thenReturn(mock(Variable.class));
+        when(constraint.getConstraint()).thenReturn("xxx");
+        assertFalse(page.validateConstraint(constraint, true));
         verify(view).setVariableHelpVisibility(false);
         verify(view).setConstraintHelpVisibility(false);
         verify(view).setConstraintValueHelpVisibility(true);
@@ -564,7 +601,19 @@ public class ProcessTasksPageTest {
         when(constraint.getVariable()).thenReturn(mock(Variable.class));
         when(constraint.getConstraint()).thenReturn("xxx");
         when(constraint.getConstraintValue()).thenReturn("  ");
-        assertFalse(page.isConstraintValid(constraint));
+        assertFalse(page.validateConstraint(constraint, false));
+        verify(view, never()).setVariableHelpVisibility(anyBoolean());
+        verify(view, never()).setConstraintHelpVisibility(anyBoolean());
+        verify(view, never()).setConstraintValueHelpVisibility(anyBoolean());
+    }
+
+    @Test
+    public void testIsConstrainValidEmptyValueShowHelp() throws Exception {
+        Constraint constraint = mock(Constraint.class);
+        when(constraint.getVariable()).thenReturn(mock(Variable.class));
+        when(constraint.getConstraint()).thenReturn("xxx");
+        when(constraint.getConstraintValue()).thenReturn("  ");
+        assertFalse(page.validateConstraint(constraint, true));
         verify(view).setVariableHelpVisibility(false);
         verify(view).setConstraintHelpVisibility(false);
         verify(view).setConstraintValueHelpVisibility(true);
@@ -576,7 +625,19 @@ public class ProcessTasksPageTest {
         when(constraint.getVariable()).thenReturn(mock(Variable.class));
         when(constraint.getConstraint()).thenReturn("xxx");
         when(constraint.getConstraintValue()).thenReturn("yyy");
-        assertTrue(page.isConstraintValid(constraint));
+        assertTrue(page.validateConstraint(constraint, false));
+        verify(view, never()).setVariableHelpVisibility(anyBoolean());
+        verify(view, never()).setConstraintHelpVisibility(anyBoolean());
+        verify(view, never()).setConstraintValueHelpVisibility(anyBoolean());
+    }
+
+    @Test
+    public void testIsConstrainValidCompleteShowHelp() throws Exception {
+        Constraint constraint = mock(Constraint.class);
+        when(constraint.getVariable()).thenReturn(mock(Variable.class));
+        when(constraint.getConstraint()).thenReturn("xxx");
+        when(constraint.getConstraintValue()).thenReturn("yyy");
+        assertTrue(page.validateConstraint(constraint, true));
         verify(view).setVariableHelpVisibility(false);
         verify(view).setConstraintHelpVisibility(false);
         verify(view).setConstraintValueHelpVisibility(false);
@@ -706,5 +767,37 @@ public class ProcessTasksPageTest {
         page.showHelpForSelectedTask(null);
         verify(view).setNameHelpVisibility(false);
         verify(view).setOperationHelpVisibility(false);
+    }
+
+    @Test
+    public void testRemoveNonExistingBindings() {
+        InputsChangedEvent inputsChanged = new InputsChangedEvent();
+        List<Variable> inputs = new ArrayList<Variable>();
+        inputs.add(varA);
+        inputs.add(varB);
+        inputsChanged.setInputs(inputs);
+
+        when(view.getRowsCount()).thenReturn(1);
+        when(view.getTasks(0)).thenReturn(mergedRow);
+
+        Operation operation = new Operation();
+        ParameterMapping parameterMapping = new ParameterMapping();
+        parameterMapping.setRequired(true);
+        parameterMapping.setVariable(varC);
+        parameterMapping.setParameter(mock(SwaggerParameter.class));
+        operation.setParameterMappings(Arrays.asList(parameterMapping));
+        taskTwo.setOperation(operation);
+
+        Map<String, Variable> taskInputs = new HashMap<String, Variable>();
+        taskInputs.put("aaa", varC);
+        taskTwo.setInputs(taskInputs);
+
+        assertEquals(varC, taskTwo.getOperation().getParameterMappings().get(0).getVariable());
+
+        page.removeNonExistingBindings(inputsChanged);
+
+        assertEquals(0, taskTwo.getInputs().size());
+        assertEquals(null, taskTwo.getOperation().getParameterMappings().get(0).getVariable());
+        verify(event).fire(any(WizardPageStatusChangeEvent.class));
     }
 }

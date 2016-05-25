@@ -59,11 +59,17 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
     @UiField
     HelpBlock variableHelp;
 
+    @UiField
+    FormLabel variableLabel;
+
     @UiField(provided = true)
     ValueListBox<String> constraint = new ValueListBox<String>(new ToStringRenderer());
 
     @UiField
     HelpBlock constraintHelp;
+
+    @UiField
+    FormLabel constraintLabel;
 
     @UiField
     TextBox constraintValue;
@@ -154,14 +160,17 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
 
     public void setVariableHelpVisibility(boolean value) {
         variableHelp.setVisible(value);
+        variableLabel.setShowRequiredIndicator(value);
     }
 
     public void setConstraintValueHelpVisibility(boolean value) {
         constraintValueHelp.setVisible(value);
+        constraintValueLabel.setShowRequiredIndicator(value);
     }
 
     public void setConstraintHelpVisibility(boolean value) {
         constraintHelp.setVisible(value);
+        constraintLabel.setShowRequiredIndicator(value);
     }
 
     private List<String> getConstraints(Variable var) {

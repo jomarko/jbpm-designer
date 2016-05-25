@@ -16,14 +16,11 @@
 package org.jbpm.designer.client.wizard.pages.widget;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.logical.shared.ValueChangeEvent;
-import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.Form;
-import org.gwtbootstrap3.client.ui.ValueListBox;
 import org.gwtbootstrap3.client.ui.html.Text;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
@@ -31,11 +28,13 @@ import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPageView;
 import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.operation.Operation;
+import org.jbpm.designer.model.operation.SwaggerParameter;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Map;
 
 @Dependent
 public class TaskDetail extends Composite implements HasModel<Task> {
@@ -76,6 +75,7 @@ public class TaskDetail extends Composite implements HasModel<Task> {
 
     public void init(ProcessTasksPageView.Presenter presenter) {
         this.presenter = presenter;
+        serviceTaskDetail.setPresenter(presenter);
         serviceTaskDetail.setModel(new DefaultValues().getDefaultServiceTask());
         humanTaskDetail.setModel(new DefaultValues().getDefaultHumanTask());
     }
@@ -155,12 +155,12 @@ public class TaskDetail extends Composite implements HasModel<Task> {
     public void setOperationHelpVisibility(boolean value) {
         serviceTaskDetail.setOperationHelpVisibility(value);
     }
-
-    public void addAvailableOperation(Operation operation) {
-        serviceTaskDetail.addAvailableOperation(operation);
+    public void setOperationParametersHelpVisibility(boolean value) {
+        serviceTaskDetail.setOperationParametersHelpVisibility(value);
     }
 
-    public void setVariablesForParameterMapping(List<Variable> variables) {
-        serviceTaskDetail.setVariablesForParameterMapping(variables);
+
+    public void setAcceptableOperations(List<Operation> acceptableOperations) {
+        serviceTaskDetail.setAcceptableOperations(acceptableOperations);
     }
 }

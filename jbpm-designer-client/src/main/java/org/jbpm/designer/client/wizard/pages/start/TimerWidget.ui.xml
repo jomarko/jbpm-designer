@@ -32,7 +32,7 @@
         </b:FieldSet>
 
         <b:FieldSet>
-            <b:FormLabel for="timerValue" text="Timer value" showRequiredIndicator="true" addStyleNames="col-lg-3"/>
+            <b:FormLabel ui:field="timerValueLabel" for="timerValue" text="Timer value" showRequiredIndicator="true" addStyleNames="col-lg-3"/>
             <gwt:VerticalPanel addStyleNames="col-lg-8">
                 <b:TextBox ui:field="timerValue"/>
                 <b:HelpBlock ui:field="timerHelp"/>

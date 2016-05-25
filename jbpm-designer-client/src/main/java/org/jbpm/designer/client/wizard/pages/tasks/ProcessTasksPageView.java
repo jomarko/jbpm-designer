@@ -20,8 +20,10 @@ import com.google.gwt.user.client.ui.Widget;
 import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.operation.Operation;
+import org.jbpm.designer.model.operation.SwaggerParameter;
 
 import java.util.List;
+import java.util.Map;
 
 
 public interface ProcessTasksPageView extends IsWidget {
@@ -38,7 +40,7 @@ public interface ProcessTasksPageView extends IsWidget {
 
         boolean isTaskValid(Task task);
 
-        boolean isConstraintValid(Constraint constraint);
+        Map<SwaggerParameter, List<Variable>> getAcceptableVariablesForParameter(ServiceTask model, Operation operation);
 
         void firePageChangedEvent();
     }
@@ -77,7 +79,9 @@ public interface ProcessTasksPageView extends IsWidget {
 
     void rebindConditionWidgetToModel(Condition model);
 
-    void setAvailableVarsForSelectedTask(List<Variable> variables, List<Variable> innerVariables);
+    void setAcceptableVariablesForInputs(List<Variable> variables);
+
+    void setAcceptableVariablesForConditions(List<Variable> variables);
 
     void showMergeInvalidCount();
 
@@ -95,6 +99,10 @@ public interface ProcessTasksPageView extends IsWidget {
 
     void setOperationHelpVisibility(boolean value);
 
+    void setOperationParametersHelpVisibility(boolean value);
+
+    void setAcceptableOperations(List<Operation> acceptableOperations);
+
     void setVariableHelpVisibility(boolean value);
 
     void setConstraintValueHelpVisibility(boolean value);
@@ -108,8 +116,6 @@ public interface ProcessTasksPageView extends IsWidget {
     void setConditionPanelVisibility(boolean value);
 
     void setTaskPanelVisibility(boolean value);
-
-    void addAvailableOperation(Operation operation);
 
     void setAvailableDataTypes(List<String> dataTypes);
 

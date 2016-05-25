@@ -42,7 +42,7 @@ public class ProcessInputsTable extends Composite {
             @Override
             public void onClick(ClickEvent clickEvent) {
                 addVariable(defaultValues.getDefaultVariable(), dataTypes);
-                ValueChangeEvent.fire(inputs, inputs.getValue());
+                fireInputsChanged();
             }
         });
     }
@@ -84,12 +84,12 @@ public class ProcessInputsTable extends Composite {
             widget.setAcceptableDataTypes(dataTypes);
             widget.setParentWidget(this);
         }
-        ValueChangeEvent.fire(inputs, inputs.getValue());
+        fireInputsChanged();
     }
 
     public void clear() {
         inputs.setValue(new ArrayList<Variable>(), true);
-        ValueChangeEvent.fire(inputs, inputs.getValue());
+        fireInputsChanged();
     }
 
     public void setAvailableDataTypes(List<String> availableDataTypes) {
@@ -97,5 +97,9 @@ public class ProcessInputsTable extends Composite {
         if(availableDataTypes != null) {
             dataTypes.addAll(availableDataTypes);
         }
+    }
+
+    public void fireInputsChanged() {
+        ValueChangeEvent.fire(inputs, inputs.getValue());
     }
 }

@@ -380,16 +380,6 @@ public class ProcessTasksPageViewTest {
     }
 
     @Test
-    public void testSetAvailableVarsForSelectedTask() {
-        List<Variable> variables = new ArrayList<Variable>();
-        variables.add(mock(Variable.class));
-        view.setAvailableVarsForSelectedTask(variables, variables);
-        conditionWidget.setVariables(variables);
-        taskIO.setAcceptableValues(variables);
-        taskDetail.setVariablesForParameterMapping(variables);
-    }
-
-    @Test
     public void testRebindConditionWidgetToModel() {
         Condition model = mock(Condition.class);
         view.rebindConditionWidgetToModel(model);
@@ -418,18 +408,6 @@ public class ProcessTasksPageViewTest {
         verify(notification).fire(notificationEvent.capture());
         assertEquals(notificationEvent.getValue().getNotification(), DesignerEditorConstants.INSTANCE.containsAlreadyMerged());
     }
-
-//    @Test
-//    public void testShowAsValid(int taskId) {
-//        int row = rowOfTask(taskId);
-//        tasksContainer.setNormalColor(row, columnOfTask(row, taskId));
-//    }
-//
-//    @Test
-//    public void testShowAsInvalid(int taskId) {
-//        int row = rowOfTask(taskId);
-//        tasksContainer.setRedColor(row, columnOfTask(row, taskId));
-//    }
 
     @Test
     public void testSetNameHelpVisibility() {
@@ -537,8 +515,10 @@ public class ProcessTasksPageViewTest {
     @Test
     public void testAddAvailableOperation() {
         Operation operation = mock(Operation.class);
-        view.addAvailableOperation(operation);
-        verify(taskDetail).addAvailableOperation(operation);
+        List<Operation> operations = new ArrayList<Operation>();
+        operations.add(operation);
+        view.setAcceptableOperations(operations);
+        verify(taskDetail).setAcceptableOperations(operations);
     }
 
     @Test

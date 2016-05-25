@@ -43,7 +43,7 @@ public interface DesignerAssetService {
     public Path createProcess( final Path context,
                                final String fileName );
 
-    public Path createProcess( final Path context,
-                               final String fileName,
-                               final BusinessProcess businessProcess);
+    public Path updateProcess(final Path pathToOldProcess,
+                                       final Path basePackage,
+                                       final BusinessProcess businessProcess);
 }

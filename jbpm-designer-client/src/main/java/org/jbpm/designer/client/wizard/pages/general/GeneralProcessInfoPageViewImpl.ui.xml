@@ -29,7 +29,7 @@
         </gwt:HTML>
         <b:Form type="HORIZONTAL">
             <b:FormGroup ui:field="processNameContainer">
-                <b:FormLabel for="processName" addStyleNames="col-lg-2" text="{i18n.processName}" showRequiredIndicator="true"/>
+                <b:FormLabel ui:field="processNameLabel" for="processName" addStyleNames="col-lg-2" text="{i18n.processName}" showRequiredIndicator="true"/>
                 <gwt:FlowPanel addStyleNames="col-lg-9">
                     <b:TextBox ui:field="processName"/>
                     <b:HelpBlock ui:field="processNameHelp" text="{i18n.processNameHelp}" visible="false"/>
@@ -39,7 +39,6 @@
                 <b:FormLabel for="processDescription" addStyleNames="col-lg-2" text="{i18n.processDescription}" />
                 <gwt:FlowPanel addStyleNames="col-lg-9">
                     <b:TextArea ui:field="processDescription"/>
-                    <b:HelpBlock ui:field="processDescriptionHelp" text="{i18n.processDescriptionHelp}" visible="false"/>
                 </gwt:FlowPanel>
             </b:FormGroup>
         </b:Form>

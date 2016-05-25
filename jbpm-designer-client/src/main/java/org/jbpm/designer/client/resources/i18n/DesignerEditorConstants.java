@@ -91,8 +91,6 @@ public interface DesignerEditorConstants extends
 
     String processDescription();
 
-    String processDescriptionHelp();
-
     String processInputs();
 
     String processParticipants();

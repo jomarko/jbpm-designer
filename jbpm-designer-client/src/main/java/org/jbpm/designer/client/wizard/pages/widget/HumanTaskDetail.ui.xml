@@ -22,19 +22,19 @@
 
     <b:Form type="HORIZONTAL">
         <b:FieldSet>
-            <b:FormLabel for="name" text="Name" showRequiredIndicator="true"/>
+            <b:FormLabel ui:field="nameLabel" for="name" text="Name" showRequiredIndicator="true"/>
             <util:DataIOEditorNameTextBox ui:field="name" />
             <b:HelpBlock ui:field="nameHelp" text="Please provide name of task" visible="false"/>
         </b:FieldSet>
         <b:FieldSet>
-            <b:FormLabel for="terminate" text="Terminate Here"/>
-            <b:CheckBox ui:field="terminate" />
-            <b:HelpBlock text="Checking to true will cause explicit termination of flow in this place."/>
+            <b:FormLabel for="endFlow" text="End Flow Here"/>
+            <b:CheckBox ui:field="endFlow" />
+            <b:HelpBlock text="Checking to true will cause that process flow will not continue after this place."/>
         </b:FieldSet>
-        <b:FieldSet ui:field="participantWrapper">
-            <b:FormLabel for="responsibleHuman" text="Responsible human" showRequiredIndicator="true"/>
+        <b:FieldSet>
+            <b:FormLabel ui:field="humanLabel" for="responsibleHuman" text="Responsible human" showRequiredIndicator="true"/>
             <b:ValueListBox ui:field="responsibleHuman"/>
-            <b:FormLabel for="responsibleGroup" text="Responsible group" showRequiredIndicator="true"/>
+            <b:FormLabel ui:field="groupLabel" for="responsibleGroup" text="Responsible group" showRequiredIndicator="true"/>
             <b:ValueListBox ui:field="responsibleGroup" />
             <b:HelpBlock ui:field="participantHelp" text="Either human or group is mandatory for human task" visible="false"/>
         </b:FieldSet>

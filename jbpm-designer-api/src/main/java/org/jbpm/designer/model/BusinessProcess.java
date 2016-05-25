@@ -15,7 +15,9 @@ public class BusinessProcess {
 
     private StandardEvent startEvent;
 
-    private List<Variable> variables;
+    private List<Variable> initialVariables;
+
+    private List<Variable> additionalVariables;
 
     private Map<Integer, List<Task>> tasks;
 
@@ -50,12 +52,20 @@ public class BusinessProcess {
         this.startEvent = startEvent;
     }
 
-    public List<Variable> getVariables() {
-        return variables;
+    public List<Variable> getInitialVariables() {
+        return initialVariables;
     }
 
-    public void setVariables(List<Variable> variables) {
-        this.variables = variables;
+    public void setInitialVariables(List<Variable> initialVariables) {
+        this.initialVariables = initialVariables;
+    }
+
+    public List<Variable> getAdditionalVariables() {
+        return additionalVariables;
+    }
+
+    public void setAdditionalVariables(List<Variable> additionalVariables) {
+        this.additionalVariables = additionalVariables;
     }
 
     public Map<Integer, List<Task>> getTasks() {

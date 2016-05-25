@@ -71,7 +71,7 @@ public class WizardModelToXmlConverterTest {
 
     @Test
     public void testTerminateOne() {
-        humanTask.setTerminateHere(true);
+        humanTask.setEndFlow(true);
 
         HumanTask humanTask2 = new HumanTask();
         humanTask2.setName("b");
@@ -92,7 +92,7 @@ public class WizardModelToXmlConverterTest {
 
     @Test
     public void testTerminateBoth() {
-        humanTask.setTerminateHere(true);
+        humanTask.setEndFlow(true);
         taskGroups.get(0).add(humanTask);
         process.setTasks(taskGroups);
 
@@ -136,7 +136,7 @@ public class WizardModelToXmlConverterTest {
     @Test
     public void testProcessOneTaskInputs() {
         humanTask.getInputs().put(stringVariable.getName(), stringVariable);
-        process.setVariables(variables);
+        process.setInitialVariables(variables);
         process.setTasks(taskGroups);
 
         converter.convertProcessToXml(process);
@@ -155,7 +155,7 @@ public class WizardModelToXmlConverterTest {
         List<Variable> outputs = humanTask.getOutputs();
         outputs.add(stringVariable);
         humanTask.setOutputs(outputs);
-        process.setVariables(variables);
+        process.setAdditionalVariables(variables);
         process.setTasks(taskGroups);
 
         converter.convertProcessToXml(process);
@@ -202,7 +202,7 @@ public class WizardModelToXmlConverterTest {
         conditionGroups.put(0, conditions);
         process.setConditions(conditionGroups);
         process.setTasks(taskGroups);
-        process.setVariables(variables);
+        process.setInitialVariables(variables);
 
         converter.convertProcessToXml(process);
 

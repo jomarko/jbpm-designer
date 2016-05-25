@@ -9,6 +9,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.*;
 
+import org.gwtbootstrap3.client.ui.FormLabel;
 import org.gwtbootstrap3.client.ui.HelpBlock;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.jboss.errai.databinding.client.api.DataBinder;
@@ -51,6 +52,9 @@ public class TimerWidget extends Composite implements HasModel<TimerEvent> {
 
     @UiField
     HelpBlock timerHelp;
+
+    @UiField
+    FormLabel timerValueLabel;
 
     public TimerWidget() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -144,5 +148,9 @@ public class TimerWidget extends Composite implements HasModel<TimerEvent> {
     @Override
     public void setModel(TimerEvent timerEvent) {
         dataBinder.setModel(timerEvent);
+    }
+
+    public void setRequiredVisibility(boolean value) {
+        timerValueLabel.setShowRequiredIndicator(value);
     }
 }

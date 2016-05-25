@@ -38,8 +38,13 @@ public class ProcessInputsPage implements WizardPage, ProcessInputsPageView.Pres
 
     private WizardPageStatusChangeEvent pageChanged = new WizardPageStatusChangeEvent(this);
 
+    private InputsChangedEvent inputsChanged = new InputsChangedEvent();
+
     @Inject
     private Event<WizardPageStatusChangeEvent> event;
+
+    @Inject
+    private Event<InputsChangedEvent> inputsChangedEvent;
 
     @Inject
     ProcessInputsPageView view;
@@ -93,6 +98,8 @@ public class ProcessInputsPage implements WizardPage, ProcessInputsPageView.Pres
     @Override
     public void firePageChangedEvent() {
         event.fire(pageChanged);
+        inputsChanged.setInputs(view.getInputs());
+        inputsChangedEvent.fire(inputsChanged);
     }
 
     @Override

@@ -45,9 +45,7 @@ import org.guvnor.common.services.shared.metadata.model.Metadata;
 import org.guvnor.common.services.shared.metadata.model.Overview;
 import org.jboss.errai.bus.server.annotations.Service;
 import org.jbpm.designer.model.*;
-import org.jbpm.designer.model.operation.Swagger;
 import org.jbpm.designer.model.operation.SwaggerDefinition;
-import org.jbpm.designer.model.operation.SwaggerParameter;
 import org.jbpm.designer.model.operation.SwaggerProperty;
 import org.jbpm.designer.repository.Asset;
 import org.jbpm.designer.repository.AssetBuilderFactory;
@@ -59,6 +57,18 @@ import org.jbpm.designer.service.BPMN2DataServices;
 import org.jbpm.designer.service.DesignerAssetService;
 import org.jbpm.designer.service.DesignerContent;
 import org.jbpm.designer.util.Utils;
+import org.jbpm.formModeler.api.model.DataHolder;
+import org.jbpm.formModeler.api.model.Field;
+import org.jbpm.formModeler.api.model.FieldType;
+import org.jbpm.formModeler.api.model.Form;
+import org.jbpm.formModeler.api.model.wrappers.I18nSet;
+import org.jbpm.formModeler.core.config.DataHolderManager;
+import org.jbpm.formModeler.core.config.FieldTypeManager;
+import org.jbpm.formModeler.core.config.FormManager;
+import org.jbpm.formModeler.core.config.FormSerializationManager;
+import org.jbpm.formModeler.core.config.builders.dataHolder.DataHolderBuildConfig;
+import org.jbpm.formModeler.core.config.builders.dataHolder.DataHolderBuilder;
+import org.jbpm.formModeler.dataModeler.integration.DataModelerService;
 import org.json.JSONArray;
 import org.kie.workbench.common.services.backend.service.KieService;
 import org.slf4j.Logger;
@@ -66,6 +76,7 @@ import org.slf4j.LoggerFactory;
 import org.uberfire.backend.server.util.Paths;
 import org.uberfire.backend.vfs.Path;
 import org.uberfire.io.IOService;
+import org.uberfire.java.nio.file.FileAlreadyExistsException;
 import org.uberfire.java.nio.file.FileSystemNotFoundException;
 import org.uberfire.mvp.PlaceRequest;
 import org.uberfire.rpc.SessionInfo;
@@ -100,6 +111,17 @@ public class DefaultDesignerAssetService
 
     @Inject
     protected WizardModelToXmlConverter wizardModelToXmlConverter;
+
+    @Inject
+    private FormManager formManager;
+    @Inject
+    private FormSerializationManager formSerializationManager;
+    @Inject
+    private DataHolderManager dataHolderManager;
+    @Inject
+    private FieldTypeManager fieldTypeManager;
+    @Inject
+    private DataModelerService dataModelerService;
    
     // socket buffer size in bytes: can be tuned for performance
     private final static int socketBufferSize = 8 * 1024;
@@ -240,9 +262,116 @@ public class DefaultDesignerAssetService
     }
 
     @Override
-    public Path createProcess(Path context, String fileName, BusinessProcess businessProcess) {
+    public Path updateProcess(Path pathToOldProcess, Path basePackage, BusinessProcess businessProcess) {
         String processContent = wizardModelToXmlConverter.convertProcessToXml(businessProcess);
-        return createAsset(context, fileName, processContent);
+        Form processForm = formManager.createForm(businessProcess.getProcessName() + "-taskform.form");
+        addVariables( processForm , businessProcess.getInitialVariables(), businessProcess.getDefinitions());
+        try {
+            createAsset(basePackage, processForm.getName(), formSerializationManager.generateFormXML(processForm));
+        }catch (FileAlreadyExistsException ex) {
+            logger.error("form-exits", "form with name: " + processForm.getName() +" already exists");
+        }
+        AssetBuilder builder = AssetBuilderFactory.getAssetBuilder(repository.loadAssetFromPath(pathToOldProcess));
+        builder.content(processContent);
+        repository.updateAsset(builder.getAsset(), "", "");
+        return pathToOldProcess;
+    }
+
+
+    private void addVariables(Form form, List<Variable> variablesToAdd, Map<String, SwaggerDefinition> definitions) {
+
+        for(Variable variable : variablesToAdd) {
+
+            if(isBasicDataType(variable)) {
+                addField(form, variable.getName(), variable.getDataType());
+                DataHolderBuildConfig config = new DataHolderBuildConfig(variable.getName(), "", variable.getName(), "#BBBBBB", "java.lang."+variable.getDataType());
+                addHolder(form, true, config);
+            } else {
+                if(definitions != null) {
+                    String[] dataTypeParts = variable.getDataType().split("\\.");
+                    if(dataTypeParts.length > 0) {
+                        addFieldAccordingToDataType(form, variable.getName(), dataTypeParts[dataTypeParts.length - 1], definitions);
+                    }
+                }
+                DataHolderBuildConfig config = new DataHolderBuildConfig(variable.getName(), "", variable.getName(), "#BBBBBB", variable.getDataType());
+                addHolder(form, false, config);
+            }
+        }
+    }
+
+    private void addFieldAccordingToDataType(Form form, String fieldBaseName, String unqualifiedDataType, Map<String, SwaggerDefinition> definitions) {
+        if(definitions.keySet().contains(unqualifiedDataType)) {
+            SwaggerDefinition definition = definitions.get(unqualifiedDataType);
+            if (definition != null && definition.getProperties() != null) {
+                addFieldAccordingToProperties(form, fieldBaseName, definition.getProperties(), definition.getRequired());
+            }
+        }
+    }
+
+    private void addFieldAccordingToProperties(Form form, String baseName, Map<String,SwaggerProperty> properties, List<String> required) {
+        for(Map.Entry<String,SwaggerProperty> property : properties.entrySet()) {
+            if(property.getValue().getType() != null && !property.getValue().getType().isEmpty()) {
+                Field field = addField(form, baseName + "/" + property.getKey(), property.getValue().getType());
+                if(field != null && required != null && required.contains(property.getKey())) {
+                    field.setFieldRequired(true);
+                }
+            }
+        }
+    }
+
+    private Field addField(Form form, String identifier, String standardUnqualifiedDataType) {
+        String standardQualifiedDataType = "java.lang." + makeUpperCase(standardUnqualifiedDataType);
+        FieldType fieldType = null;
+        if(standardQualifiedDataType.compareTo("java.lang.Object") != 0) {
+            fieldType = fieldTypeManager.getTypeByClass(standardQualifiedDataType);
+        } else {
+            fieldType = fieldTypeManager.getComplexTypeByClass(standardQualifiedDataType);
+        }
+        I18nSet label = new I18nSet();
+        label.setValue("en", identifier);
+        try {
+            return formManager.addFieldToForm(form, identifier, fieldType, label, "", identifier);
+        } catch (Exception e) {
+            logger.error("field build", e.getMessage());
+        }
+        return null;
+    }
+
+    private void addHolder(Form form, boolean basic, DataHolderBuildConfig config) {
+        DataHolder holder = null;
+        if(basic) {
+            DataHolderBuilder builder = dataHolderManager.getBuilderByBuilderType("basicType");
+            holder = builder.buildDataHolder(config);
+        } else {
+            holder = dataModelerService.buildDataHolder(config);
+        }
+
+        if(holder == null) {
+            logger.error("Holder null", "Holder : " + config.getHolderId() + " is null");
+        }
+        formManager.addDataHolderToForm(form, holder);
+    }
+
+    private boolean isBasicDataType(Variable variable) {
+        String dataType = variable.getDataType();
+        if( dataType.compareTo("Boolean") == 0 ||
+            dataType.compareTo("Integer") == 0 ||
+            dataType.compareTo("Float") == 0 ||
+            dataType.compareTo("Double") == 0 ||
+            dataType.compareTo("String") == 0 ) {
+                return true;
+         }
+         return false;
+    }
+
+    private String makeUpperCase(String type) {
+        if(type == null) {
+            return "Object";
+        }
+        if(type.length() < 2) {
+            return type.toUpperCase();
+        }
+        return type.substring(0,1).toUpperCase() + type.substring(1, type.length());
     }
 
     private String getEditorResponse(String urlpath,

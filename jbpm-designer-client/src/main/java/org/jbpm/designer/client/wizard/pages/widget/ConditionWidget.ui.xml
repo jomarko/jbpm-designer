@@ -23,10 +23,10 @@
 
     <b:Form type="HORIZONTAL">
         <b:FieldSet>
-            <b:FormLabel for="variable" text="Variable" showRequiredIndicator="true"/>
+            <b:FormLabel ui:field="variableLabel" for="variable" text="Variable" showRequiredIndicator="true"/>
             <b:ValueListBox ui:field="variable" />
             <b:HelpBlock ui:field="variableHelp" text="Select variable for condition" visible="false"/>
-            <b:FormLabel for="constraint" text="Constraint" showRequiredIndicator="true"/>
+            <b:FormLabel ui:field="constraintLabel" for="constraint" text="Constraint" showRequiredIndicator="true"/>
             <b:ValueListBox ui:field="constraint" />
             <b:HelpBlock ui:field="constraintHelp" text="Select constraint for variable" visible="false"/>
             <b:FormLabel ui:field="constraintValueLabel" for="constraintValue" text="Constraint Value" showRequiredIndicator="true"/>

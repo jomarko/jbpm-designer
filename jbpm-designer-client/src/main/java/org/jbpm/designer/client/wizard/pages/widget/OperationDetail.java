@@ -13,12 +13,15 @@ import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
 import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.model.operation.Operation;
+import org.jbpm.designer.model.operation.ParameterMapping;
+import org.jbpm.designer.model.operation.SwaggerParameter;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Dependent
 public class OperationDetail extends Composite implements HasModel<Operation> {
@@ -60,15 +63,16 @@ public class OperationDetail extends Composite implements HasModel<Operation> {
         dataBinder.setModel(operation);
     }
 
-    public void setVariablesForParameterMapping(List<Variable> variables) {
+    public void setVariablesForParameterMapping(Map<SwaggerParameter,List<Variable>> variables) {
+        dataBinder.unbind();
         parameters.setAcceptableVariables(variables);
+        bindDataBinder();
     }
 
     public void rebindToModel(Operation operation) {
         dataBinder.unbind();
         dataBinder.setModel(operation);
-        dataBinder.bind(description, "description")
-                  .bind(parameters.getListWidget(), "parameterMappings").getModel();
+        bindDataBinder();
     }
 
     public void setRequiredParametersHelpVisibility(boolean value) {
@@ -77,5 +81,16 @@ public class OperationDetail extends Composite implements HasModel<Operation> {
 
     public void addPropertyChangeHandler(PropertyChangeHandler handler) {
         dataBinder.addPropertyChangeHandler(handler);
+    }
+
+    public void clear() {
+        dataBinder.unbind();
+        description.clear();
+        parameters.parameters.setValue(new ArrayList<ParameterMapping>());
+    }
+
+    private void bindDataBinder() {
+        dataBinder.bind(description, "description")
+                .bind(parameters.getListWidget(), "parameterMappings").getModel();
     }
 }

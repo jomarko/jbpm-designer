@@ -47,9 +47,6 @@ public class ParameterDetail extends Composite implements HasModel<ParameterMapp
     @DataField
     Element requiredIndicator = Document.get().createElement("sup");
 
-    @Inject
-    Event<NotificationEvent> notification;
-
     @Override
     public ParameterMapping getModel() {
         return parameterMapping.getModel();
@@ -61,31 +58,7 @@ public class ParameterDetail extends Composite implements HasModel<ParameterMapp
     }
 
     public void setAcceptableVariables(List<Variable> variables) {
-        List<Variable> acceptable = new ArrayList<Variable>(variables);
-        if(parameterMapping.getModel() != null && parameterMapping.getModel().getParameter() != null) {
-            SwaggerParameter parameter = parameterMapping.getModel().getParameter();
-            if(parameter.getSchema() != null) {
-
-                for(Variable variable : variables) {
-                    String variableDataType = variable.getDataType();
-                    if(!CompareUtils.areSchemeAndDataTypeSame(parameter.getSchema(), variableDataType)) {
-                        acceptable.remove(variable);
-                    }
-                }
-            } else if(parameter.getType() != null) {
-                for(Variable variable : variables) {
-                    if(variable.getDataType().compareToIgnoreCase(parameter.getType()) != 0) {
-                        acceptable.remove(variable);
-                    }
-                }
-            }
-        }
-        if(acceptable.size() == 0) {
-            notification.fire(new NotificationEvent(
-                    DesignerEditorConstants.INSTANCE.noCompatibleVariableForParameter() + " " + name.getValue(),
-                    NotificationEvent.NotificationType.ERROR));
-        }
-        variable.setAcceptableValues(acceptable);
+        variable.setAcceptableValues(variables);
     }
 
     public void showNameAsRequired(boolean required) {

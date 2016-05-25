@@ -14,16 +14,15 @@ import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.util.DataIOEditorNameTextBox;
+import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPageView;
 import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.ServiceTask;
-import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.model.operation.Operation;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 @Dependent
@@ -38,9 +37,6 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
 
     private static ServiceTaskDetailBinder uiBinder = GWT.create(ServiceTaskDetailBinder.class);
 
-    private List<Operation> acceptableOperations;
-    private List<Variable> acceptableVariables;
-
     @UiField
     DataIOEditorNameTextBox name;
 
@@ -48,10 +44,13 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
     HelpBlock nameHelp;
 
     @UiField
-    FieldSet operationWrapper;
+    FormLabel nameLabel;
 
     @UiField
     HelpBlock operationHelp;
+
+    @UiField
+    FormLabel operationLabel;
 
     @UiField(provided = true)
     ValueListBox<Operation> operation = new ValueListBox<Operation>(new Renderer<Operation>() {
@@ -76,29 +75,25 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
     Form serviceTaskDetailForm;
 
     @UiField
-    CheckBox terminate;
+    CheckBox endFlow;
 
     @Inject
     private OperationDetail operationDetail;
 
     private DefaultValues defaultValues = new DefaultValues();
 
+    private ProcessTasksPageView.Presenter presenter;
+
     public ServiceTaskDetail() {
         initWidget(uiBinder.createAndBindUi(this));
         bindDataBinder();
-
-        if(acceptableOperations == null) {
-            acceptableOperations = new ArrayList<Operation>();
-        }
-        if(acceptableVariables == null) {
-            acceptableVariables = new ArrayList<Variable>();
-        }
 
         operation.addValueChangeHandler(new ValueChangeHandler<Operation>() {
             @Override
             public void onValueChange(ValueChangeEvent<Operation> valueChangeEvent) {
                 operationDetail.rebindToModel(valueChangeEvent.getValue());
-                operationDetail.setVariablesForParameterMapping(acceptableVariables);
+                operationDetail.setVariablesForParameterMapping(
+                    presenter.getAcceptableVariablesForParameter(dataBinder.getModel(), valueChangeEvent.getValue()));
             }
         });
 
@@ -123,6 +118,19 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
     @Override
     public void setModel(ServiceTask serviceTask) {
         dataBinder.setModel(serviceTask);
+        if(operationDetail != null) {
+            if(serviceTask == null || serviceTask.getOperation() == null) {
+                operationDetail.clear();
+            } else {
+                operationDetail.rebindToModel(serviceTask.getOperation());
+                Operation operation = null;
+                if(serviceTask != null) {
+                    operation = serviceTask.getOperation();
+                }
+                operationDetail.setVariablesForParameterMapping(
+                    presenter.getAcceptableVariablesForParameter(serviceTask, operation));
+            }
+        }
     }
 
     public void unbind() {
@@ -131,7 +139,7 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
 
     public void bindDataBinder() {
         dataBinder.bind(name, "name")
-                .bind(terminate, "terminateHere")
+                .bind(endFlow, "endFlow")
                 .bind(operation, "operation")
                 .getModel();
     }
@@ -143,50 +151,27 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
 
     public void setNameHelpVisibility(boolean value) {
         nameHelp.setVisible( value );
+        nameLabel.setShowRequiredIndicator(value);
     }
 
     public void setOperationHelpVisibility(boolean value) {
         operationHelp.setVisible( value );
+        operationLabel.setShowRequiredIndicator(value);
+    }
+
+    public void setOperationParametersHelpVisibility(boolean value) {
         operationDetail.setRequiredParametersHelpVisibility( value );
     }
 
-    public void addAvailableOperation(Operation available) {
-        if(acceptableOperations == null) {
-            acceptableOperations = new ArrayList<Operation>();
-        }
-        if(isNotSelected(available) && isNotAlreadyAcceptable(available)) {
-            acceptableOperations.add(available);
-        }
+    public void setAcceptableOperations(List<Operation> acceptableOperations) {
+        dataBinder.unbind();
+        operation.setValue(null);
         operation.setAcceptableValues(acceptableOperations);
+        bindDataBinder();
     }
 
-    public void setVariablesForParameterMapping(List<Variable> variables) {
-        if(variables != null) {
-            acceptableVariables = variables;
-        } else {
-            acceptableVariables = new ArrayList<Variable>();
-        }
-        operationDetail.setVariablesForParameterMapping(acceptableVariables);
+    public void setPresenter(ProcessTasksPageView.Presenter presenter) {
+        this.presenter = presenter;
     }
 
-    private boolean isNotAlreadyAcceptable(Operation oper) {
-        List<String> operationIds = new ArrayList<String>();
-        for(Operation acceptable : acceptableOperations) {
-            operationIds.add(acceptable.getOperationId());
-        }
-        return !operationIds.contains(oper.getOperationId());
-    }
-
-    private boolean isNotSelected(Operation oper) {
-        if(operation.getValue() == null) {
-            return true;
-        } else {
-            Operation selected = operation.getValue();
-            if(selected.getOperationId().compareTo(oper.getOperationId()) == 0) {
-                return false;
-            } else {
-                return true;
-            }
-        }
-    }
 }

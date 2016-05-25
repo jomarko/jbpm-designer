@@ -35,6 +35,4 @@ public interface GeneralProcessInfoPageView extends IsWidget {
 
     void hideNameHelp();
 
-    void showDescriptionHelp();
-
 }

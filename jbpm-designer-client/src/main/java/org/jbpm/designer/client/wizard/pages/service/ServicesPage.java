@@ -11,6 +11,7 @@ import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.model.operation.ServiceUploadResultEntry;
 import org.jbpm.designer.model.operation.Swagger;
+import org.jbpm.designer.model.operation.SwaggerDefinition;
 import org.jbpm.designer.service.SwaggerService;
 import org.kie.workbench.common.screens.search.model.SearchPageRow;
 import org.kie.workbench.common.screens.search.model.SearchTermPageRequest;
@@ -25,7 +26,9 @@ import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Dependent
 public class ServicesPage implements WizardPage, ServicesPageView.Presenter{
@@ -119,6 +122,16 @@ public class ServicesPage implements WizardPage, ServicesPageView.Presenter{
 
     public List<Swagger> getSwaggers() {
         return swaggers;
+    }
+
+    public Map<String, SwaggerDefinition> getDefinitions() {
+        Map<String, SwaggerDefinition> definitions = new HashMap<String, SwaggerDefinition>();
+        if(swaggers != null) {
+            for(Swagger swagger : swaggers) {
+                definitions.putAll(swagger.getDefinitions());
+            }
+        }
+        return definitions;
     }
 
     private void findExistingSwaggers(final int fromPage) {

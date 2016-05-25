@@ -27,6 +27,7 @@ import org.jbpm.designer.model.BusinessProcess;
 import org.jbpm.designer.model.Task;
 import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.model.operation.Swagger;
+import org.jbpm.designer.model.operation.SwaggerDefinition;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.core.client.wizards.AbstractWizard;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPage;
@@ -57,8 +58,6 @@ public class GuidedProcessWizard extends AbstractWizard {
     ServicesPage servicesPage;
 
     Callback<BusinessProcess> completeProcessCallback;
-
-    private NewProcessHandler handler;
 
     private List<WizardPage> pages;
 
@@ -130,10 +129,6 @@ public class GuidedProcessWizard extends AbstractWizard {
         completeProcessCallback.callback(constructBusinessProcess());
     }
 
-    public void setHandler(NewProcessHandler handler) {
-        this.handler = handler;
-    }
-
     public void setProcessName(String processName){
         generalInfoPage.setProcessName(processName);
     }
@@ -161,28 +156,33 @@ public class GuidedProcessWizard extends AbstractWizard {
         return servicesPage.getSwaggers();
     }
 
+    public Map<String, SwaggerDefinition> getDefinitions() {
+        return servicesPage.getDefinitions();
+    }
+
     private BusinessProcess constructBusinessProcess() {
         BusinessProcess businessProcess = new BusinessProcess();
         businessProcess.setProcessName(generalInfoPage.getProcessName());
         businessProcess.setProcessDocumentation(generalInfoPage.getProcessDocumentation());
         businessProcess.setStartEvent(startEventPage.getStartEvent());
-        List<Variable> variables = inputsPage.getInputs();
+        businessProcess.setInitialVariables(inputsPage.getInputs());
+        List<Variable> additionalVariables = new ArrayList<Variable>();
         for(Map.Entry<Integer, List<Task>> tasksGroup: tasksPage.getTasks().entrySet()) {
             for(Task task : tasksGroup.getValue()) {
                 Variable taskOutput = null;
                 if(task.getOutputs() != null && task.getOutputs().size() == 1) {
                     taskOutput = task.getOutputs().get(0);
                     if (taskOutput != null && taskOutput.getName() != null &&
-                            !taskOutput.getName().isEmpty() && !variables.contains(taskOutput)) {
-                        variables.add(taskOutput);
+                            !taskOutput.getName().isEmpty() && !additionalVariables.contains(taskOutput)) {
+                        additionalVariables.add(taskOutput);
                     }
                 }
             }
         }
+        businessProcess.setAdditionalVariables(additionalVariables);
         businessProcess.setConditions(tasksPage.getMergedRowsWithConditions());
-        businessProcess.setVariables(variables);
         businessProcess.setTasks(tasksPage.getTasks());
-        businessProcess.setDefinitions(tasksPage.getDefinitions());
+        businessProcess.setDefinitions(servicesPage.getDefinitions());
         return businessProcess;
     }
 

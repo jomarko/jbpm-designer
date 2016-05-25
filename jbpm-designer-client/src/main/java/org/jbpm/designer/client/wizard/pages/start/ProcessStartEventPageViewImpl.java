@@ -138,4 +138,14 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
         }
         return standardStartEvent;
     }
+
+    @Override
+    public void setTimerRequiredIndicatorVisibility(boolean value) {
+        timerDetails.setRequiredVisibility(value);
+    }
+
+    @Override
+    public void setSignalRequiredIndicatorVisibility(boolean value) {
+        signalDetails.setRequiredVisibility(value);
+    }
 }

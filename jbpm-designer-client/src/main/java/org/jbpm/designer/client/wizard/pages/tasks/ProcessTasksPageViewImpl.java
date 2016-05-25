@@ -33,6 +33,7 @@ import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.wizard.pages.widget.*;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.operation.Operation;
+import org.jbpm.designer.model.operation.SwaggerParameter;
 import org.uberfire.workbench.events.NotificationEvent;
 
 import javax.annotation.PostConstruct;
@@ -41,6 +42,7 @@ import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Dependent
 public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksPageView, DeletableFlexTable.RowsHandler {
@@ -280,11 +282,13 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
-    public void setAvailableVarsForSelectedTask(List<Variable> variables, List<Variable> innerVariables) {
-        conditionWidget.setVariables(variables);
+    public void setAcceptableVariablesForInputs(List<Variable> variables) {
         taskIO.setAcceptableValues(variables);
-        innerVariables.addAll(variables);
-        taskDetail.setVariablesForParameterMapping(innerVariables);
+    }
+
+    @Override
+    public void setAcceptableVariablesForConditions(List<Variable> variables) {
+        conditionWidget.setVariables(variables);
     }
 
     @Override
@@ -337,6 +341,11 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
+    public void setOperationParametersHelpVisibility(boolean value) {
+        taskDetail.setOperationParametersHelpVisibility(value);
+    }
+
+    @Override
     public void setVariableHelpVisibility(boolean value) {
         conditionWidget.setVariableHelpVisibility(value);
     }
@@ -373,8 +382,8 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
-    public void addAvailableOperation(Operation operation) {
-        taskDetail.addAvailableOperation(operation);
+    public void setAcceptableOperations(List<Operation> acceptableOperations) {
+        taskDetail.setAcceptableOperations(acceptableOperations);
     }
 
     @Override

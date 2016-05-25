@@ -26,4 +26,8 @@ public interface ProcessStartEventPageView extends IsWidget {
     String getDefinedTimeValue();
 
     StandardEvent getDefinedEvent();
+
+    void setTimerRequiredIndicatorVisibility(boolean value);
+
+    void setSignalRequiredIndicatorVisibility(boolean value);
 }

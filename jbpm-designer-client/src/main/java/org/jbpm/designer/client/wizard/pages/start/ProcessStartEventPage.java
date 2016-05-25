@@ -75,6 +75,7 @@ public class ProcessStartEventPage implements WizardPage, ProcessStartEventPageV
     public boolean isStartValid() {
 
         if(view.isSelectedDateStart()) {
+            boolean dateValid = true;
             String value = view.getDefinedTimeValue();
             if(value != null && !value.trim().isEmpty()) {
                 value = value.trim();
@@ -82,38 +83,46 @@ public class ProcessStartEventPage implements WizardPage, ProcessStartEventPageV
                 try {
                     date = dateFormat.parse(value);
                 } catch (Exception e) {
-                    return false;
+                    dateValid = false;
                 }
                 if(date == null) {
-                    return false;
+                    dateValid = false;
                 }
             } else {
-                return false;
+                dateValid = false;
             }
+            view.setTimerRequiredIndicatorVisibility(!dateValid);
+            return dateValid;
         }
 
         if(view.isSelectedDelayStart() || view.isSelectedCycleStart()) {
+            boolean timeValueValid = true;
             String value = view.getDefinedTimeValue();
             if(value != null && !value.trim().isEmpty()) {
                 value = value.trim();
                 if (!cronRegExp.test(value)) {
-                    return false;
+                    timeValueValid = false;
                 }
             } else {
-                return false;
+                timeValueValid = false;
             }
+            view.setTimerRequiredIndicatorVisibility(!timeValueValid);
+            return timeValueValid;
         }
 
         if(view.isSelectedSignalStart()) {
+            boolean signalValid = true;
             String value = view.getDefinedSignal();
             if(value!= null && !value.trim().isEmpty()) {
                 value = value.trim();
                 if(!signalRegExp.test(value)) {
-                    return false;
+                    signalValid = false;
                 }
             } else {
-                return false;
+                signalValid = false;
             }
+            view.setSignalRequiredIndicatorVisibility(!signalValid);
+            return signalValid;
         }
         return true;
     }

@@ -18,12 +18,15 @@ import com.google.gwt.user.client.ui.Widget;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.ErrorCallback;
 import org.jboss.errai.common.client.api.RemoteCallback;
+import org.jboss.errai.security.shared.api.identity.*;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.wizard.GuidedProcessWizard;
+import org.jbpm.designer.client.wizard.pages.inputs.InputsChangedEvent;
 import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
 import org.jbpm.designer.client.wizard.util.CompareUtils;
 import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.*;
+import org.jbpm.designer.model.User;
 import org.jbpm.designer.model.operation.*;
 import org.jbpm.designer.service.DiscoverService;
 import org.slf4j.Logger;
@@ -35,8 +38,10 @@ import org.uberfire.ext.security.management.impl.SearchRequestImpl;
 import org.uberfire.ext.widgets.common.client.callbacks.DefaultErrorCallback;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPage;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
+import org.uberfire.workbench.events.NotificationEvent;
 
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
@@ -50,17 +55,18 @@ import java.util.Map;
 public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presenter {
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessTasksPage.class);
+
+    private static int RESULT_MAX_COUNT = 100;
+
     private static final String METHOD_GET = "GET";
     private static final String METHOD_POST = "POST";
     private static final String METHOD_DELETE = "DELETE";
 
-    private static int RESULT_MAX_COUNT = 100;
+    @Inject
+    private ClientUserSystemManager manager;
 
     @Inject
     ProcessTasksPageView view;
-
-    @Inject
-    private ClientUserSystemManager manager;
 
     private GuidedProcessWizard wizard;
 
@@ -69,12 +75,13 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     @Inject
     private Event<WizardPageStatusChangeEvent> event;
 
+    @Inject
+    private Event<NotificationEvent> notification;
+
     private DefaultValues defaultValues = new DefaultValues();
 
     @Inject
     Caller<DiscoverService> discoverService;
-
-    private Map<String, SwaggerDefinition> definitions = new HashMap<String, SwaggerDefinition>();
 
     private List<String> discoveredDataTypes = new ArrayList<String>();
 
@@ -86,6 +93,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     @Override
     public void isComplete(Callback<Boolean> callback) {
         boolean allTasksValid = true;
+        boolean flowCompletelyTerminated = false;
         int rowsCount = view.getRowsCount();
         List<Task> previousRow = null;
         List<String> taskNames = new ArrayList<String>();
@@ -108,13 +116,27 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
                 if(previousRow != null) {
                     boolean canContinue = false;
                     for(Task taskOfPreviousRow : previousRow) {
-                        if(!taskOfPreviousRow.isTerminateHere()) {
+                        if(!taskOfPreviousRow.isEndFlow()) {
                             canContinue = true;
                         }
                     }
-                    if(!canContinue) {
+                    if(!flowCompletelyTerminated && !canContinue) {
+                        flowCompletelyTerminated = true;
+                    }
+                    if(flowCompletelyTerminated) {
                         allTasksValid = false;
                         view.showAsInvalid(task.getId());
+                    }
+                }
+            }
+            for(Widget widget : view.getWidgets(row)) {
+                if(widget instanceof ListTaskDetail && ((ListTaskDetail) widget).getCondition() != null) {
+                    ListTaskDetail detail = (ListTaskDetail)widget;
+                    if(!validateConstraint(detail.getCondition().getConstraint(), false)) {
+                        allTasksValid = false;
+                        if(detail.getModel() != null) {
+                            view.showAsInvalid(detail.getModel().getId());
+                        }
                     }
                 }
             }
@@ -272,18 +294,20 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     private void rebindSelectedWidget(ListTaskDetail detail, Task model) {
         view.unbindAllTaskWidgets();
 
+        List<Variable> basicAvailable = getVariablesForTask(model);
         if (model instanceof HumanTask) {
             view.showHumanSpecificDetails();
         }
         if (model instanceof ServiceTask) {
             view.showServiceSpecificDetails();
+            view.setAcceptableOperations(getAcceptableOperations((ServiceTask) model));
         }
 
-        List<Variable> basicAvailable = getVariablesForTask(model);
-        List<Variable> innerAvailable = getInnerVariables(basicAvailable);
-        view.setAvailableVarsForSelectedTask(basicAvailable, innerAvailable);
         detail.setModel(model);
         view.setModelTaskDetailWidgets(model);
+
+        view.setAcceptableVariablesForInputs(basicAvailable);
+        view.setAcceptableVariablesForConditions(basicAvailable);
         if (detail.getCondition() != null) {
             view.rebindConditionWidgetToModel(detail.getCondition());
         }
@@ -314,33 +338,70 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         return possibleInputs;
     }
 
-    public List<Variable> getInnerVariables(List<Variable> variables) {
-        List<Variable> innerVariables = new ArrayList<Variable>();
-        for(Variable variable : variables) {
-            for(String definitionKey : definitions.keySet()) {
-                if(CompareUtils.areSchemeAndDataTypeSame(definitionKey, variable.getDataType())) {
-                    for(Map.Entry<String, SwaggerProperty> property : definitions.get(definitionKey).getProperties().entrySet()) {
-                        if(property.getValue().getType() != null) {
-                            Variable innerVariable = new Variable();
-                            innerVariable.setName(variable.getName() + "."  + property.getKey());
-                            innerVariable.setDataType(typeToUpper(property.getValue().getType()));
-                            innerVariables.add(innerVariable);
-                        }
-                        if(property.getValue().get$ref() != null) {
-                            for(String dataType : discoveredDataTypes) {
-                                if(CompareUtils.areSchemeAndDataTypeSame(property.getValue().get$ref(), dataType)) {
-                                    Variable innerVariable = new Variable();
-                                    innerVariable.setName(variable.getName() + "."  + property.getKey());
-                                    innerVariable.setDataType(dataType);
-                                    innerVariables.add(innerVariable);
+    @Override
+    public Map<SwaggerParameter, List<Variable>> getAcceptableVariablesForParameter(ServiceTask model, Operation operation) {
+        Map<SwaggerParameter, List<Variable>> acceptableVariablesForParameter = new HashMap<SwaggerParameter, List<Variable>>();
+        if(model != null) {
+            List<Variable> variables = getVariablesForTask(model);
+            List<Variable> subTypes = new ArrayList<Variable>(variables);
+            for (Variable variable : variables) {
+                Map<String, SwaggerDefinition> definitions = wizard.getDefinitions();
+                for (String definitionKey : definitions.keySet()) {
+                    if (CompareUtils.areSchemeAndDataTypeSame(definitionKey, variable.getDataType())) {
+                        for (Map.Entry<String, SwaggerProperty> property : definitions.get(definitionKey).getProperties().entrySet()) {
+                            if (property.getValue().getType() != null) {
+                                Variable subVariable = new Variable();
+                                subVariable.setName(variable.getName() + "." + property.getKey());
+                                subVariable.setDataType(typeToUpper(property.getValue().getType()));
+                                subTypes.add(subVariable);
+                            }
+                            if (property.getValue().get$ref() != null) {
+                                for (String dataType : discoveredDataTypes) {
+                                    if (CompareUtils.areSchemeAndDataTypeSame(property.getValue().get$ref(), dataType)) {
+                                        Variable subVariable = new Variable();
+                                        subVariable.setName(variable.getName() + "." + property.getKey());
+                                        subVariable.setDataType(dataType);
+                                        subTypes.add(subVariable);
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+
+            if (operation != null && operation.getParameterMappings() != null) {
+                for (ParameterMapping mapping : operation.getParameterMappings()) {
+                    if (mapping.getParameter() != null) {
+                        SwaggerParameter parameter = mapping.getParameter();
+                        List<Variable> acceptable = new ArrayList<Variable>(subTypes);
+                        if (parameter.getSchema() != null) {
+                            for (Variable variable : subTypes) {
+                                String variableDataType = variable.getDataType();
+                                if (!CompareUtils.areSchemeAndDataTypeSame(parameter.getSchema(), variableDataType)) {
+                                    acceptable.remove(variable);
+                                }
+                            }
+                        } else if (parameter.getType() != null) {
+                            for (Variable variable : subTypes) {
+                                if (variable.getDataType().compareToIgnoreCase(parameter.getType()) != 0) {
+                                    acceptable.remove(variable);
+                                }
+                            }
+                        }
+
+                        acceptableVariablesForParameter.put(parameter, acceptable);
+                        if (acceptable.size() == 0) {
+                            notification.fire(new NotificationEvent(
+                                    DesignerEditorConstants.INSTANCE.noCompatibleVariableForParameter() + " " + parameter.getName(),
+                                    NotificationEvent.NotificationType.ERROR));
+                        }
+                    }
+                }
+            }
         }
-        return innerVariables;
+
+        return acceptableVariablesForParameter;
     }
 
     private String typeToUpper(String type) {
@@ -366,7 +427,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
 
         if(task instanceof ServiceTask) {
             ServiceTask serviceTask = (ServiceTask) task;
-            if(serviceTask.getOperation() == null || !isOperationValid(serviceTask.getOperation())) {
+            if(serviceTask.getOperation() == null || !checkRequiredMappings(serviceTask.getOperation().getParameterMappings())) {
                 return false;
             }
         }
@@ -381,53 +442,50 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         return true;
     }
 
-    private boolean isOperationValid(Operation operation) {
-        boolean valid = true;
-
-        if(operation.getParameterMappings() != null) {
-            valid = valid && checkRequiredMappings(operation.getParameterMappings());
-        }
-        return valid;
-    }
-
     private boolean checkRequiredMappings(List<ParameterMapping> mappings) {
-        for(ParameterMapping parameterMapping : mappings) {
-            if(parameterMapping.isRequired() && parameterMapping.getVariable() == null) {
-                return false;
+        if(mappings != null) {
+            for (ParameterMapping parameterMapping : mappings) {
+                if (parameterMapping.isRequired() && parameterMapping.getVariable() == null) {
+                    return false;
+                }
             }
         }
         return true;
     }
 
-    @Override
-    public boolean isConstraintValid(Constraint constraint) {
-        boolean validResult = true;
+    public boolean validateConstraint(Constraint constraint, boolean showHelps) {
+        boolean validVariable = true;
+        boolean validConstraint = true;
+        boolean validValue = true;
         if(constraint == null) {
-            validResult = false;;
+            return false;
         }
 
+        String dataType = null;
         if(constraint.getVariable() == null) {
-            view.setVariableHelpVisibility(true);
-            validResult = false;
+            validVariable = false;
         } else {
-            view.setVariableHelpVisibility(false);
+            dataType = constraint.getVariable().getDataType();
         }
 
         if(constraint.getConstraint() == null || constraint.getConstraint().trim().isEmpty()) {
-            view.setConstraintHelpVisibility(true);
-            validResult = false;
-        } else {
-            view.setConstraintHelpVisibility(false);
+            validConstraint = false;
         }
 
-        if(constraint.getConstraintValue() == null || constraint.getConstraintValue().trim().isEmpty()) {
-            view.setConstraintValueHelpVisibility(true);
-            validResult = false;
-        } else {
-            view.setConstraintValueHelpVisibility(false);
+        if(dataType == null || dataType.compareTo("Boolean") != 0) {
+            if (constraint.getConstraintValue() == null || constraint.getConstraintValue().trim().isEmpty()) {
+                validValue = false;
+            }
         }
 
-        return validResult;
+
+        if(showHelps) {
+            view.setVariableHelpVisibility(!validVariable);
+            view.setConstraintHelpVisibility(!validConstraint);
+            view.setConstraintValueHelpVisibility(!validValue);
+        }
+
+        return validVariable && validConstraint && validValue;
     }
 
     public Map<Integer, List<Task>> getTasks() {
@@ -462,11 +520,13 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
 
     public void showHelpForSelectedTask(@Observes WizardPageStatusChangeEvent event) {
         Task task = null;
+        Condition condition = null;
         List<Widget> selectedWidgets = view.getSelectedWidgets();
         if(selectedWidgets != null && selectedWidgets.size() > 0) {
             Widget lastWidget = selectedWidgets.get(selectedWidgets.size() - 1);
             if(lastWidget instanceof ListTaskDetail) {
                 task = ((ListTaskDetail)lastWidget).getModel();
+                condition = ((ListTaskDetail) lastWidget).getCondition();
             }
         }
 
@@ -490,13 +550,47 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
                 ServiceTask serviceTask = (ServiceTask) task;
                 if (serviceTask.getOperation() == null) {
                     view.setOperationHelpVisibility(true);
-                } else if(!isOperationValid(serviceTask.getOperation())) {
-                    view.setOperationHelpVisibility(true);
+                } else if(!checkRequiredMappings(serviceTask.getOperation().getParameterMappings())) {
+                    view.setOperationHelpVisibility(false);
+                    view.setOperationParametersHelpVisibility(true);
                 } else {
                     view.setOperationHelpVisibility(false);
+                    view.setOperationParametersHelpVisibility(false);
                 }
             }
         }
+        if(condition != null) {
+            validateConstraint(condition.getConstraint(), true);
+        }
+    }
+
+    public void removeNonExistingBindings(@Observes InputsChangedEvent event) {
+        List<Variable> availableInputs = event.getInputs();
+        Map<Integer, List<Task>> tasks = getTasks();
+        for(Map.Entry<Integer, List<Task>> row : tasks.entrySet()) {
+            for(Task task : row.getValue()) {
+                if(task.getInputs() != null) {
+                    Map<String, Variable> newTaskInputs = new HashMap<String, Variable>();
+                    for(Map.Entry<String,Variable> variable : task.getInputs().entrySet()) {
+                        if(availableInputs.contains(variable.getValue())) {
+                           newTaskInputs.put(variable.getKey(), variable.getValue());
+                        }
+                    }
+                    task.setInputs(newTaskInputs);
+                }
+                if(task instanceof ServiceTask) {
+                    Operation operation = ((ServiceTask) task).getOperation();
+                    if(operation != null && operation.getParameterMappings() != null) {
+                        for(ParameterMapping mapping : operation.getParameterMappings()) {
+                            if(mapping.getVariable() != null && !availableInputs.contains(mapping.getVariable())) {
+                                mapping.setVariable(null);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        firePageChangedEvent();
     }
 
     private boolean areFromSameRow(List<Widget> widgets) {
@@ -538,13 +632,87 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         return true;
     }
 
+    private List<Operation> extractOperations(List<Swagger> swaggers) {
+        List<Operation> operations = new ArrayList<Operation>();
+        if (swaggers != null) {
+            for (Swagger swagger : swaggers) {
+                if (swagger!= null && swagger.getPaths() != null && swagger.getPaths().entrySet() != null) {
+                    for (Map.Entry<String, SwaggerPath> path : swagger.getPaths().entrySet()) {
+                        if (path != null && path.getValue() != null) {
+                            if (path.getValue().getGet() != null) {
+                                Operation operation = new Operation();
+                                operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
+                                operation.setMethod(METHOD_GET);
+                                SwaggerOperation swaggerOperation = path.getValue().getGet();
+                                extractOperation(swaggerOperation, operation, operations);
+                            }
+                            if (path.getValue().getPost() != null) {
+                                Operation operation = new Operation();
+                                operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
+                                operation.setMethod(METHOD_POST);
+                                SwaggerOperation swaggerOperation = path.getValue().getPost();
+                                extractOperation(swaggerOperation, operation, operations);
+                            }
+                            if (path.getValue().getDelete() != null) {
+                                Operation operation = new Operation();
+                                operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
+                                operation.setMethod(METHOD_DELETE);
+                                SwaggerOperation swaggerOperation = path.getValue().getDelete();
+                                extractOperation(swaggerOperation, operation, operations);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return operations;
+    }
+
+    private void extractOperation(SwaggerOperation swaggerOperation, Operation operation, List<Operation> operations) {
+        if(swaggerOperation != null) {
+            operation.setOperationId(swaggerOperation.getOperationId());
+            operation.setDescription(swaggerOperation.getDescription());
+            List<ParameterMapping> parameterMappings = new ArrayList<ParameterMapping>();
+            for (SwaggerParameter swaggerParameter : swaggerOperation.getParameters()) {
+                ParameterMapping parameterMapping = new ParameterMapping();
+                parameterMapping.setParameter(swaggerParameter);
+                parameterMapping.setRequired(swaggerParameter.isRequired());
+                parameterMappings.add(parameterMapping);
+            }
+            operation.setParameterMappings(parameterMappings);
+            if(swaggerOperation.getResponses() != null
+                    && swaggerOperation.getResponses().get("200") != null
+                    && swaggerOperation.getResponses().get("200").getSchema() != null) {
+                operation.setResponseScheme(swaggerOperation.getResponses().get("200").getSchema());
+            }
+            operations.add(operation);
+        }
+    }
+
+    private List<Operation> getAcceptableOperations(ServiceTask task) {
+        List<Operation> available = extractOperations(wizard.getSwaggers());
+        if(task.getOperation() == null) {
+            return available;
+        } else {
+            List<Operation> acceptable = new ArrayList<Operation>(available);
+            for(Operation operation : available) {
+                if(operation.getOperationId() != null && task.getOperation().getOperationId() != null &&
+                        operation.getOperationId().compareTo(task.getOperation().getOperationId()) == 0) {
+                    acceptable.remove(operation);
+                    acceptable.add(task.getOperation());
+                }
+            }
+            return acceptable;
+        }
+    }
+
     private void sendRequestForExistingUsers(final int getResultFromPage) {
         manager.users(new RemoteCallback<AbstractEntityManager.SearchResponse<org.jboss.errai.security.shared.api.identity.User>>() {
             @Override
             public void callback(final AbstractEntityManager.SearchResponse<org.jboss.errai.security.shared.api.identity.User> response) {
-                List<User> availableUsers = new ArrayList<User>();
+                List<org.jbpm.designer.model.User> availableUsers = new ArrayList<org.jbpm.designer.model.User>();
                 for(org.jboss.errai.security.shared.api.identity.User u : response.getResults()) {
-                    availableUsers.add(new User(u.getIdentifier()));
+                    availableUsers.add(new org.jbpm.designer.model.User(u.getIdentifier()));
                 }
                 view.addAvailableHumanParticipants(availableUsers);
                 if(availableUsers.size() == RESULT_MAX_COUNT) {
@@ -580,68 +748,5 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
                 return true;
             }
         }).search(new SearchRequestImpl("", getResultFromPage, RESULT_MAX_COUNT));
-    }
-
-    private void extractOperations(List<Swagger> swaggers) {
-        if (swaggers != null) {
-            for (Swagger swagger : swaggers) {
-                if (swagger!= null && swagger.getPaths() != null && swagger.getPaths().entrySet() != null) {
-                    for (Map.Entry<String, SwaggerPath> path : swagger.getPaths().entrySet()) {
-                        if (path != null && path.getValue() != null) {
-                            if (path.getValue().getGet() != null) {
-                                Operation operation = new Operation();
-                                operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
-                                operation.setMethod(METHOD_GET);
-                                SwaggerOperation swaggerOperation = path.getValue().getGet();
-                                addOperation(swaggerOperation, operation);
-                            }
-                            if (path.getValue().getPost() != null) {
-                                Operation operation = new Operation();
-                                operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
-                                operation.setMethod(METHOD_POST);
-                                SwaggerOperation swaggerOperation = path.getValue().getPost();
-                                addOperation(swaggerOperation, operation);
-                            }
-                            if (path.getValue().getDelete() != null) {
-                                Operation operation = new Operation();
-                                operation.setUrl(swagger.getHost() + swagger.getBasePath() + path.getKey());
-                                operation.setMethod(METHOD_DELETE);
-                                SwaggerOperation swaggerOperation = path.getValue().getDelete();
-                                addOperation(swaggerOperation, operation);
-                            }
-                        }
-                    }
-                }
-
-                if (swagger.getDefinitions() != null) {
-                    definitions.putAll(swagger.getDefinitions());
-                }
-            }
-        }
-    }
-
-    private void addOperation(SwaggerOperation swaggerOperation, Operation operation) {
-        if(swaggerOperation != null) {
-            operation.setOperationId(swaggerOperation.getOperationId());
-            operation.setDescription(swaggerOperation.getDescription());
-            List<ParameterMapping> parameterMappings = new ArrayList<ParameterMapping>();
-            for (SwaggerParameter swaggerParameter : swaggerOperation.getParameters()) {
-                ParameterMapping parameterMapping = new ParameterMapping();
-                parameterMapping.setParameter(swaggerParameter);
-                parameterMapping.setRequired(swaggerParameter.isRequired());
-                parameterMappings.add(parameterMapping);
-            }
-            operation.setParameterMappings(parameterMappings);
-            if(swaggerOperation.getResponses() != null
-                    && swaggerOperation.getResponses().get("200") != null
-                    && swaggerOperation.getResponses().get("200").getSchema() != null) {
-                operation.setResponseScheme(swaggerOperation.getResponses().get("200").getSchema());
-            }
-            view.addAvailableOperation(operation);
-        }
-    }
-
-    public Map<String, SwaggerDefinition> getDefinitions() {
-        return definitions;
     }
 }

@@ -23,7 +23,7 @@
 
     <b:Form type="HORIZONTAL">
         <b:FieldSet>
-            <b:FormLabel for="signal" text="Signal name" showRequiredIndicator="true" addStyleNames="col-lg-3"/>
+            <b:FormLabel ui:field="signalNameLabel" for="signal" text="Signal name" showRequiredIndicator="true" addStyleNames="col-lg-3"/>
             <gwt:VerticalPanel addStyleNames="col-lg-8">
                 <b:TextBox ui:field="signal"/>
                 <b:HelpBlock ui:field="signalHelp" text="{i18n.signalHelp}"/>

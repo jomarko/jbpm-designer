@@ -23,6 +23,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
 
 import com.google.gwt.user.client.ui.Widget;
+import org.gwtbootstrap3.client.ui.FormLabel;
 import org.gwtbootstrap3.client.ui.HelpBlock;
 import org.gwtbootstrap3.client.ui.TextArea;
 import org.gwtbootstrap3.client.ui.TextBox;
@@ -48,10 +49,10 @@ public class GeneralProcessInfoPageViewImpl extends Composite implements General
     HelpBlock processNameHelp;
 
     @UiField
-    TextArea processDescription;
+    FormLabel processNameLabel;
 
     @UiField
-    HelpBlock processDescriptionHelp;
+    TextArea processDescription;
 
 
     public GeneralProcessInfoPageViewImpl() {
@@ -93,15 +94,12 @@ public class GeneralProcessInfoPageViewImpl extends Composite implements General
     @Override
     public void showNameHelp() {
         processNameHelp.setVisible(true);
+        processNameLabel.setShowRequiredIndicator(true);
     }
 
     @Override
     public void hideNameHelp() {
         processNameHelp.setVisible(false);
-    }
-
-    @Override
-    public void showDescriptionHelp() {
-        processDescriptionHelp.setVisible(true);
+        processNameLabel.setShowRequiredIndicator(false);
     }
 }

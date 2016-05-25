@@ -43,7 +43,13 @@ public class HumanTaskDetail extends Composite implements HasModel<HumanTask> {
     HelpBlock nameHelp;
 
     @UiField
-    FieldSet participantWrapper;
+    FormLabel nameLabel;
+
+    @UiField
+    FormLabel humanLabel;
+
+    @UiField
+    FormLabel groupLabel;
 
     @UiField(provided = true)
     ValueListBox<User> responsibleHuman = new ValueListBox<User>(new ToStringRenderer());
@@ -55,7 +61,7 @@ public class HumanTaskDetail extends Composite implements HasModel<HumanTask> {
     HelpBlock participantHelp;
 
     @UiField
-    CheckBox terminate;
+    CheckBox endFlow;
 
     public HumanTaskDetail() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -81,7 +87,7 @@ public class HumanTaskDetail extends Composite implements HasModel<HumanTask> {
 
     public void bindDataBinder() {
         dataBinder.bind(name, "name")
-                .bind(terminate, "terminateHere")
+                .bind(endFlow, "endFlow")
                 .bind(responsibleHuman, "responsibleHuman")
                 .bind(responsibleGroup, "responsibleGroup")
                 .getModel();
@@ -107,9 +113,12 @@ public class HumanTaskDetail extends Composite implements HasModel<HumanTask> {
 
     public void setNameHelpVisibility(boolean value) {
         nameHelp.setVisible( value );
+        nameLabel.setShowRequiredIndicator(value);
     }
 
     public void setParticipantHelpVisibility(boolean value) {
         participantHelp.setVisible( value );
+        humanLabel.setShowRequiredIndicator(value);
+        groupLabel.setShowRequiredIndicator(value);
     }
 }

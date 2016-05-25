@@ -7,9 +7,12 @@ import org.jboss.errai.ui.shared.api.annotations.DataField;
 import org.jboss.errai.ui.shared.api.annotations.Templated;
 import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.model.operation.ParameterMapping;
+import org.jbpm.designer.model.operation.SwaggerParameter;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Templated("ParametersDetail.html#widget")
 public class ParametersDetail extends Composite {
@@ -18,10 +21,16 @@ public class ParametersDetail extends Composite {
     @Table(root="tbody")
     protected ListWidget<ParameterMapping, ParameterDetail> parameters;
 
-    public void setAcceptableVariables(List<Variable> acceptableVariables) {
+    public void setAcceptableVariables(Map<SwaggerParameter,List<Variable>> acceptableVariables) {
         for(int row = 0; row < parameters.getWidgetCount(); row++) {
             ParameterDetail widget = parameters.getWidget(row);
-            widget.setAcceptableVariables(acceptableVariables);
+            if(widget != null && widget.getModel() != null && widget.getModel().getParameter() != null) {
+                if(acceptableVariables.containsKey(widget.getModel().getParameter())) {
+                    widget.setAcceptableVariables(acceptableVariables.get(widget.getModel().getParameter()));
+                } else {
+                    widget.setAcceptableVariables(new ArrayList<Variable>());
+                }
+            }
         }
     }
 

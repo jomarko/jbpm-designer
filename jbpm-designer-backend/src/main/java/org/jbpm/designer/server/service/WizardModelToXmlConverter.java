@@ -52,7 +52,8 @@ public class WizardModelToXmlConverter {
 
     public String convertProcessToXml(BusinessProcess businessProcess) {
         createProcess(businessProcess.getProcessName(), businessProcess.getProcessDocumentation());
-        createProcessVariables(businessProcess.getVariables());
+        createProcessVariables(businessProcess.getInitialVariables());
+        createProcessVariables(businessProcess.getAdditionalVariables());
         int horizontalOffset = 100;
         FlowElement from = createStartEvent(horizontalOffset, businessProcess.getStartEvent());
         FlowElement to;
@@ -116,7 +117,7 @@ public class WizardModelToXmlConverter {
                 ((ExclusiveGateway)fromGateway).setDefault(flow);
             }
             FlowElement end = null;
-            if(task.isTerminateHere()) {
+            if(task.isEndFlow()) {
                 end = createEndEvent(horizontalOffset + 300, 100 + verticalRelativeOffset);
                 createEdge(middle, end, null);
             } else if(continueTasksCount(rowTasks) == 1) {
@@ -137,7 +138,7 @@ public class WizardModelToXmlConverter {
     private int continueTasksCount(List<Task> tasks) {
         int count= 0;
         for(Task task : tasks) {
-            if(!task.isTerminateHere()) {
+            if(!task.isEndFlow()) {
                 count++;
             }
         }
