@@ -11,6 +11,7 @@ import org.jboss.errai.ui.client.widget.Table;
 import org.jboss.errai.ui.shared.api.annotations.DataField;
 import org.jboss.errai.ui.shared.api.annotations.Templated;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
+import org.jbpm.designer.client.wizard.pages.inputs.InputDeletedEvent;
 import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.Variable;
 import org.uberfire.workbench.events.NotificationEvent;
@@ -26,6 +27,11 @@ public class TaskOutputsTable extends Composite {
 
     @Inject
     Event<NotificationEvent> notification;
+
+    @Inject
+    protected Event<InputDeletedEvent> inputDeletedEvent;
+
+    private InputDeletedEvent inputDeleted;
 
     @Inject
     @DataField
@@ -53,6 +59,7 @@ public class TaskOutputsTable extends Composite {
                 addVariable(model, dataTypes);
             }
         });
+        inputDeleted = new InputDeletedEvent();
     }
 
     public ListWidget<Variable, TaskOutputRow> getListWidget() {
@@ -72,6 +79,8 @@ public class TaskOutputsTable extends Composite {
 
     public void deleteVariable(Variable variable) {
         outputs.getValue().remove(variable);
+        inputDeleted.setDeletedInput(variable);
+        inputDeletedEvent.fire(inputDeleted);
         ValueChangeEvent.fire(outputs, outputs.getValue());
     }
 

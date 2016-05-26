@@ -18,8 +18,6 @@ package org.jbpm.designer.client.wizard.pages.tasks;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.logical.shared.ValueChangeEvent;
-import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
@@ -31,9 +29,9 @@ import org.jboss.errai.databinding.client.api.PropertyChangeEvent;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.wizard.pages.widget.*;
+import org.jbpm.designer.client.wizard.util.ConditionUtils;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.model.operation.Operation;
-import org.jbpm.designer.model.operation.SwaggerParameter;
 import org.uberfire.workbench.events.NotificationEvent;
 
 import javax.annotation.PostConstruct;
@@ -42,7 +40,6 @@ import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Dependent
 public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksPageView, DeletableFlexTable.RowsHandler {
@@ -113,7 +110,8 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         tasksContainer.registerRowsHandler(this);
         taskIO.setPropertyChangeChandler(getHandler());
         taskDetail.setPropertyChangeHandler(getHandler());
-        conditionWidget.setPropertyChangeHandler(getHandler());
+        conditionWidget.addPropertyChangeHandler(getHandler());
+        conditionWidget.addPropertyChangeHandler(getConstraintChangeHandler());
     }
 
     @Override
@@ -405,22 +403,29 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
         return new PropertyChangeHandler() {
             @Override
             public void onPropertyChange(PropertyChangeEvent propertyChangeEvent) {
+                presenter.firePageChangedEvent();
+            }
+        };
+    }
+
+    private PropertyChangeHandler getConstraintChangeHandler() {
+        return new PropertyChangeHandler () {
+            @Override
+            public void onPropertyChange(PropertyChangeEvent propertyChangeEvent) {
                 int row = tasksContainer.getRowOfWidget(lastSelectedWidgets.get(0));
                 List<Widget> rowWidgets = tasksContainer.getRowWidgets(row);
                 rowWidgets.remove(lastSelectedWidgets.get(0));
                 if(rowWidgets.size() == 2 && rowWidgets.get(1) instanceof ListTaskDetail && lastSelectedWidgets.get(0) instanceof ListTaskDetail) {
-                    Condition condition = ((ListTaskDetail) rowWidgets.get(1)).getCondition();
+                    Condition oldCondition = ((ListTaskDetail) rowWidgets.get(1)).getCondition();
                     ListTaskDetail lastSelected = (ListTaskDetail) lastSelectedWidgets.get(0);
-                    if(condition != null && lastSelected.getCondition() != null) {
-                        condition.setExecuteIfConstraintSatisfied(!lastSelected.getCondition().isExecuteIfConstraintSatisfied());
-                        ((ListTaskDetail) rowWidgets.get(1)).setCondition(condition);
+                    if(oldCondition != null && lastSelected.getCondition() != null) {
+                        ((ListTaskDetail) rowWidgets.get(1)).setCondition(ConditionUtils.constructReverseCondition(lastSelected.getCondition()));
                     }
                 }
                 presenter.firePageChangedEvent();
             }
         };
     }
-
 
     private int rowOfTask(int taskId) {
         for(int row = 0; row < tasksContainer.getRowCount(); row++) {

@@ -19,14 +19,12 @@ import com.google.gwt.user.client.ui.Widget;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
-import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.service.DiscoverService;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.common.client.callbacks.DefaultErrorCallback;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPage;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
-import org.uberfire.workbench.events.NotificationEvent;
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
@@ -38,13 +36,8 @@ public class ProcessInputsPage implements WizardPage, ProcessInputsPageView.Pres
 
     private WizardPageStatusChangeEvent pageChanged = new WizardPageStatusChangeEvent(this);
 
-    private InputsChangedEvent inputsChanged = new InputsChangedEvent();
-
     @Inject
     private Event<WizardPageStatusChangeEvent> event;
-
-    @Inject
-    private Event<InputsChangedEvent> inputsChangedEvent;
 
     @Inject
     ProcessInputsPageView view;
@@ -98,8 +91,6 @@ public class ProcessInputsPage implements WizardPage, ProcessInputsPageView.Pres
     @Override
     public void firePageChangedEvent() {
         event.fire(pageChanged);
-        inputsChanged.setInputs(view.getInputs());
-        inputsChangedEvent.fire(inputsChanged);
     }
 
     @Override

@@ -15,6 +15,7 @@ import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.Variable;
 
 import javax.annotation.PostConstruct;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +32,11 @@ public class ProcessInputsTable extends Composite {
     @DataField
     Button addButton;
 
+    @Inject
+    protected Event<InputDeletedEvent> inputDeletedEvent;
+
+    private InputDeletedEvent inputDeleted;
+
     private DefaultValues defaultValues = new DefaultValues();
 
     private List<String> dataTypes;
@@ -45,6 +51,7 @@ public class ProcessInputsTable extends Composite {
                 fireInputsChanged();
             }
         });
+        inputDeleted = new InputDeletedEvent();
     }
 
     public List<Variable> getVariables() {
@@ -84,6 +91,8 @@ public class ProcessInputsTable extends Composite {
             widget.setAcceptableDataTypes(dataTypes);
             widget.setParentWidget(this);
         }
+        inputDeleted.setDeletedInput(variable);
+        inputDeletedEvent.fire(inputDeleted);
         fireInputsChanged();
     }
 

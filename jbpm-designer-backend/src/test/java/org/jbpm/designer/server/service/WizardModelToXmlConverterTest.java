@@ -186,16 +186,15 @@ public class WizardModelToXmlConverterTest {
         taskGroups.get(0).add(humanTask);
         Map<Integer, List<Condition>> conditionGroups = new HashMap<Integer, List<Condition>>();
         List<Condition> conditions = new ArrayList<Condition>();
-        Constraint constraint = new Constraint();
-        constraint.setVariable(stringVariable);
-        constraint.setConstraint(Constraint.EQUAL_TO);
-        constraint.setConstraintValue("abc");
         Condition positive = new Condition();
-        positive.setConstraint(constraint);
-        positive.setExecuteIfConstraintSatisfied(true);
+        positive.setVariable(stringVariable);
+        positive.setConstraint(Condition.EQUALS_TO);
+        positive.setConstraintValue("abc");
+
         Condition negative = new Condition();
-        negative.setConstraint(constraint);
-        negative.setExecuteIfConstraintSatisfied(false);
+        negative.setVariable(stringVariable);
+        negative.setConstraint(Condition.EQUALS_TO);
+        negative.setConstraintValue("abc");
 
         conditions.add(positive);
         conditions.add(negative);

@@ -18,15 +18,13 @@ import com.google.gwt.user.client.ui.Widget;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.ErrorCallback;
 import org.jboss.errai.common.client.api.RemoteCallback;
-import org.jboss.errai.security.shared.api.identity.*;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.wizard.GuidedProcessWizard;
-import org.jbpm.designer.client.wizard.pages.inputs.InputsChangedEvent;
+import org.jbpm.designer.client.wizard.pages.inputs.InputDeletedEvent;
 import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
 import org.jbpm.designer.client.wizard.util.CompareUtils;
 import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.*;
-import org.jbpm.designer.model.User;
 import org.jbpm.designer.model.operation.*;
 import org.jbpm.designer.service.DiscoverService;
 import org.slf4j.Logger;
@@ -41,7 +39,6 @@ import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
 import org.uberfire.workbench.events.NotificationEvent;
 
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
@@ -105,14 +102,14 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
                     allTasksValid = false;
                     view.setUniqueNameHelpVisibility(true);
                     view.showAsInvalid(task.getId());
-                }
-                taskNames.add(task.getName());
-                if(!isTaskValid(task)) {
+                } else if(!isTaskValid(task)) {
                     allTasksValid = false;
                     view.showAsInvalid(task.getId());
                 } else {
                     view.showAsValid(task.getId());
                 }
+
+                taskNames.add(task.getName());
                 if(previousRow != null) {
                     boolean canContinue = false;
                     for(Task taskOfPreviousRow : previousRow) {
@@ -132,7 +129,7 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
             for(Widget widget : view.getWidgets(row)) {
                 if(widget instanceof ListTaskDetail && ((ListTaskDetail) widget).getCondition() != null) {
                     ListTaskDetail detail = (ListTaskDetail)widget;
-                    if(!validateConstraint(detail.getCondition().getConstraint(), false)) {
+                    if(!validateCondition(detail.getCondition(), false)) {
                         allTasksValid = false;
                         if(detail.getModel() != null) {
                             view.showAsInvalid(detail.getModel().getId());
@@ -230,15 +227,8 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
                 ((ListTaskDetail)selectedWidgets.get(0)).setIsMergedWith(((ListTaskDetail) selectedWidgets.get(1)).getId());
                 ((ListTaskDetail)selectedWidgets.get(1)).setIsMergedWith(((ListTaskDetail) selectedWidgets.get(0)).getId());
                 if(conditionBased) {
-                    Constraint constraint = new Constraint();
-                    Condition positive = new Condition();
-                    positive.setConstraint(constraint);
-                    positive.setExecuteIfConstraintSatisfied(true);
-                    Condition negative = new Condition();
-                    negative.setConstraint(constraint);
-                    negative.setExecuteIfConstraintSatisfied(false);
-                    ((ListTaskDetail) selectedWidgets.get(0)).setCondition(positive);
-                    ((ListTaskDetail) selectedWidgets.get(1)).setCondition(negative);
+                    ((ListTaskDetail) selectedWidgets.get(0)).setCondition(new Condition());
+                    ((ListTaskDetail) selectedWidgets.get(1)).setCondition(new Condition());
                 }
                 view.mergeSelectedWidgets(conditionBased);
                 view.deselectAll();
@@ -294,7 +284,6 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
     private void rebindSelectedWidget(ListTaskDetail detail, Task model) {
         view.unbindAllTaskWidgets();
 
-        List<Variable> basicAvailable = getVariablesForTask(model);
         if (model instanceof HumanTask) {
             view.showHumanSpecificDetails();
         }
@@ -303,10 +292,12 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
             view.setAcceptableOperations(getAcceptableOperations((ServiceTask) model));
         }
 
+        List<Variable> basicAvailable = getVariablesForTask(model);
+        view.setAcceptableVariablesForInputs(basicAvailable);
+
         detail.setModel(model);
         view.setModelTaskDetailWidgets(model);
 
-        view.setAcceptableVariablesForInputs(basicAvailable);
         view.setAcceptableVariablesForConditions(basicAvailable);
         if (detail.getCondition() != null) {
             view.rebindConditionWidgetToModel(detail.getCondition());
@@ -453,27 +444,27 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         return true;
     }
 
-    public boolean validateConstraint(Constraint constraint, boolean showHelps) {
+    public boolean validateCondition(Condition condition, boolean showHelps) {
         boolean validVariable = true;
         boolean validConstraint = true;
         boolean validValue = true;
-        if(constraint == null) {
+        if(condition == null) {
             return false;
         }
 
         String dataType = null;
-        if(constraint.getVariable() == null) {
+        if(condition.getVariable() == null) {
             validVariable = false;
         } else {
-            dataType = constraint.getVariable().getDataType();
+            dataType = condition.getVariable().getDataType();
         }
 
-        if(constraint.getConstraint() == null || constraint.getConstraint().trim().isEmpty()) {
+        if(condition.getConstraint() == null || condition.getConstraint().trim().isEmpty()) {
             validConstraint = false;
         }
 
         if(dataType == null || dataType.compareTo("Boolean") != 0) {
-            if (constraint.getConstraintValue() == null || constraint.getConstraintValue().trim().isEmpty()) {
+            if (condition.getConstraintValue() == null || condition.getConstraintValue().trim().isEmpty()) {
                 validValue = false;
             }
         }
@@ -560,29 +551,29 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
             }
         }
         if(condition != null) {
-            validateConstraint(condition.getConstraint(), true);
+            validateCondition(condition, true);
         }
     }
 
-    public void removeNonExistingBindings(@Observes InputsChangedEvent event) {
-        List<Variable> availableInputs = event.getInputs();
+    public void removeNonExistingBindings(@Observes InputDeletedEvent event) {
+        Variable deletedInput = event.getDeletedInput();
         Map<Integer, List<Task>> tasks = getTasks();
         for(Map.Entry<Integer, List<Task>> row : tasks.entrySet()) {
             for(Task task : row.getValue()) {
-                if(task.getInputs() != null) {
-                    Map<String, Variable> newTaskInputs = new HashMap<String, Variable>();
-                    for(Map.Entry<String,Variable> variable : task.getInputs().entrySet()) {
-                        if(availableInputs.contains(variable.getValue())) {
-                           newTaskInputs.put(variable.getKey(), variable.getValue());
+                if(task.getInputs() != null && task.getInputs().values() != null && task.getInputs().values().contains(deletedInput)) {
+                    Map<String, Variable> newInputs = new HashMap<String, Variable>(task.getInputs());
+                    for(Map.Entry<String, Variable> entry : task.getInputs().entrySet()) {
+                        if(deletedInput == entry.getValue()) {
+                            newInputs.remove(entry.getKey());
                         }
                     }
-                    task.setInputs(newTaskInputs);
+                    task.setInputs(newInputs);
                 }
                 if(task instanceof ServiceTask) {
                     Operation operation = ((ServiceTask) task).getOperation();
                     if(operation != null && operation.getParameterMappings() != null) {
                         for(ParameterMapping mapping : operation.getParameterMappings()) {
-                            if(mapping.getVariable() != null && !availableInputs.contains(mapping.getVariable())) {
+                            if(mapping.getVariable() == deletedInput) {
                                 mapping.setVariable(null);
                             }
                         }

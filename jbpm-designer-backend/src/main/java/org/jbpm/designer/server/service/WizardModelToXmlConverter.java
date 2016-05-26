@@ -29,6 +29,7 @@ import org.jbpm.designer.model.Task;
 import org.jbpm.designer.model.operation.Operation;
 import org.jbpm.designer.model.operation.ParameterMapping;
 import org.jbpm.designer.model.operation.SwaggerParameter;
+import org.jbpm.designer.server.service.util.KieFunctionsGenerator;
 import org.jbpm.designer.web.profile.impl.JbpmProfileImpl;
 
 import javax.enterprise.context.Dependent;
@@ -113,9 +114,6 @@ public class WizardModelToXmlConverter {
                 condition = businessProcess.getConditions().get(row).get(conditionsCounter++);
             }
             SequenceFlow flow = createEdge(fromGateway, middle, condition);
-            if(condition != null && condition.isExecuteIfConstraintSatisfied()) {
-                ((ExclusiveGateway)fromGateway).setDefault(flow);
-            }
             FlowElement end = null;
             if(task.isEndFlow()) {
                 end = createEndEvent(horizontalOffset + 300, 100 + verticalRelativeOffset);
@@ -450,44 +448,11 @@ public class WizardModelToXmlConverter {
         flow.setId(id);
 
         if(condition != null) {
-            Constraint constraint = condition.getConstraint();
-            if (constraint != null && constraint.getConstraint() != null && constraint.getVariable() != null
-                    && (constraint.getConstraintValue() != null || "Boolean".compareTo(constraint.getVariable().getDataType()) == 0)) {
+            if (condition.getConstraint() != null && condition.getVariable() != null
+                    && (condition.getConstraintValue() != null || "Boolean".compareTo(condition.getVariable().getDataType()) == 0)) {
                 FormalExpression expression = Bpmn2Factory.eINSTANCE.createFormalExpression();
                 expression.setId(getIdString());
-                String expressionBody = "";
-                if(condition.isExecuteIfConstraintSatisfied()){
-                    expressionBody += "return KieFunctions.";
-                } else {
-                    expressionBody += "return !KieFunctions.";
-                }
-                if (constraint.getConstraint().compareTo(Constraint.EQUAL_TO) == 0) {
-                    expressionBody += "equalsTo(";
-                } else if (constraint.getConstraint().compareTo(Constraint.STARTS_WITH) == 0) {
-                    expressionBody += "startsWith(";
-                } else if (constraint.getConstraint().compareTo(Constraint.CONTAINS) == 0) {
-                    expressionBody += "contains(";
-                }else if (constraint.getConstraint().compareTo(Constraint.GREATER_THAN) == 0) {
-                    expressionBody += "greaterThan(";
-                } else if (constraint.getConstraint().compareTo(Constraint.EQUAL_OR_GREATER_THAN) == 0) {
-                    expressionBody += "greaterOrEqualThan(";
-                } else if (constraint.getConstraint().compareTo(Constraint.LESS_THAN) == 0) {
-                    expressionBody += "lessThan(";
-                } else if (constraint.getConstraint().compareTo(Constraint.EQUAL_OR_LESS_THAN) == 0) {
-                    expressionBody += "lessOrEqualThan(";
-                } else if (constraint.getConstraint().compareTo(Constraint.IS_TRUE) == 0) {
-                    expressionBody += "isTrue(" + constraint.getVariable().getName() + ");";
-                } else if (constraint.getConstraint().compareTo(Constraint.IS_FALSE) == 0) {
-                    expressionBody += "isFalse(" + constraint.getVariable().getName() + ");";
-                }
-
-                if(constraint.getConstraint().compareTo(Constraint.IS_TRUE) != 0 && constraint.getConstraint().compareTo(Constraint.IS_FALSE) != 0) {
-                    expressionBody += constraint.getVariable().getName();
-                    expressionBody += ",\"";
-                    expressionBody += constraint.getConstraintValue();
-                    expressionBody += "\");";
-                }
-                expression.setBody(expressionBody);
+                expression.setBody(KieFunctionsGenerator.getKieFunctionsExpression(condition));
                 expression.setLanguage("http://www.java.com/java");
                 flow.setConditionExpression(expression);
             }

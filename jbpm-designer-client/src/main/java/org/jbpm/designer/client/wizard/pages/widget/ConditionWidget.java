@@ -28,21 +28,19 @@ import org.gwtbootstrap3.client.ui.*;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.databinding.client.api.PropertyChangeHandler;
 import org.jboss.errai.ui.client.widget.HasModel;
+import org.jbpm.designer.client.wizard.util.ConditionUtils;
 import org.jbpm.designer.model.Condition;
-import org.jbpm.designer.model.Constraint;
 import org.jbpm.designer.model.Variable;
 
 import javax.enterprise.context.Dependent;
-import java.util.ArrayList;
 import java.util.List;
 
 @Dependent
 public class ConditionWidget extends Composite implements HasModel<Condition>, HasValue<Condition> {
 
-    private static final String CONSTRAINT_VARIABLE = "constraint.variable";
-    private static final String CONSTRAINT_CONSTRAINT = "constraint.constraint";
-    private static final String CONSTRAINT_CONSTRAINT_VALUE = "constraint.constraintValue";
-    private static final String EXECUTE_IF_CONSTRAINT_SATISFIED = "executeIfConstraintSatisfied";
+    private static final String VARIABLE = "variable";
+    private static final String CONSTRAINT = "constraint";
+    private static final String CONSTRAINT_VALUE = "constraintValue";
 
     interface ConditionWidgetBinder
             extends
@@ -80,8 +78,6 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
     @UiField
     FormLabel constraintValueLabel;
 
-    @UiField
-    CheckBox constraintSatisfied;
 
     public ConditionWidget() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -91,7 +87,7 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
             @Override
             public void onValueChange(ValueChangeEvent<Variable> valueChangeEvent) {
                 constraint.setValue("");
-                constraint.setAcceptableValues(getConstraints(valueChangeEvent.getValue()));
+                constraint.setAcceptableValues(ConditionUtils.getConstraints(valueChangeEvent.getValue()));
                 if(valueChangeEvent.getValue().getDataType().compareTo("Boolean") == 0) {
                     constraintValueLabel.setVisible(false);
                     constraintValue.setVisible(false);
@@ -150,11 +146,10 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
         bindDataBinder();
     }
 
-    public void setPropertyChangeHandler(PropertyChangeHandler handler) {
-        binder.addPropertyChangeHandler(CONSTRAINT_VARIABLE, handler);
-        binder.addPropertyChangeHandler(CONSTRAINT_CONSTRAINT, handler);
-        binder.addPropertyChangeHandler(CONSTRAINT_CONSTRAINT_VALUE, handler);
-        binder.addPropertyChangeHandler(EXECUTE_IF_CONSTRAINT_SATISFIED, handler);
+    public void addPropertyChangeHandler(PropertyChangeHandler handler) {
+        binder.addPropertyChangeHandler(VARIABLE, handler);
+        binder.addPropertyChangeHandler(CONSTRAINT, handler);
+        binder.addPropertyChangeHandler(CONSTRAINT_VALUE, handler);
 
     }
 
@@ -173,34 +168,10 @@ public class ConditionWidget extends Composite implements HasModel<Condition>, H
         constraintLabel.setShowRequiredIndicator(value);
     }
 
-    private List<String> getConstraints(Variable var) {
-        List<String> constraints = new ArrayList<String>();
-        if(var.getDataType().compareTo("Float") == 0
-            || var.getDataType().compareTo("Integer") == 0
-            || var.getDataType().compareTo("Double") == 0) {
-            constraints.add(Constraint.LESS_THAN);
-            constraints.add(Constraint.EQUAL_OR_LESS_THAN);
-            constraints.add(Constraint.GREATER_THAN);
-            constraints.add(Constraint.EQUAL_OR_GREATER_THAN);
-            constraints.add(Constraint.EQUAL_TO);
-        }
-        if(var.getDataType().compareTo("String") == 0) {
-            constraints.add(Constraint.CONTAINS);
-            constraints.add(Constraint.STARTS_WITH);
-            constraints.add(Constraint.EQUAL_TO);
-        }
-        if(var.getDataType().compareTo("Boolean") == 0) {
-            constraints.add(Constraint.IS_TRUE);
-            constraints.add(Constraint.IS_FALSE);
-        }
-        return constraints;
-    }
-
     private void bindDataBinder() {
-        binder.bind(variable, CONSTRAINT_VARIABLE)
-                .bind(constraint, CONSTRAINT_CONSTRAINT)
-                .bind(constraintValue, CONSTRAINT_CONSTRAINT_VALUE)
-                .bind(constraintSatisfied, EXECUTE_IF_CONSTRAINT_SATISFIED)
+        binder.bind(variable, VARIABLE)
+                .bind(constraint, CONSTRAINT)
+                .bind(constraintValue, CONSTRAINT_VALUE)
                 .getModel();
     }
 }

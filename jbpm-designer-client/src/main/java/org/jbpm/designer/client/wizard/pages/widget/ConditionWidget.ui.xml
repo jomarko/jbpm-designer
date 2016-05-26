@@ -32,8 +32,6 @@
             <b:FormLabel ui:field="constraintValueLabel" for="constraintValue" text="Constraint Value" showRequiredIndicator="true"/>
             <b:TextBox ui:field="constraintValue" />
             <b:HelpBlock ui:field="constraintValueHelp" text="Set constraint value" visible="false"/>
-            <b:FormLabel for="constraintSatisfied" text="Execute if condition is satisfied" />
-            <b:CheckBox ui:field="constraintSatisfied" />
         </b:FieldSet>
     </b:Form>
 

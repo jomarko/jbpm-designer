@@ -4,7 +4,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import org.jboss.errai.common.client.api.ErrorCallback;
 import org.jboss.errai.common.client.api.RemoteCallback;
-import org.jbpm.designer.client.wizard.pages.inputs.InputsChangedEvent;
+import org.jbpm.designer.client.wizard.pages.inputs.InputDeletedEvent;
 import org.jbpm.designer.client.wizard.pages.widget.ListTaskDetail;
 import org.jbpm.designer.model.*;
 import org.jbpm.designer.client.wizard.GuidedProcessWizard;
@@ -29,9 +29,7 @@ import org.uberfire.mocks.EventSourceMock;
 import javax.enterprise.event.Event;
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @RunWith(GwtMockitoTestRunner.class)
@@ -314,9 +312,9 @@ public class ProcessTasksPageTest {
         verify(widgetOne).setIsMergedWith(2);
         verify(widgetTwo).setIsMergedWith(1);
         verify(widgetOne).setCondition(conditionCaptor.capture());
-        assertEquals(true,conditionCaptor.getValue().isExecuteIfConstraintSatisfied());
+        assertNotNull(conditionCaptor.getValue());
         verify(widgetTwo).setCondition(conditionCaptor.capture());
-        assertEquals(false,conditionCaptor.getValue().isExecuteIfConstraintSatisfied());
+        assertNotNull(conditionCaptor.getValue());
         verify(view).mergeSelectedWidgets(true);
         verify(view).deselectAll();
         verify(view).setMergeButtonsVisibility(false);
@@ -523,62 +521,62 @@ public class ProcessTasksPageTest {
 
     @Test
     public void testIsConstrainValidNullVariable() throws Exception {
-        Constraint constraint = mock(Constraint.class);
-        assertFalse(page.validateConstraint(constraint, false));
+        Condition condition = mock(Condition.class);
+        assertFalse(page.validateCondition(condition, false));
         verify(view, never()).setVariableHelpVisibility(anyBoolean());
     }
 
     @Test
     public void testIsConstrainValidNullVariableShwoHelp() throws Exception {
-        Constraint constraint = mock(Constraint.class);
-        assertFalse(page.validateConstraint(constraint, true));
+        Condition condition = mock(Condition.class);
+        assertFalse(page.validateCondition(condition, true));
         verify(view).setVariableHelpVisibility(true);
     }
 
     @Test
-    public void testIsConstrainValidNullConstraint() throws Exception {
-        Constraint constraint = mock(Constraint.class);
-        when(constraint.getVariable()).thenReturn(mock(Variable.class));
-        assertFalse(page.validateConstraint(constraint, false));
+    public void testIsConstrainValidNullCondition() throws Exception {
+        Condition condition = mock(Condition.class);
+        when(condition.getVariable()).thenReturn(mock(Variable.class));
+        assertFalse(page.validateCondition(condition, false));
         verify(view, never()).setVariableHelpVisibility(anyBoolean());
         verify(view, never()).setConstraintHelpVisibility(anyBoolean());
     }
 
     @Test
-    public void testIsConstrainValidNullConstraintShowHelp() throws Exception {
-        Constraint constraint = mock(Constraint.class);
-        when(constraint.getVariable()).thenReturn(mock(Variable.class));
-        assertFalse(page.validateConstraint(constraint, true));
+    public void testIsConstrainValidNullConditionShowHelp() throws Exception {
+        Condition condition = mock(Condition.class);
+        when(condition.getVariable()).thenReturn(mock(Variable.class));
+        assertFalse(page.validateCondition(condition, true));
         verify(view).setVariableHelpVisibility(false);
         verify(view).setConstraintHelpVisibility(true);
     }
 
     @Test
-    public void testIsConstrainValidEmptyConstraint() throws Exception {
-        Constraint constraint = mock(Constraint.class);
-        when(constraint.getVariable()).thenReturn(mock(Variable.class));
-        when(constraint.getConstraint()).thenReturn("  ");
-        assertFalse(page.validateConstraint(constraint, false));
+    public void testIsConstrainValidEmptyCondition() throws Exception {
+        Condition condition = mock(Condition.class);
+        when(condition.getVariable()).thenReturn(mock(Variable.class));
+        when(condition.getConstraint()).thenReturn("  ");
+        assertFalse(page.validateCondition(condition, false));
         verify(view, never()).setVariableHelpVisibility(anyBoolean());
         verify(view, never()).setConstraintHelpVisibility(anyBoolean());
     }
 
     @Test
-    public void testIsConstrainValidEmptyConstraintShowHelp() throws Exception {
-        Constraint constraint = mock(Constraint.class);
-        when(constraint.getVariable()).thenReturn(mock(Variable.class));
-        when(constraint.getConstraint()).thenReturn("  ");
-        assertFalse(page.validateConstraint(constraint, true));
+    public void testIsConstrainValidEmptyConditionShowHelp() throws Exception {
+        Condition condition = mock(Condition.class);
+        when(condition.getVariable()).thenReturn(mock(Variable.class));
+        when(condition.getConstraint()).thenReturn("  ");
+        assertFalse(page.validateCondition(condition, true));
         verify(view).setVariableHelpVisibility(false);
         verify(view).setConstraintHelpVisibility(true);
     }
 
     @Test
     public void testIsConstrainValidNullValue() throws Exception {
-        Constraint constraint = mock(Constraint.class);
-        when(constraint.getVariable()).thenReturn(mock(Variable.class));
-        when(constraint.getConstraint()).thenReturn("xxx");
-        assertFalse(page.validateConstraint(constraint, false));
+        Condition condition = mock(Condition.class);
+        when(condition.getVariable()).thenReturn(mock(Variable.class));
+        when(condition.getConstraint()).thenReturn("xxx");
+        assertFalse(page.validateCondition(condition, false));
         verify(view, never()).setVariableHelpVisibility(anyBoolean());
         verify(view, never()).setConstraintHelpVisibility(anyBoolean());
         verify(view, never()).setConstraintValueHelpVisibility(anyBoolean());
@@ -586,10 +584,10 @@ public class ProcessTasksPageTest {
 
     @Test
     public void testIsConstrainValidNullValueShowHelp() throws Exception {
-        Constraint constraint = mock(Constraint.class);
-        when(constraint.getVariable()).thenReturn(mock(Variable.class));
-        when(constraint.getConstraint()).thenReturn("xxx");
-        assertFalse(page.validateConstraint(constraint, true));
+        Condition condition = mock(Condition.class);
+        when(condition.getVariable()).thenReturn(mock(Variable.class));
+        when(condition.getConstraint()).thenReturn("xxx");
+        assertFalse(page.validateCondition(condition, true));
         verify(view).setVariableHelpVisibility(false);
         verify(view).setConstraintHelpVisibility(false);
         verify(view).setConstraintValueHelpVisibility(true);
@@ -597,11 +595,11 @@ public class ProcessTasksPageTest {
 
     @Test
     public void testIsConstrainValidEmptyValue() throws Exception {
-        Constraint constraint = mock(Constraint.class);
-        when(constraint.getVariable()).thenReturn(mock(Variable.class));
-        when(constraint.getConstraint()).thenReturn("xxx");
-        when(constraint.getConstraintValue()).thenReturn("  ");
-        assertFalse(page.validateConstraint(constraint, false));
+        Condition condition = mock(Condition.class);
+        when(condition.getVariable()).thenReturn(mock(Variable.class));
+        when(condition.getConstraint()).thenReturn("xxx");
+        when(condition.getConstraintValue()).thenReturn("  ");
+        assertFalse(page.validateCondition(condition, false));
         verify(view, never()).setVariableHelpVisibility(anyBoolean());
         verify(view, never()).setConstraintHelpVisibility(anyBoolean());
         verify(view, never()).setConstraintValueHelpVisibility(anyBoolean());
@@ -609,11 +607,11 @@ public class ProcessTasksPageTest {
 
     @Test
     public void testIsConstrainValidEmptyValueShowHelp() throws Exception {
-        Constraint constraint = mock(Constraint.class);
-        when(constraint.getVariable()).thenReturn(mock(Variable.class));
-        when(constraint.getConstraint()).thenReturn("xxx");
-        when(constraint.getConstraintValue()).thenReturn("  ");
-        assertFalse(page.validateConstraint(constraint, true));
+        Condition condition = mock(Condition.class);
+        when(condition.getVariable()).thenReturn(mock(Variable.class));
+        when(condition.getConstraint()).thenReturn("xxx");
+        when(condition.getConstraintValue()).thenReturn("  ");
+        assertFalse(page.validateCondition(condition, true));
         verify(view).setVariableHelpVisibility(false);
         verify(view).setConstraintHelpVisibility(false);
         verify(view).setConstraintValueHelpVisibility(true);
@@ -621,11 +619,11 @@ public class ProcessTasksPageTest {
 
     @Test
     public void testIsConstrainValidComplete() throws Exception {
-        Constraint constraint = mock(Constraint.class);
-        when(constraint.getVariable()).thenReturn(mock(Variable.class));
-        when(constraint.getConstraint()).thenReturn("xxx");
-        when(constraint.getConstraintValue()).thenReturn("yyy");
-        assertTrue(page.validateConstraint(constraint, false));
+        Condition condition = mock(Condition.class);
+        when(condition.getVariable()).thenReturn(mock(Variable.class));
+        when(condition.getConstraint()).thenReturn("xxx");
+        when(condition.getConstraintValue()).thenReturn("yyy");
+        assertTrue(page.validateCondition(condition, false));
         verify(view, never()).setVariableHelpVisibility(anyBoolean());
         verify(view, never()).setConstraintHelpVisibility(anyBoolean());
         verify(view, never()).setConstraintValueHelpVisibility(anyBoolean());
@@ -633,11 +631,11 @@ public class ProcessTasksPageTest {
 
     @Test
     public void testIsConstrainValidCompleteShowHelp() throws Exception {
-        Constraint constraint = mock(Constraint.class);
-        when(constraint.getVariable()).thenReturn(mock(Variable.class));
-        when(constraint.getConstraint()).thenReturn("xxx");
-        when(constraint.getConstraintValue()).thenReturn("yyy");
-        assertTrue(page.validateConstraint(constraint, true));
+        Condition condition = mock(Condition.class);
+        when(condition.getVariable()).thenReturn(mock(Variable.class));
+        when(condition.getConstraint()).thenReturn("xxx");
+        when(condition.getConstraintValue()).thenReturn("yyy");
+        assertTrue(page.validateCondition(condition, true));
         verify(view).setVariableHelpVisibility(false);
         verify(view).setConstraintHelpVisibility(false);
         verify(view).setConstraintValueHelpVisibility(false);
@@ -771,11 +769,8 @@ public class ProcessTasksPageTest {
 
     @Test
     public void testRemoveNonExistingBindings() {
-        InputsChangedEvent inputsChanged = new InputsChangedEvent();
-        List<Variable> inputs = new ArrayList<Variable>();
-        inputs.add(varA);
-        inputs.add(varB);
-        inputsChanged.setInputs(inputs);
+        InputDeletedEvent inputsChanged = new InputDeletedEvent();
+        inputsChanged.setDeletedInput(varC);
 
         when(view.getRowsCount()).thenReturn(1);
         when(view.getTasks(0)).thenReturn(mergedRow);
