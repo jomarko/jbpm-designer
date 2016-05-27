@@ -17,12 +17,14 @@ import org.jbpm.designer.client.util.DataIOEditorNameTextBox;
 import org.jbpm.designer.client.wizard.pages.tasks.ProcessTasksPageView;
 import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.ServiceTask;
+import org.jbpm.designer.model.Variable;
 import org.jbpm.designer.model.operation.Operation;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Dependent
@@ -94,6 +96,8 @@ public class ServiceTaskDetail extends Composite implements HasModel<ServiceTask
                 operationDetail.rebindToModel(valueChangeEvent.getValue());
                 operationDetail.setVariablesForParameterMapping(
                     presenter.getAcceptableVariablesForParameter(dataBinder.getModel(), valueChangeEvent.getValue()));
+                ServiceTask model = getModel();
+                model.setOutputs(new ArrayList<Variable>());
             }
         });
 

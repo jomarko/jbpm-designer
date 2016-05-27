@@ -37,19 +37,15 @@ public class TaskOutputsTableTest {
 
     private List<Variable> variables;
     private Variable variable;
-    private List<String> dataTypes;
 
     private TaskOutputsTable table;
 
     @Before
     public void setUp() throws Exception {
-        dataTypes = new ArrayList<String>();
-        dataTypes.add("String");
 
         table = new TaskOutputsTable();
         table.outputs = outputs;
         table.notification = Mockito.mock(EventSourceMock.class);
-        table.dataTypes = dataTypes;
         table.inputDeletedEvent = event;
         table.addButton = mock(Button.class);
 
@@ -89,21 +85,5 @@ public class TaskOutputsTableTest {
 
         verify(event).fire(deletedInput.capture());
         assertEquals(variable, deletedInput.getValue().getDeletedInput());
-    }
-
-    @Test
-    public void testSetAvailableDataTypes() {
-        List<String> newDataTypes = new ArrayList<String>();
-        newDataTypes.add("Integer");
-
-        TaskOutputRow row = mock(TaskOutputRow.class);
-        when(outputs.getWidget(0)).thenReturn(row);
-        when(outputs.getWidgetCount()).thenReturn(1);
-        when(row.getModel()).thenReturn(variable);
-
-        table.setAvailableDataTypes(newDataTypes);
-        verify(row).setAcceptableDataTypes(newDataTypes);
-        assertEquals(1, table.dataTypes.size());
-        assertEquals("Integer", table.dataTypes.get(0));
     }
 }

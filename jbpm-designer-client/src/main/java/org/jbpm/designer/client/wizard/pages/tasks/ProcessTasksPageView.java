@@ -119,8 +119,6 @@ public interface ProcessTasksPageView extends IsWidget {
 
     void setAvailableDataTypes(List<String> dataTypes);
 
-    void restrictOutputDataTypes();
-
     void setUniqueNameHelpVisibility(boolean value);
 
 }

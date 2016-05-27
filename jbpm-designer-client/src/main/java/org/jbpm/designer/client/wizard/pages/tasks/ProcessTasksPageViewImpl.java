@@ -390,11 +390,6 @@ public class ProcessTasksPageViewImpl extends Composite implements ProcessTasksP
     }
 
     @Override
-    public void restrictOutputDataTypes() {
-        taskIO.restrictOutputDataTypes();
-    }
-
-    @Override
     public void setUniqueNameHelpVisibility(boolean value) {
         uniqueNameHelp.setVisible(value);
     }

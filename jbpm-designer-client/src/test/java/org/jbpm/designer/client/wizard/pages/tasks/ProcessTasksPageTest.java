@@ -344,7 +344,6 @@ public class ProcessTasksPageTest {
 
         when(widgetOne.getCondition()).thenReturn(mock(Condition.class));
         page.taskDetailSelected(widgetOne);
-        verify(view, times(2)).restrictOutputDataTypes();
         verify(view).setConditionPanelVisibility(false);
         verify(view).setConditionPanelVisibility(true);
         verify(event, times(2)).fire(any(WizardPageStatusChangeEvent.class));
@@ -440,7 +439,6 @@ public class ProcessTasksPageTest {
         verify(widgetOne).rebind();
         verify(view).rebindTaskDetailWidgets();
         verify(view).highlightSelected();
-        verify(view).restrictOutputDataTypes();
     }
 
     @Test

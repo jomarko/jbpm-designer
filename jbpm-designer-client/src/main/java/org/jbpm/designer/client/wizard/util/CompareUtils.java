@@ -7,6 +7,9 @@ public class CompareUtils {
     public static boolean areSchemeAndDataTypeSame(SwaggerSchema schema, String dataType) {
         if(schema  != null && schema.get$ref() != null && dataType != null) {
             return  areSchemeAndDataTypeSame(schema.get$ref(), dataType);
+        } else if (schema  != null && schema.getType() != null && schema.getType().compareTo("array") == 0
+                && dataType != null && dataType.compareTo("java.util.List") == 0) {
+            return true;
         }
 
         return false;

@@ -3,7 +3,6 @@ package org.jbpm.designer.client.wizard.pages.tasks;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import org.gwtbootstrap3.client.ui.Button;
 import org.jboss.errai.ui.client.widget.ListWidget;
@@ -12,14 +11,12 @@ import org.jboss.errai.ui.shared.api.annotations.DataField;
 import org.jboss.errai.ui.shared.api.annotations.Templated;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.wizard.pages.inputs.InputDeletedEvent;
-import org.jbpm.designer.client.wizard.util.DefaultValues;
 import org.jbpm.designer.model.Variable;
 import org.uberfire.workbench.events.NotificationEvent;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.List;
 
 @Templated("TaskOutputsTable.html#widget")
@@ -42,21 +39,20 @@ public class TaskOutputsTable extends Composite {
     @DataField
     Button addButton;
 
-    private DefaultValues defaultValues = new DefaultValues();
+    private TaskIO parentWidget;
 
-    protected List<String> dataTypes;
+    public void setParentWidget(TaskIO parentWidget) {
+        this.parentWidget = parentWidget;
+    }
 
     @PostConstruct
     public void initialize() {
-        dataTypes = new ArrayList<String>();
         addButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent clickEvent) {
-                Variable model = defaultValues.getDefaultVariable();
-                if(dataTypes.size() > 0 && !dataTypes.contains(model.getDataType())) {
-                    model.setDataType(dataTypes.get(0));
+                if(parentWidget != null) {
+                    parentWidget.addVariable();
                 }
-                addVariable(model, dataTypes);
             }
         });
         inputDeleted = new InputDeletedEvent();
@@ -82,23 +78,5 @@ public class TaskOutputsTable extends Composite {
         inputDeleted.setDeletedInput(variable);
         inputDeletedEvent.fire(inputDeleted);
         ValueChangeEvent.fire(outputs, outputs.getValue());
-    }
-
-    public void setAvailableDataTypes(List<String> availableDataTypes) {
-        dataTypes.clear();
-        if(availableDataTypes != null) {
-            dataTypes.addAll(availableDataTypes);
-        }
-        if(outputs.getWidgetCount() > 0) {
-            for(int row = 0; row < outputs.getWidgetCount(); row++) {
-                TaskOutputRow rowWidget = outputs.getWidget(row);
-                if(dataTypes.size() == 1) {
-                    Variable model = rowWidget.getModel();
-                    model.setDataType(dataTypes.get(0));
-                    rowWidget.setModel(model);
-                }
-                rowWidget.setAcceptableDataTypes(dataTypes);
-            }
-        }
     }
 }

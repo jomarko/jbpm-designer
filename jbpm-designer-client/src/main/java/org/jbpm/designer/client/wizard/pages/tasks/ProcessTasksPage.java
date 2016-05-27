@@ -260,7 +260,6 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
 
         Task model = detail.getModel();
         rebindSelectedWidget(detail, model);
-        view.restrictOutputDataTypes();
 
         List<Widget> selectedWidgets = view.getSelectedWidgets();
 

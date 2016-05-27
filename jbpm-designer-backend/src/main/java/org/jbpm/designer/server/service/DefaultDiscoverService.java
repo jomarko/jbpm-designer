@@ -32,6 +32,7 @@ public class DefaultDiscoverService implements DiscoverService {
             dataTypeNames.add( (String) row.getValue() );
         }
         Collections.sort( dataTypeNames );
+        dataTypeNames.add(0, "java.util.List");
         dataTypeNames.add(0, "String");
         dataTypeNames.add(0, "Object");
         dataTypeNames.add(0, "Integer");

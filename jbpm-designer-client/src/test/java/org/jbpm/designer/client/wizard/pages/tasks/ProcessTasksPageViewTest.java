@@ -538,10 +538,4 @@ public class ProcessTasksPageViewTest {
         verify(taskDetailPanel).setVisible(true);
         verify(taskDetailPanel).setVisible(false);
     }
-
-    @Test
-    public void testRestrictOutputDataTypes() throws Exception {
-        view.restrictOutputDataTypes();
-        verify(taskIO).restrictOutputDataTypes();
-    }
 }
