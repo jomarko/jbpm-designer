@@ -29,7 +29,7 @@ public class ProcessStartEventPageViewImpl extends Composite implements ProcessS
 
     protected Presenter presenter;
 
-    private StandardEvent standardStartEvent = new StandardEvent();
+    protected StandardEvent standardStartEvent = new StandardEvent();
 
     @Inject
     public ProcessStartEventPageViewImpl() {

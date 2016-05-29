@@ -16,7 +16,6 @@
 package org.jbpm.designer.client.wizard;
 
 import com.google.gwt.user.client.ui.Widget;
-import org.jbpm.designer.client.handlers.NewProcessHandler;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
 import org.jbpm.designer.client.wizard.pages.general.GeneralProcessInfoPage;
 import org.jbpm.designer.client.wizard.pages.inputs.ProcessInputsPage;

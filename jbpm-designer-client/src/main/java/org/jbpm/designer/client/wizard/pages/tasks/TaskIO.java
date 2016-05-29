@@ -153,16 +153,18 @@ public class TaskIO extends Composite implements HasModel<Task> {
                 ServiceTask serviceTask = (ServiceTask) getModel();
                 if(serviceTask.getOperation() != null) {
                     Operation operation = serviceTask.getOperation();
+                    boolean foundDataType = false;
                     for(String dataType : dataTypes) {
                         if(CompareUtils.areSchemeAndDataTypeSame(operation.getResponseScheme(), dataType)) {
                             Variable variable = defaultValues.getDefaultVariable();
                             variable.setName("");
                             variable.setDataType(dataType);
                             taskOutputsTable.addVariable(variable, Arrays.asList(dataType));
+                            foundDataType = true;
                         }
                     }
-                    if(getModel().getOutputs() == null || getModel().getOutputs().size() == 0) {
-                        notification.fire(new NotificationEvent("No compatible data type for operation output", NotificationEvent.NotificationType.ERROR));
+                    if(!foundDataType) {
+                        notification.fire(new NotificationEvent("No compatible data type with the operation response", NotificationEvent.NotificationType.WARNING));
                     }
                 } else {
                     notification.fire(new NotificationEvent("Select operation at first", NotificationEvent.NotificationType.WARNING));

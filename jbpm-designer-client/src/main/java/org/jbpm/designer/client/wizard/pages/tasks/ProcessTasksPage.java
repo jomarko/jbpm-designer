@@ -328,37 +328,42 @@ public class ProcessTasksPage implements WizardPage, ProcessTasksPageView.Presen
         return possibleInputs;
     }
 
-    @Override
-    public Map<SwaggerParameter, List<Variable>> getAcceptableVariablesForParameter(ServiceTask model, Operation operation) {
-        Map<SwaggerParameter, List<Variable>> acceptableVariablesForParameter = new HashMap<SwaggerParameter, List<Variable>>();
-        if(model != null) {
-            List<Variable> variables = getVariablesForTask(model);
-            List<Variable> subTypes = new ArrayList<Variable>(variables);
-            for (Variable variable : variables) {
-                Map<String, SwaggerDefinition> definitions = wizard.getDefinitions();
-                for (String definitionKey : definitions.keySet()) {
-                    if (CompareUtils.areSchemeAndDataTypeSame(definitionKey, variable.getDataType())) {
-                        for (Map.Entry<String, SwaggerProperty> property : definitions.get(definitionKey).getProperties().entrySet()) {
-                            if (property.getValue().getType() != null) {
-                                Variable subVariable = new Variable();
-                                subVariable.setName(variable.getName() + "." + property.getKey());
-                                subVariable.setDataType(typeToUpper(property.getValue().getType()));
-                                subTypes.add(subVariable);
-                            }
-                            if (property.getValue().get$ref() != null) {
-                                for (String dataType : discoveredDataTypes) {
-                                    if (CompareUtils.areSchemeAndDataTypeSame(property.getValue().get$ref(), dataType)) {
-                                        Variable subVariable = new Variable();
-                                        subVariable.setName(variable.getName() + "." + property.getKey());
-                                        subVariable.setDataType(dataType);
-                                        subTypes.add(subVariable);
-                                    }
+    private List<Variable> constructSubTypeVariables(List<Variable> variables) {
+        List<Variable> subTypeVariables = new ArrayList<Variable>(variables);
+        for (Variable variable : variables) {
+            Map<String, SwaggerDefinition> definitions = wizard.getDefinitions();
+            for (String definitionKey : definitions.keySet()) {
+                if (CompareUtils.areSchemeAndDataTypeSame(definitionKey, variable.getDataType())) {
+                    for (Map.Entry<String, SwaggerProperty> property : definitions.get(definitionKey).getProperties().entrySet()) {
+                        if (property.getValue().getType() != null) {
+                            Variable subVariable = new Variable();
+                            subVariable.setName(variable.getName() + "." + property.getKey());
+                            subVariable.setDataType(typeToUpper(property.getValue().getType()));
+                            subTypeVariables.add(subVariable);
+                        }
+                        if (property.getValue().get$ref() != null) {
+                            for (String dataType : discoveredDataTypes) {
+                                if (CompareUtils.areSchemeAndDataTypeSame(property.getValue().get$ref(), dataType)) {
+                                    Variable subVariable = new Variable();
+                                    subVariable.setName(variable.getName() + "." + property.getKey());
+                                    subVariable.setDataType(dataType);
+                                    subTypeVariables.add(subVariable);
                                 }
                             }
                         }
                     }
                 }
             }
+        }
+        return subTypeVariables;
+    }
+
+    @Override
+    public Map<SwaggerParameter, List<Variable>> getAcceptableVariablesForParameter(ServiceTask model, Operation operation) {
+        Map<SwaggerParameter, List<Variable>> acceptableVariablesForParameter = new HashMap<SwaggerParameter, List<Variable>>();
+        if(model != null) {
+            List<Variable> variables = getVariablesForTask(model);
+            List<Variable> subTypes = constructSubTypeVariables(variables);
 
             if (operation != null && operation.getParameterMappings() != null) {
                 for (ParameterMapping mapping : operation.getParameterMappings()) {

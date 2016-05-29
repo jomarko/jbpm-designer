@@ -61,7 +61,7 @@ public class DefaultSwaggerService implements SwaggerService {
         return constructSwagger(swaggerAsset.getAssetContent(), fileName).getResultEntry();
     }
 
-    private ResultWrapper constructSwagger(String swaggerJson, String fileName) {
+    protected ResultWrapper constructSwagger(String swaggerJson, String fileName) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -90,7 +90,7 @@ public class DefaultSwaggerService implements SwaggerService {
         return wrapper;
     }
 
-    private class ResultWrapper {
+    protected class ResultWrapper {
         private Swagger swagger;
         private ServiceUploadResultEntry resultEntry;
 

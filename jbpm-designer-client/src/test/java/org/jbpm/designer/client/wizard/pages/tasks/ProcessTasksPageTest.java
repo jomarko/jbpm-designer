@@ -1,7 +1,7 @@
 package org.jbpm.designer.client.wizard.pages.tasks;
 
 import com.google.gwt.user.client.ui.Widget;
-import com.google.gwtmockito.GwtMockitoTestRunner;
+import com.google.gwtmockito.GwtMockito;
 import org.jboss.errai.common.client.api.ErrorCallback;
 import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jbpm.designer.client.wizard.pages.inputs.InputDeletedEvent;
@@ -15,7 +15,6 @@ import org.jbpm.designer.service.DiscoverService;
 import org.jbpm.designer.service.SwaggerService;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.*;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.security.management.api.AbstractEntityManager;
@@ -32,7 +31,6 @@ import java.util.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-@RunWith(GwtMockitoTestRunner.class)
 public class ProcessTasksPageTest {
 
     Event<WizardPageStatusChangeEvent> event = mock(EventSourceMock.class);
@@ -90,6 +88,7 @@ public class ProcessTasksPageTest {
 
     @Before
     public void setUp() {
+        GwtMockito.initMocks(this);
         page.discoverService = new CallerMock<DiscoverService>(mock(DiscoverService.class));
 
         varA = new Variable("a", Variable.VariableType.INPUT, "String", null);

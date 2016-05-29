@@ -11,6 +11,7 @@ import org.uberfire.mocks.EventSourceMock;
 import javax.enterprise.event.Event;
 
 import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class GeneralProcessInfoPageTest {
@@ -32,6 +33,24 @@ public class GeneralProcessInfoPageTest {
         page.initialise();
         verify(view).init(page);
         verify(event).fire(any(WizardPageStatusChangeEvent.class));
+    }
+
+    @Test
+    public void testSetProcessName() {
+        page.setProcessName("abc");
+        verify(view).setName("abc");
+    }
+
+    @Test
+    public void testGetProcessName() {
+        when(view.getName()).thenReturn("xyz");
+        assertEquals("xyz", page.getProcessName());
+    }
+
+    @Test
+    public void testGetProcessDocumentation() {
+        when(view.getDescription()).thenReturn("xxx");
+        assertEquals("xxx", page.getProcessDocumentation());
     }
 
     @Test

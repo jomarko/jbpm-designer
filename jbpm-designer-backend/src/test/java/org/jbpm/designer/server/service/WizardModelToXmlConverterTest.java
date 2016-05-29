@@ -29,14 +29,16 @@ import org.mockito.Mockito;
 
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class WizardModelToXmlConverterTest {
 
     private WizardModelToXmlConverter converter;
     private BusinessProcess process;
     private HumanTask humanTask;
+    private ServiceTask serviceTask;
+    private Operation operation;
+    private Condition condition;
     private Variable stringVariable;
     private List<Variable> variables;
     private Map<Integer, List<Task>> taskGroups;
@@ -49,12 +51,19 @@ public class WizardModelToXmlConverterTest {
         process.setProcessName("someNameOfProcess");
         process.setStartEvent(new StandardEvent());
 
-        humanTask = new HumanTask();
-        humanTask.setName("humanTaskName");
+        humanTask = new HumanTask("humanTaskName");
         humanTask.setResponsibleHuman(new User("user_nick"));
         humanTask.setResponsibleGroup(new User("group_nick"));
         humanTask.setInputs(new HashMap<String, Variable>());
         humanTask.setOutputs(new ArrayList<Variable>());
+
+        condition = new Condition();
+        operation = new Operation();
+
+        serviceTask = new ServiceTask("serviceTaskName");
+        serviceTask.setOperation(operation);
+        serviceTask.setInputs(new HashMap<String, Variable>());
+        serviceTask.setOutputs(new ArrayList<Variable>());
 
         taskGroups = new HashMap<Integer, List<Task>>();
         List<Task> group = new ArrayList<Task>();
@@ -67,6 +76,65 @@ public class WizardModelToXmlConverterTest {
 
         variables = new ArrayList<Variable>();
         variables.add(stringVariable);
+    }
+
+    @Test
+    public void testSignalStart() {
+        SignalEvent signalEvent = new SignalEvent();
+        signalEvent.setSignalName("signalTest");
+        process.setStartEvent(signalEvent);
+
+        converter.convertProcessToXml(process);
+        boolean foundSignalDefinition = false;
+        for(FlowElement flowElement : converter.process.getFlowElements()) {
+            if(flowElement instanceof IntermediateCatchEvent) {
+                if( ((SignalEventDefinition)((IntermediateCatchEvent) flowElement).getEventDefinitions().get(0)).getSignalRef() != null &&
+                    !((SignalEventDefinition)((IntermediateCatchEvent) flowElement).getEventDefinitions().get(0)).getSignalRef().isEmpty()) {
+                    foundSignalDefinition = true;
+                }
+            }
+        }
+        assertTrue(foundSignalDefinition);
+        assertEquals(5, converter.process.getFlowElements().size());
+    }
+
+    @Test
+    public void testTimerDateStart() {
+        TimerEvent timerEvent = new TimerEvent();
+        timerEvent.setTimerType(TimerEvent.DATE);
+        process.setStartEvent(timerEvent);
+
+        converter.convertProcessToXml(process);
+        assertNotNull(((TimerEventDefinition)((StartEvent)converter.process.getFlowElements().get(0)).getEventDefinitions().get(0)).getTimeDate());
+        assertNull(((TimerEventDefinition)((StartEvent)converter.process.getFlowElements().get(0)).getEventDefinitions().get(0)).getTimeCycle());
+        assertNull(((TimerEventDefinition)((StartEvent)converter.process.getFlowElements().get(0)).getEventDefinitions().get(0)).getTimeDuration());
+        assertEquals(3, converter.process.getFlowElements().size());
+    }
+
+    @Test
+    public void testTimerCycleStart() {
+        TimerEvent timerEvent = new TimerEvent();
+        timerEvent.setTimerType(TimerEvent.CYCLE);
+        process.setStartEvent(timerEvent);
+
+        converter.convertProcessToXml(process);
+        assertNull(((TimerEventDefinition)((StartEvent)converter.process.getFlowElements().get(0)).getEventDefinitions().get(0)).getTimeDate());
+        assertNotNull(((TimerEventDefinition)((StartEvent)converter.process.getFlowElements().get(0)).getEventDefinitions().get(0)).getTimeCycle());
+        assertNull(((TimerEventDefinition)((StartEvent)converter.process.getFlowElements().get(0)).getEventDefinitions().get(0)).getTimeDuration());
+        assertEquals(3, converter.process.getFlowElements().size());
+    }
+
+    @Test
+    public void testTimerDurationStart() {
+        TimerEvent timerEvent = new TimerEvent();
+        timerEvent.setTimerType(TimerEvent.DURATION);
+        process.setStartEvent(timerEvent);
+
+        converter.convertProcessToXml(process);
+        assertNull(((TimerEventDefinition)((StartEvent)converter.process.getFlowElements().get(0)).getEventDefinitions().get(0)).getTimeDate());
+        assertNull(((TimerEventDefinition)((StartEvent)converter.process.getFlowElements().get(0)).getEventDefinitions().get(0)).getTimeCycle());
+        assertNotNull(((TimerEventDefinition)((StartEvent)converter.process.getFlowElements().get(0)).getEventDefinitions().get(0)).getTimeDuration());
+        assertEquals(3, converter.process.getFlowElements().size());
     }
 
     @Test
@@ -101,6 +169,91 @@ public class WizardModelToXmlConverterTest {
         assertEquals(11, converter.process.getFlowElements().size());
         assertEquals(1, extractBpmnGateways(converter.process.getFlowElements(), false).size());
         assertEquals(2, extractEndEvents(converter.process.getFlowElements()).size());
+    }
+
+    @Test
+    public void testParallelAndExclusive() {
+        List<Task> parallel = new ArrayList<Task>();
+        parallel.add(humanTask);
+        parallel.add(serviceTask);
+
+        List<Task> exclusive = new ArrayList<Task>();
+        exclusive.add(humanTask);
+        exclusive.add(serviceTask);
+
+        condition.setVariable(stringVariable);
+        condition.setConstraint(Condition.EQUALS_TO);
+        condition.setConstraintValue("anyvalue");
+
+        List<Condition> conditions = new ArrayList<Condition>();
+        conditions.add(condition);
+        conditions.add(condition);
+
+        Map<Integer, List<Condition>> conditionsMap = new HashMap<Integer, List<Condition>>();
+        conditionsMap.put(1, conditions);
+
+        taskGroups.clear();
+        taskGroups.put(0, parallel);
+        taskGroups.put(1, exclusive);
+
+        process.setTasks(taskGroups);
+        process.setConditions(conditionsMap);
+
+        converter.convertProcessToXml(process);
+
+        assertEquals(21, converter.process.getFlowElements().size());
+        assertEquals(2, extractBpmnGateways(converter.process.getFlowElements(), false).size());
+        assertEquals(2, extractBpmnGateways(converter.process.getFlowElements(), true).size());
+        assertEquals(1, extractEndEvents(converter.process.getFlowElements()).size());
+        assertEquals(4, extractBpmnTasks(converter.process.getFlowElements()).size());
+    }
+
+    @Test
+    public void testTaskExclusiveTask() {
+        condition.setVariable(stringVariable);
+        condition.setConstraint(Condition.EQUALS_TO);
+        condition.setConstraintValue("anyvalue");
+
+        List<Condition> conditions = new ArrayList<Condition>();
+        conditions.add(condition);
+        conditions.add(condition);
+
+        Map<Integer, List<Condition>> conditionsMap = new HashMap<Integer, List<Condition>>();
+        conditionsMap.put(1, conditions);
+
+        taskGroups.clear();
+        taskGroups.put(0, Arrays.asList((Task) humanTask));
+        taskGroups.put(1, Arrays.asList(humanTask, serviceTask));
+        taskGroups.put(2, Arrays.asList((Task) serviceTask));
+
+        process.setTasks(taskGroups);
+        process.setConditions(conditionsMap);
+
+        converter.convertProcessToXml(process);
+
+        assertEquals(16, converter.process.getFlowElements().size());
+        assertEquals(0, extractBpmnGateways(converter.process.getFlowElements(), false).size());
+        assertEquals(2, extractBpmnGateways(converter.process.getFlowElements(), true).size());
+        assertEquals(1, extractEndEvents(converter.process.getFlowElements()).size());
+        assertEquals(4, extractBpmnTasks(converter.process.getFlowElements()).size());
+    }
+
+    @Test
+    public void testParallelEndParallelEndTask() {
+        humanTask.setEndFlow(true);
+        taskGroups.clear();
+        taskGroups.put(0, Arrays.asList(humanTask, serviceTask));
+        taskGroups.put(1, Arrays.asList(humanTask, serviceTask));
+        taskGroups.put(2, Arrays.asList((Task) serviceTask));
+
+        process.setTasks(taskGroups);
+        converter.convertProcessToXml(process);
+
+        assertEquals(21, converter.process.getFlowElements().size());
+        assertEquals(2, extractBpmnGateways(converter.process.getFlowElements(), false).size());
+        assertEquals(0, extractBpmnGateways(converter.process.getFlowElements(), true).size());
+        assertEquals(3, extractEndEvents(converter.process.getFlowElements()).size());
+        assertEquals(5, extractBpmnTasks(converter.process.getFlowElements()).size());
     }
 
     @Test
@@ -193,7 +346,7 @@ public class WizardModelToXmlConverterTest {
 
         Condition negative = new Condition();
         negative.setVariable(stringVariable);
-        negative.setConstraint(Condition.EQUALS_TO);
+        negative.setConstraint(Condition.NOT_EQUALS_TO);
         negative.setConstraintValue("abc");
 
         conditions.add(positive);
@@ -208,6 +361,11 @@ public class WizardModelToXmlConverterTest {
         assertEquals(1, converter.process.getProperties().size());
         assertEquals(12, converter.process.getFlowElements().size());
         assertEquals(2, extractBpmnGateways(converter.process.getFlowElements(), true).size());
+
+        Gateway gateway = extractBpmnGateways(converter.process.getFlowElements(), true).get(0);
+        assertEquals(2, gateway.getOutgoing().size());
+        assertTrue(((FormalExpression)gateway.getOutgoing().get(0).getConditionExpression()).getBody().contains("KieFunctions.equalsTo"));
+        assertTrue(((FormalExpression)gateway.getOutgoing().get(1).getConditionExpression()).getBody().contains("!KieFunctions.equalsTo"));
     }
 
     @Test

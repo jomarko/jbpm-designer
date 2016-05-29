@@ -1,10 +1,11 @@
 package org.jbpm.designer.client.wizard.pages.start;
 
-import com.google.gwtmockito.GwtMockitoTestRunner;
+import com.google.gwtmockito.GwtMockito;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
 import org.uberfire.mocks.EventSourceMock;
@@ -12,7 +13,7 @@ import javax.enterprise.event.Event;
 
 import static org.mockito.Mockito.*;
 
-@RunWith(GwtMockitoTestRunner.class)
+@RunWith(MockitoJUnitRunner.class)
 public class ProcessStartEventPageTest {
 
     Event<WizardPageStatusChangeEvent> event = mock(EventSourceMock.class);
@@ -27,6 +28,7 @@ public class ProcessStartEventPageTest {
 
     @Before
     public void init() {
+        GwtMockito.initMocks(this);
         startPage = spy(ProcessStartEventPage.class);
         startPage.event = event;
         startPage.view = view;
@@ -173,6 +175,12 @@ public class ProcessStartEventPageTest {
         when(view.getDefinedTimeValue()).thenReturn("1 2 3 1");
         startPage.isComplete(callback);
         verify(callback).callback(false);
+    }
+
+    @Test
+    public void testGetStartEvent() {
+        startPage.getStartEvent();
+        verify(view).getDefinedEvent();
     }
 
     private void setMockFroCronTest() {

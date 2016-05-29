@@ -1,10 +1,13 @@
 package org.jbpm.designer.client.wizard.pages.tasks;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.user.client.ui.ValueListBox;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwtmockito.GwtMockito;
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import com.google.gwtmockito.WithClassesToStub;
 import org.gwtbootstrap3.client.ui.Button;
@@ -32,7 +35,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 @WithClassesToStub(ValueListBox.class)
-@RunWith(GwtMockitoTestRunner.class)
 public class ProcessTasksPageViewTest {
 
     @Mock
@@ -86,7 +88,8 @@ public class ProcessTasksPageViewTest {
 
     @Before
     public void setUp() throws Exception {
-        view = new ProcessTasksPageViewImpl();
+        GwtMockito.initMocks(this);
+        view = GWT.create(ProcessTasksPageViewImpl.class);
         view.taskDetail = taskDetail;
         view.taskIO = taskIO;
         view.taskIoPane = taskIoPane;
@@ -100,6 +103,45 @@ public class ProcessTasksPageViewTest {
         view.conditionPanel = conditionPanel;
         view.taskDetailPanel = taskDetailPanel;
         view.taskType = taskType;
+
+        doCallRealMethod().when(view).init(any(ProcessTasksPageView.Presenter.class));
+        doCallRealMethod().when(view).rebindConditionWidgetToModel(any(Condition.class));
+        doCallRealMethod().when(view).rebindTaskDetailWidgets();
+        doCallRealMethod().when(view).setParticipantHelpVisibility(anyBoolean());
+        doCallRealMethod().when(view).setMergeButtonsVisibility(anyBoolean());
+        doCallRealMethod().when(view).setVariableHelpVisibility(anyBoolean());
+        doCallRealMethod().when(view).setSplitButtonVisibility(anyBoolean());
+        doCallRealMethod().when(view).unbindAllTaskWidgets();
+        doCallRealMethod().when(view).getTasks(anyInt());
+        doCallRealMethod().when(view).getRowsCount();
+        doCallRealMethod().when(view).setAcceptableOperations(anyList());
+        doCallRealMethod().when(view).showMergeInvalidCount();
+        doCallRealMethod().when(view).conditionButtonHandler(any(ClickEvent.class));
+        doCallRealMethod().when(view).highlightSelected();
+        doCallRealMethod().when(view).setTaskPanelVisibility(anyBoolean());
+        doCallRealMethod().when(view).splitSelectedWidgets();
+        doCallRealMethod().when(view).setAvailableDataTypes(anyList());
+        doCallRealMethod().when(view).addedRow(anyList());
+        doCallRealMethod().when(view).setConstraintHelpVisibility(anyBoolean());
+        doCallRealMethod().when(view).setConstraintValueHelpVisibility(anyBoolean());
+        doCallRealMethod().when(view).addButtonHandler(any(ClickEvent.class));
+        doCallRealMethod().when(view).splitButtonHandler(any(ClickEvent.class));
+        doCallRealMethod().when(view).showAlreadyContainsMerged();
+        doCallRealMethod().when(view).addAvailableHumanParticipants(anyList());
+        doCallRealMethod().when(view).addAvailableGroupParticipants(anyList());
+        doCallRealMethod().when(view).showHumanSpecificDetails();
+        doCallRealMethod().when(view).showServiceSpecificDetails();
+        doCallRealMethod().when(view).getWidgets(anyInt());
+        doCallRealMethod().when(view).mergeSelectedWidgets(anyBoolean());
+        doCallRealMethod().when(view).setModelTaskDetailWidgets(any(Task.class));
+        doCallRealMethod().when(view).setNameHelpVisibility(anyBoolean());
+        doCallRealMethod().when(view).setConditionPanelVisibility(anyBoolean());
+        doCallRealMethod().when(view).setOperationHelpVisibility(anyBoolean());
+        doCallRealMethod().when(view).deselectAll();
+        doCallRealMethod().when(view).showSplitInvalidCount();
+        doCallRealMethod().when(view).rowDeleted();
+        doCallRealMethod().when(view).parallelButtonHandler(any(ClickEvent.class));
+
         view.init(presenter);
     }
 
@@ -109,37 +151,6 @@ public class ProcessTasksPageViewTest {
         verify(taskDetailPane).add(taskDetail);
         verify(taskDetail).init(presenter);
         verify(tasksContainer).clear();
-    }
-
-    @Test
-    public void testAddedRow() throws Exception {
-        List<Widget> widgets = new ArrayList<Widget>();
-        widgets.add(mock(MergedTasksIndicator.class));
-        ListTaskDetail detail = mock(ListTaskDetail.class);
-        widgets.add(detail);
-        when(detail.isInitialized()).thenReturn(false);
-        Task defaultModel = new Task();
-        when(presenter.getDefaultModel(anyString())).thenReturn(defaultModel);
-        view.addedRow(widgets);
-        verify(detail).addDomHandler(clickCaptor.capture(), any(DomEvent.Type.class));
-        verify(detail).setModel(defaultModel);
-        verify(detail).setInitialized(true);
-
-        ClickEvent clickEvent = mock(ClickEvent.class);
-        when(clickEvent.isControlKeyDown()).thenReturn(false);
-        assertEquals(0, view.lastSelectedWidgets.size());
-        clickCaptor.getValue().onClick(clickEvent);
-        assertEquals(1, view.lastSelectedWidgets.size());
-
-        clickCaptor.getValue().onClick(clickEvent);
-        assertEquals(1, view.lastSelectedWidgets.size());
-
-        when(clickEvent.isControlKeyDown()).thenReturn(true);
-        clickCaptor.getValue().onClick(clickEvent);
-        assertEquals(0, view.lastSelectedWidgets.size());
-
-        clickCaptor.getValue().onClick(clickEvent);
-        assertEquals(1, view.lastSelectedWidgets.size());
     }
 
     @Test

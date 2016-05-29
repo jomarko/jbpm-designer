@@ -1,6 +1,7 @@
 package org.jbpm.designer.client.wizard.pages.tasks;
 
-import com.google.gwtmockito.GwtMockitoTestRunner;
+import com.google.gwt.core.client.GWT;
+import com.google.gwtmockito.GwtMockito;
 import org.gwtbootstrap3.client.ui.Button;
 import org.jboss.errai.ui.client.widget.ListWidget;
 import org.jbpm.designer.client.resources.i18n.DesignerEditorConstants;
@@ -8,7 +9,6 @@ import org.jbpm.designer.client.wizard.pages.inputs.InputDeletedEvent;
 import org.jbpm.designer.model.Variable;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.*;
 import org.uberfire.mocks.EventSourceMock;
 import org.uberfire.workbench.events.NotificationEvent;
@@ -21,7 +21,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-@RunWith(GwtMockitoTestRunner.class)
 public class TaskOutputsTableTest {
 
     Event<InputDeletedEvent> event = mock(EventSourceMock.class);
@@ -42,8 +41,8 @@ public class TaskOutputsTableTest {
 
     @Before
     public void setUp() throws Exception {
-
-        table = new TaskOutputsTable();
+        GwtMockito.initMocks(this);
+        table = GWT.create(TaskOutputsTable.class);
         table.outputs = outputs;
         table.notification = Mockito.mock(EventSourceMock.class);
         table.inputDeletedEvent = event;
@@ -52,6 +51,9 @@ public class TaskOutputsTableTest {
         variables =  new ArrayList<Variable>();
         variable = Mockito.mock(Variable.class);
         table.initialize();
+        doCallRealMethod().when(table).addVariable(any(Variable.class), anyList());
+        doCallRealMethod().when(table).deleteVariable(any(Variable.class));
+        doCallRealMethod().when(table).initialize();
     }
 
     @Test
@@ -78,6 +80,7 @@ public class TaskOutputsTableTest {
 
     @Test
     public void testDeleteVariable() {
+        table.initialize();
         variables.add(variable);
         when(outputs.getValue()).thenReturn(variables);
         table.deleteVariable(variable);

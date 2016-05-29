@@ -1,5 +1,7 @@
 package org.jbpm.designer.client.wizard.pages.widget;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwtmockito.GwtMockito;
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import com.google.gwtmockito.WithClassesToStub;
 import org.gwtbootstrap3.client.ui.ValueListBox;
@@ -24,7 +26,6 @@ import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 
 @WithClassesToStub(com.google.gwt.user.client.ui.ValueListBox.class)
-@RunWith(GwtMockitoTestRunner.class)
 public class TaskDetailTest {
 
     @Mock
@@ -46,11 +47,18 @@ public class TaskDetailTest {
 
     @Before
     public void setUp() throws Exception {
-        taskDetail = new TaskDetail();
+        GwtMockito.initMocks(this);
+        taskDetail = GWT.create(TaskDetail.class);
         taskDetail.serviceTaskDetail = serviceTaskDetail;
         taskDetail.humanTaskDetail = humanTaskDetail;
         taskDetail.taskType = taskType;
 
+        doCallRealMethod().when(taskDetail).init(any(ProcessTasksPageView.Presenter.class));
+        doCallRealMethod().when(taskDetail).setModel(any(Task.class));
+        doCallRealMethod().when(taskDetail).getModel();
+        doCallRealMethod().when(taskDetail).showHumanDetails();
+        doCallRealMethod().when(taskDetail).showServiceDetails();
+        doCallRealMethod().when(taskDetail).unbind();
     }
 
     @Test
@@ -121,7 +129,8 @@ public class TaskDetailTest {
         verify(taskType).setText("Human");
     }
 
-    public void showServiceDetails() {
+    @Test
+    public void testShowServiceDetails() {
         taskDetail.showServiceDetails();
         verify(humanTaskDetail).setVisible(false);
         verify(serviceTaskDetail).setVisible(true);

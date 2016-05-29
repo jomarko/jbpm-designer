@@ -1,17 +1,14 @@
 package org.jbpm.designer.client.wizard.pages.tasks;
 
-import com.google.gwtmockito.GwtMockitoTestRunner;
+import com.google.gwt.core.client.GWT;
+import com.google.gwtmockito.GwtMockito;
 import org.jboss.errai.databinding.client.api.DataBinder;
 import org.jboss.errai.ui.client.widget.ListWidget;
-import org.jbpm.designer.model.ServiceTask;
 import org.jbpm.designer.model.Task;
 import org.jbpm.designer.model.Variable;
-import org.jbpm.designer.model.operation.Operation;
-import org.jbpm.designer.model.operation.SwaggerSchema;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -21,7 +18,6 @@ import java.util.*;
 
 import static org.mockito.Mockito.*;
 
-@RunWith(GwtMockitoTestRunner.class)
 public class TaskIOTest {
 
     @Mock
@@ -51,7 +47,8 @@ public class TaskIOTest {
 
     @Before
     public void setUp() {
-        taskIO = new TaskIO();
+        GwtMockito.initMocks(this);
+        taskIO = GWT.create(TaskIO.class);
         taskIO.taskInputsTable = inputsTable;
         taskIO.taskOutputsTable = outputsTable;
         taskIO.dataBinder = dataBinder;
@@ -65,6 +62,8 @@ public class TaskIOTest {
 
         when(inputsTable.getListWidget()).thenReturn(inputs);
         when(outputsTable.getListWidget()).thenReturn(outputs);
+        doCallRealMethod().when(taskIO).setAcceptableValues(anyList());
+        doCallRealMethod().when(taskIO).setModel(any(Task.class));
     }
 
     @Test

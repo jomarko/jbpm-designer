@@ -13,15 +13,16 @@ import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.core.client.wizards.WizardPageStatusChangeEvent;
 import org.uberfire.mocks.CallerMock;
 import org.uberfire.mocks.EventSourceMock;
-import org.uberfire.workbench.events.NotificationEvent;
 
 import javax.enterprise.event.Event;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ProcessInputsPageTest {
@@ -127,4 +128,13 @@ public class ProcessInputsPageTest {
         verify(view).setVariablesHelpVisibility(true);
         verify(callback).callback(false);
     }
+
+    @Test
+    public void testGetInputs(){
+        List<Variable> inputs = new ArrayList<Variable>(Arrays.asList(mock(Variable.class)));
+        when(view.getInputs()).thenReturn(inputs);
+        assertEquals(inputs, page.getInputs());
+        verify(view).getInputs();
+    }
+
 }

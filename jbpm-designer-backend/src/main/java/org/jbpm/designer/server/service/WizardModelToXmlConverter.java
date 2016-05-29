@@ -216,7 +216,7 @@ public class WizardModelToXmlConverter {
                 Variable method = new Variable();
                 method.setDataType("String");
                 method.setName("Method");
-                inputAssignments.put(method, operation.getMethod());
+                inputAssignments.put(method, (operation.getMethod() != null && !operation.getMethod().isEmpty()) ? operation.getMethod() : "GET");
 
                 Variable url = new Variable();
                 url.setDataType("String");

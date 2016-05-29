@@ -1,12 +1,11 @@
 package org.jbpm.designer.client.wizard.pages.inputs;
 
-import com.google.gwtmockito.GwtMockitoTestRunner;
+import com.google.gwtmockito.GwtMockito;
 import org.gwtbootstrap3.client.ui.Button;
 import org.jboss.errai.ui.client.widget.ListWidget;
 import org.jbpm.designer.model.Variable;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -19,7 +18,6 @@ import java.util.List;
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 
-@RunWith(GwtMockitoTestRunner.class)
 public class ProcessInputsTableTest {
 
     Event<InputDeletedEvent> event = mock(EventSourceMock.class);
@@ -37,6 +35,7 @@ public class ProcessInputsTableTest {
 
     @Before
     public void setUp() throws Exception {
+        GwtMockito.initMocks(this);
         table = new ProcessInputsTable();
         table.inputs = listWidget;
         table.inputDeletedEvent = event;
@@ -73,5 +72,28 @@ public class ProcessInputsTableTest {
 
         verify(event).fire(deletedInput.capture());
         assertEquals(variable, deletedInput.getValue().getDeletedInput());
+    }
+
+    @Test
+    public void testClear() {
+        table.clear();
+        List<Variable> variables = new ArrayList<Variable>();
+        verify(listWidget).setValue(variables, true);
+    }
+
+    @Test
+    public void testProblemMarkVisibilityTrue() {
+        ProcessInputRow row = mock(ProcessInputRow.class);
+        when(listWidget.getWidget(any(Variable.class))).thenReturn(row);
+        table.setVariableProblemMarkVisibility(mock(Variable.class), true);
+        verify(row).showAsterisk(true);
+    }
+
+    @Test
+    public void testProblemMarkVisibilityFalse() {
+        ProcessInputRow row = mock(ProcessInputRow.class);
+        when(listWidget.getWidget(any(Variable.class))).thenReturn(row);
+        table.setVariableProblemMarkVisibility(mock(Variable.class), false);
+        verify(row).showAsterisk(false);
     }
 }

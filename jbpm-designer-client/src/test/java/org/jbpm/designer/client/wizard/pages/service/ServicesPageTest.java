@@ -10,10 +10,12 @@ import org.kie.workbench.common.screens.search.model.SearchTermPageRequest;
 import org.kie.workbench.common.screens.search.service.SearchService;
 import org.mockito.*;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.uberfire.client.callbacks.Callback;
 import org.uberfire.mocks.CallerMock;
 import org.uberfire.paging.PageResponse;
 
 import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ServicesPageTest {
@@ -35,6 +37,9 @@ public class ServicesPageTest {
     ServicesPage page = new ServicesPage();
 
     @Captor
+    ArgumentCaptor<SearchTermPageRequest> termCaptor;
+
+    @Captor
     ArgumentCaptor<ServiceUploadResultEntry> resultCaptor;
 
     @Before
@@ -47,6 +52,17 @@ public class ServicesPageTest {
     public void testInitialise() throws Exception {
         page.initialise();
         verify(view).init(page);
+        verify(view).clearUploadResults();
+        verify(searchService).fullTextSearch(termCaptor.capture());
+        assertEquals("*.swagger",termCaptor.getValue().getTerm());
+        assertEquals(0 ,termCaptor.getValue().getStartRowIndex());
+    }
+
+    @Test
+    public void testIsComplete() {
+        Callback<Boolean> callback = mock(Callback.class);
+        page.isComplete(callback);
+        verify(callback).callback(true);
     }
 
     @Test

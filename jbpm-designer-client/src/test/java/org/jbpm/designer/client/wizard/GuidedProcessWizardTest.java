@@ -1,6 +1,5 @@
 package org.jbpm.designer.client.wizard;
 
-import com.google.gwtmockito.GwtMockitoTestRunner;
 import org.jbpm.designer.client.wizard.pages.general.GeneralProcessInfoPage;
 import org.jbpm.designer.client.wizard.pages.inputs.ProcessInputsPage;
 import org.jbpm.designer.client.wizard.pages.service.ServicesPage;
@@ -12,16 +11,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.*;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.core.client.wizards.WizardView;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 
-@RunWith(GwtMockitoTestRunner.class)
+@RunWith(MockitoJUnitRunner.class)
 public class GuidedProcessWizardTest {
 
     @Mock
@@ -58,16 +57,6 @@ public class GuidedProcessWizardTest {
     @Before
     public void setUp() throws Exception {
         wizard.setupPages();
-    }
-
-    @Test
-    public void testStart()  {
-        wizard.start();
-        verify(generalInfoPage).initialise();
-        verify(inputsPage).initialise();
-        verify(startEventPage).initialise();
-        verify(tasksPage).initialise();
-        verify(servicesPage).initialise();
     }
 
     @Test

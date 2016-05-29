@@ -1,8 +1,10 @@
 package org.jbpm.designer.client.wizard.pages.start;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.VerticalPanel;
-import com.google.gwtmockito.GwtMockitoTestRunner;
+import com.google.gwtmockito.GwtMockito;
 import org.gwtbootstrap3.client.ui.HelpBlock;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.jbpm.designer.model.SignalEvent;
@@ -10,14 +12,11 @@ import org.jbpm.designer.model.StandardEvent;
 import org.jbpm.designer.model.TimerEvent;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 
-@RunWith(GwtMockitoTestRunner.class)
 public class ProcessStartEventPageViewTest {
 
     @Mock
@@ -48,7 +47,8 @@ public class ProcessStartEventPageViewTest {
 
     @Before
     public void setUp() throws Exception {
-        view = new ProcessStartEventPageViewImpl();
+        GwtMockito.initMocks(this);
+        view = GWT.create(ProcessStartEventPageViewImpl.class);
         view.standard = standard;
         view.timerDetails = timerDetails;
         view.timer = timer;
@@ -57,6 +57,19 @@ public class ProcessStartEventPageViewTest {
         view.signal = signal;
         view.standardHelp = standardHelp;
         view.container = container;
+        view.standardStartEvent = mock(StandardEvent.class);
+        doCallRealMethod().when(view).init(any(ProcessStartEventPageView.Presenter.class));
+        doCallRealMethod().when(view).initializeView();
+        doCallRealMethod().when(view).getDefinedEvent();
+        doCallRealMethod().when(view).getDefinedTimeValue();
+        doCallRealMethod().when(view).getDefinedSignal();
+        doCallRealMethod().when(view).isSelectedDateStart();
+        doCallRealMethod().when(view).isSelectedDelayStart();
+        doCallRealMethod().when(view).isSelectedCycleStart();
+        doCallRealMethod().when(view).isSelectedSignalStart();
+        doCallRealMethod().when(view).timerClicked(any(ClickEvent.class));
+        doCallRealMethod().when(view).signalClicked(any(ClickEvent.class));
+        doCallRealMethod().when(view).standardClicked(any(ClickEvent.class));
     }
 
     @Test

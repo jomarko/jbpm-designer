@@ -1,0 +1,273 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "vacations",
+    "description": "A sample API for managing vacations",
+    "termsOfService": "http://swagger.io/terms/",
+    "contact": {
+      "name": "Swagger API Team",
+      "email": "foo@example.com",
+      "url": "http://madskristensen.net"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "http://github.com/gruntjs/grunt/blob/master/LICENSE-MIT"
+    }
+  },
+  "host": "http://private-733819-vacations.apiary-mock.com",
+  "basePath": "/api",
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/vacations":
+      "post": {
+        "description": "Creates a new vacation request",
+        "operationId": "createRequest",
+        "parameters": [
+          {
+            "name": "vacationRequest",
+            "in": "body",
+            "description": "New vacation request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VacationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Created Vacation with status - New",
+            "schema": {
+              "$ref": "#/definitions/Vacation"
+            },
+            "examples": {
+              "application/json": {
+                "id": 1,
+                "request": {
+                  "reason": "Family Holiday",
+                  "unpaid": false,
+                  "length": 2
+                },
+                "status": "New"
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/vacations/{id}": {
+      "get": {
+        "description": "Returns a Vacation according to the ID",
+        "operationId": "getVacationById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Id of Vacation to fetch",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vacation response",
+            "schema": {
+              "$ref": "#/definitions/Vacation"
+            },
+            "examples": {
+              "application/json": {
+                "id": 2,
+                "request": {
+                  "reason": "Other",
+                  "unpaid": true,
+                  "length": 2
+                },
+                "status": "New"
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "deletes a Vacation according the ID",
+        "operationId": "deleteVacation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of vacation to delete",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "vacation deleted"
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/vacations/{id}/confirm": {
+      "post": {
+        "description": "confirms the vacation",
+        "operationId": "confirmVacation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Vacation Id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vacation response",
+            "schema": {
+              "$ref": "#/definitions/Vacation"
+            },
+            "examples": {
+              "application/json": {
+                "id": 2,
+                "request": {
+                  "reason": "Other",
+                  "unpaid": true,
+                  "length": 2
+                },
+                "status": "Confirmed"
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/vacations/{id}/decline": {
+      "post": {
+        "description": "declines the vacation",
+        "operationId": "declineVacation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Vacation Id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vacation response",
+            "schema": {
+              "$ref": "#/definitions/Vacation"
+            },
+            "examples": {
+              "application/json": {
+                "id": 2,
+                "request": {
+                  "reason": "Other",
+                  "unpaid": true,
+                  "length": 2
+                },
+                "status": "Declined"
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Vacation": {
+      "required": [
+        "id",
+        "request",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "request": {
+          "$ref": "#/definitions/VacationRequest"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "VacationRequest": {
+      "required": [
+        "reason",
+        "length"
+      ],
+      "properties": {
+        "reason": {
+          "type": "string"
+        },
+        "unpaid": {
+          "type": "boolean"
+        },
+        "length": {
+          "type": "integer"
+        }
+      }
+    },
+    "Error": {
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
