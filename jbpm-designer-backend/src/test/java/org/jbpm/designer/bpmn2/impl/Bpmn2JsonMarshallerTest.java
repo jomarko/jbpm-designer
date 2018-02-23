@@ -1008,4 +1008,35 @@ public class Bpmn2JsonMarshallerTest {
         assertNotNull(endEvent);
     }
 
+    @Test
+    public void testMessageRefNodes() throws Exception {
+        JSONObject process = loader.loadProcessFromXml("messageRefNodes.bpmn2");
+
+        JSONObject startMessageEvent = getChildByName(process,
+                                                     "start");
+        JSONObject startMessageEventProperties = startMessageEvent.getJSONObject("properties");
+        assertEquals("messageOne",
+                     startMessageEventProperties.getString("messageref"));
+
+        JSONObject sendTask = getChildByName(process,
+                                                      "send");
+        JSONObject sendTaskProperties = sendTask.getJSONObject("properties");
+        assertEquals("messagetwo",
+                     sendTaskProperties.getString("messageref"));
+
+        JSONObject receiveTask = getChildByName(process,
+                                             "receive");
+        JSONObject receiveTaskProperties = receiveTask.getJSONObject("properties");
+        assertEquals("messagethree",
+                     receiveTaskProperties.getString("messageref"));
+
+        JSONObject endMessageEvent = getChildByName(process,
+                                                "end");
+        JSONObject endMessageEventProperties = endMessageEvent.getJSONObject("properties");
+        assertEquals("messagefour",
+                     endMessageEventProperties.getString("messageref"));
+
+
+    }
+
 }

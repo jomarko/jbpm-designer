@@ -743,8 +743,13 @@ public class Bpmn2JsonMarshaller {
             } else if (ed instanceof MessageEventDefinition) {
                 if (((MessageEventDefinition) ed).getMessageRef() != null) {
                     Message msg = ((MessageEventDefinition) ed).getMessageRef();
-                    properties.put("messageref",
-                                   msg.getId());
+                    if(msg.getName() != null) {
+                        properties.put("messageref",
+                                       msg.getName());
+                    } else {
+                        properties.put("messageref",
+                                       msg.getId());
+                    }
                 }
             } else if (ed instanceof CompensateEventDefinition) {
                 if (((CompensateEventDefinition) ed).getActivityRef() != null) {
@@ -900,8 +905,13 @@ public class Bpmn2JsonMarshaller {
             } else if (ed instanceof MessageEventDefinition) {
                 if (((MessageEventDefinition) ed).getMessageRef() != null) {
                     Message msg = ((MessageEventDefinition) ed).getMessageRef();
-                    properties.put("messageref",
-                                   msg.getId());
+                    if(msg.getName() != null) {
+                        properties.put("messageref",
+                                       msg.getName());
+                    } else {
+                        properties.put("messageref",
+                                       msg.getId());
+                    }
                 }
             } else if (ed instanceof CompensateEventDefinition) {
                 if (((CompensateEventDefinition) ed).getActivityRef() != null) {
@@ -1897,15 +1907,25 @@ public class Bpmn2JsonMarshaller {
             taskType = "Send";
             SendTask st = (SendTask) task;
             if (st.getMessageRef() != null) {
-                properties.put("messageref",
-                               st.getMessageRef().getId());
+                if(st.getMessageRef().getName() != null) {
+                    properties.put("messageref",
+                                   st.getMessageRef().getName());
+                } else {
+                    properties.put("messageref",
+                                   st.getMessageRef().getId());
+                }
             }
         } else if (task instanceof ReceiveTask) {
             taskType = "Receive";
             ReceiveTask rt = (ReceiveTask) task;
             if (rt.getMessageRef() != null) {
-                properties.put("messageref",
-                               rt.getMessageRef().getId());
+                if(rt.getMessageRef().getName() != null) {
+                    properties.put("messageref",
+                                   rt.getMessageRef().getName());
+                } else {
+                    properties.put("messageref",
+                                   rt.getMessageRef().getId());
+                }
             }
         }
 
