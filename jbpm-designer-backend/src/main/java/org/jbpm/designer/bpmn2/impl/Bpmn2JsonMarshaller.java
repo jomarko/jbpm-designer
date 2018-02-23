@@ -650,15 +650,15 @@ public class Bpmn2JsonMarshaller {
                     try {
                         properties.put("timedate",
                                        ((FormalExpression) ted.getTimeDate()).getBody());
-                    } catch(Exception e) {
+                    } catch (Exception e) {
                         _logger.info("Could not find timedate for : " + ted);
                     }
                 }
                 if (ted.getTimeDuration() != null) {
                     try {
                         properties.put("timeduration",
-                                   ((FormalExpression) ted.getTimeDuration()).getBody());
-                    } catch(Exception e) {
+                                       ((FormalExpression) ted.getTimeDuration()).getBody());
+                    } catch (Exception e) {
                         _logger.info("Could not find timeduration for : " + ted);
                     }
                 }
@@ -670,7 +670,7 @@ public class Bpmn2JsonMarshaller {
                             properties.put("timecyclelanguage",
                                            ((FormalExpression) ted.getTimeCycle()).getLanguage());
                         }
-                    } catch(Exception e) {
+                    } catch (Exception e) {
                         _logger.info("Could not find timecycle for : " + ted);
                     }
                 }
@@ -726,7 +726,7 @@ public class Bpmn2JsonMarshaller {
                                            "drools");
                         }
                     }
-                } catch(Exception e) {
+                } catch (Exception e) {
                     _logger.info("Could not find conditional expression for: " + ed);
                 }
             } else if (ed instanceof EscalationEventDefinition) {
@@ -742,14 +742,8 @@ public class Bpmn2JsonMarshaller {
                 }
             } else if (ed instanceof MessageEventDefinition) {
                 if (((MessageEventDefinition) ed).getMessageRef() != null) {
-                    Message msg = ((MessageEventDefinition) ed).getMessageRef();
-                    if(msg.getName() != null) {
-                        properties.put("messageref",
-                                       msg.getName());
-                    } else {
-                        properties.put("messageref",
-                                       msg.getId());
-                    }
+                    setMessageRefProperties(properties,
+                                            ((MessageEventDefinition) ed).getMessageRef());
                 }
             } else if (ed instanceof CompensateEventDefinition) {
                 if (((CompensateEventDefinition) ed).getActivityRef() != null) {
@@ -758,6 +752,17 @@ public class Bpmn2JsonMarshaller {
                                    act.getName());
                 }
             }
+        }
+    }
+
+    private void setMessageRefProperties(final Map<String, Object> properties,
+                                         final Message message) {
+        if (message.getName() != null) {
+            properties.put("messageref",
+                           message.getName());
+        } else {
+            properties.put("messageref",
+                           message.getId());
         }
     }
 
@@ -820,7 +825,7 @@ public class Bpmn2JsonMarshaller {
                 if (ted.getTimeDuration() != null) {
                     try {
                         properties.put("timeduration",
-                                   ((FormalExpression) ted.getTimeDuration()).getBody());
+                                       ((FormalExpression) ted.getTimeDuration()).getBody());
                     } catch (Exception e) {
                         _logger.info("Could not find timeduration for: " + ted);
                     }
@@ -833,7 +838,7 @@ public class Bpmn2JsonMarshaller {
                             properties.put("timecyclelanguage",
                                            ((FormalExpression) ted.getTimeCycle()).getLanguage());
                         }
-                    } catch(Exception e) {
+                    } catch (Exception e) {
                         _logger.info("Could not find timecycle for: " + ted);
                     }
                 }
@@ -888,7 +893,7 @@ public class Bpmn2JsonMarshaller {
                                            "drools");
                         }
                     }
-                } catch(Exception e) {
+                } catch (Exception e) {
                     _logger.info("Could not find conditionexpression for: " + ed);
                 }
             } else if (ed instanceof EscalationEventDefinition) {
@@ -904,14 +909,8 @@ public class Bpmn2JsonMarshaller {
                 }
             } else if (ed instanceof MessageEventDefinition) {
                 if (((MessageEventDefinition) ed).getMessageRef() != null) {
-                    Message msg = ((MessageEventDefinition) ed).getMessageRef();
-                    if(msg.getName() != null) {
-                        properties.put("messageref",
-                                       msg.getName());
-                    } else {
-                        properties.put("messageref",
-                                       msg.getId());
-                    }
+                    setMessageRefProperties(properties,
+                                            ((MessageEventDefinition) ed).getMessageRef());
                 }
             } else if (ed instanceof CompensateEventDefinition) {
                 if (((CompensateEventDefinition) ed).getActivityRef() != null) {
@@ -1907,25 +1906,13 @@ public class Bpmn2JsonMarshaller {
             taskType = "Send";
             SendTask st = (SendTask) task;
             if (st.getMessageRef() != null) {
-                if(st.getMessageRef().getName() != null) {
-                    properties.put("messageref",
-                                   st.getMessageRef().getName());
-                } else {
-                    properties.put("messageref",
-                                   st.getMessageRef().getId());
-                }
+                setMessageRefProperties(properties, st.getMessageRef());
             }
         } else if (task instanceof ReceiveTask) {
             taskType = "Receive";
             ReceiveTask rt = (ReceiveTask) task;
             if (rt.getMessageRef() != null) {
-                if(rt.getMessageRef().getName() != null) {
-                    properties.put("messageref",
-                                   rt.getMessageRef().getName());
-                } else {
-                    properties.put("messageref",
-                                   rt.getMessageRef().getId());
-                }
+                setMessageRefProperties(properties, rt.getMessageRef());
             }
         }
 
@@ -2050,7 +2037,7 @@ public class Bpmn2JsonMarshaller {
                         properties.put("multipleinstancecompletioncondition",
                                        ((FormalExpression) taskmi.getCompletionCondition()).getBody());
                     }
-                } catch(Exception e) {
+                } catch (Exception e) {
                     _logger.info("Could not find multipleinstancecompletioncondition for: " + taskmi);
                 }
             }
@@ -2440,7 +2427,7 @@ public class Bpmn2JsonMarshaller {
                              true);
 
                 for (OnEntryScriptType onEntryScript : onEntryExtensions) {
-                    if(onEntryScript.getScript() != null) {
+                    if (onEntryScript.getScript() != null) {
                         onEntryStr += onEntryScript.getScript().replace("\\",
                                                                         "\\\\").replace("\n",
                                                                                         "\\n");
@@ -3033,7 +3020,7 @@ public class Bpmn2JsonMarshaller {
                                            completionLanguage);
                         }
                     }
-                } catch(Exception e) {
+                } catch (Exception e) {
                     _logger.info("Could not find adhoccompletioncondition for: " + ahsp);
                 }
             }
@@ -3148,7 +3135,7 @@ public class Bpmn2JsonMarshaller {
                         properties.put("multipleinstancecompletioncondition",
                                        ((FormalExpression) taskmi.getCompletionCondition()).getBody());
                     }
-                } catch(Exception e) {
+                } catch (Exception e) {
                     _logger.info("Could not find multipleinstancecompletioncondition for : " + taskmi);
                 }
             }
@@ -3445,7 +3432,7 @@ public class Bpmn2JsonMarshaller {
                                    cdStr);
                 }
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             _logger.info("Could not find conditionexpression for : " + conditionExpression);
         }
 
@@ -4118,11 +4105,11 @@ public class Bpmn2JsonMarshaller {
     private List<EventDefinition> getEventDefinitionsForEvent(Event event) {
         List<EventDefinition> eventDefinitions = new ArrayList<>();
 
-        if(event != null && event instanceof CatchEvent) {
+        if (event != null && event instanceof CatchEvent) {
             CatchEvent catchEvent = (CatchEvent) event;
             eventDefinitions.addAll(catchEvent.getEventDefinitions());
             eventDefinitions.addAll(catchEvent.getEventDefinitionRefs());
-        } else if(event != null && event instanceof ThrowEvent) {
+        } else if (event != null && event instanceof ThrowEvent) {
             ThrowEvent throwEvent = (ThrowEvent) event;
             eventDefinitions.addAll(throwEvent.getEventDefinitions());
             eventDefinitions.addAll(throwEvent.getEventDefinitionRefs());
@@ -4132,5 +4119,4 @@ public class Bpmn2JsonMarshaller {
 
         return eventDefinitions;
     }
-
 }
