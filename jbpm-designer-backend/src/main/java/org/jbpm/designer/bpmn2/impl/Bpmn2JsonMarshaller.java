@@ -3013,6 +3013,11 @@ public class Bpmn2JsonMarshaller {
                            elementName);
         }
 
+        if (subProcess.getDocumentation() != null && subProcess.getDocumentation().size() > 0) {
+            properties.put("documentation",
+                           subProcess.getDocumentation().get(0).getText());
+        }
+
         if (subProcess instanceof AdHocSubProcess) {
             AdHocSubProcess ahsp = (AdHocSubProcess) subProcess;
             if (ahsp.getOrdering().equals(AdHocOrdering.PARALLEL)) {
